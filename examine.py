@@ -1,7 +1,7 @@
-from utils.word_decomposation import convert_Vietnamese_to_IPA
+from utils.word_decomposation import analyse_Vietnamese
 
 word = "thắm"
-components = convert_Vietnamese_to_IPA(word)
+components = analyse_Vietnamese(word)
 
 print(components)
 
