@@ -1,10 +1,9 @@
+from core.encoders import build_encoder
+from core.decoder import build_decoder
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
-from .decoder import build_decoder
-from .encoder import build_encoder
-from utils.dataset import SpecAugment
 
 class AcousticModel(nn.Module):
     def __init__(self, config, vocab_size):
@@ -17,12 +16,12 @@ class AcousticModel(nn.Module):
         self.blank_id = config['blank_id']
 
     def forward(self, inputs, decoder_input, tfr=1.0, encoder_mask=None):
-        encoder_outputs, ctc_out = self.encoder(inputs, encoder_mask)
+        encoder_outputs = self.encoder(inputs, encoder_mask)
         decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, tfr)  
 
-        return encoder_outputs, ctc_out, decoder_outputs
+        return encoder_outputs, decoder_outputs
     
-    def recognize(self, enc_inputs, speech_length, target_length=100, enc_mask=None):
+    def recognize(self, enc_inputs, enc_mask=None):
         """
         Greedy decode for inference
         Args:
