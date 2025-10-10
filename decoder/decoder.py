@@ -1,9 +1,12 @@
+from utils import (
+    MultiHeadAttentionBlock,
+    FeedForwardBlock,
+    ResidualConnection,
+    ProjectionLayer,
+    PositionalEncoding
+)
 import torch
 from torch import nn
-from utils import (
-    MultiHeadAttentionBlock
-)
-from .modules import FeedForwardBlock, ResidualConnection, ProjectionLayer, PositionalEncoding
 
 class TransformerDecoderLayer(nn.Module):
     def __init__(self, d_model: int, h: int, ff_size: int, dropout: float) -> None:
@@ -17,9 +20,6 @@ class TransformerDecoderLayer(nn.Module):
             ResidualConnection(features=d_model, dropout=dropout)
         ])
 
-        
-
-    
     def forward(self, x, encoder_out, enc_mask, dec_mask):
         
         x = self.residual_connections[0](x, lambda x: self.self_attention(x, x, x, dec_mask))
