@@ -1,1 +1,1 @@
-from saa import InterleaveHybridAcousticEncoder
+from core.encoders.saa_encoder import InterleaveHybridAcousticEncoder
