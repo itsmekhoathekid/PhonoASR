@@ -1,6 +1,6 @@
+from .modules import ScaledDotProductAttention
 import torch.nn as nn
 import torch.nn.functional as F
-from .modules import ScaledDotProductAttention
 import numpy as np
 import math
 

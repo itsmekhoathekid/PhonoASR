@@ -1,7 +1,9 @@
-from utils import (
+from core.atten import (
     MultiHeadAttention,
-    ResidualConnection
-    )
+)
+from core.modules import (
+    ResidualConnection,
+)
 import torch
 import torch.nn as nn
     

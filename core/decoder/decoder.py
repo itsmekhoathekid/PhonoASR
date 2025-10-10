@@ -1,9 +1,11 @@
-from utils import (
-    MultiHeadAttentionBlock,
+from core.modules import (
     FeedForwardBlock,
     ResidualConnection,
     ProjectionLayer,
     PositionalEncoding
+)
+from core.atten import (
+    MultiHeadAttentionBlock
 )
 import torch
 from torch import nn
