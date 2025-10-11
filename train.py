@@ -1,22 +1,21 @@
 import torch
 from dataset import Speech2Text, speech_collate_fn
-from models import (
-    Transformer, 
+from core.modules import (
     CTCLoss,
-    Kldiv_Loss, 
-    add_nan_hook,
-    CELoss
+    KLDivLoss, 
+    CELoss, 
+    Optimizer,
+    logg,
+    add_nan_hook
 )
-
+from core import AcousticModel
 from tqdm import tqdm
 import argparse
 import yaml
 import os 
-from models.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import datetime
 import logging
-from utils import logg
 from speechbrain.nnet.losses import kldiv_loss, ctc_loss
 from speechbrain.nnet.schedulers import NoamScheduler
 
@@ -76,7 +75,8 @@ def train_one_epoch(model, dataloader, optimizer, criterion_ctc, criterion_ep, d
         text_len = batch["text_len"].to(device)
         tokens = batch["tokens"].to(device)
         tokens_lens = batch["tokens_lens"].to(device)
-
+        # print(speech.shape)
+        # exit()
         optimizer.zero_grad()
 
         enc_out , dec_out, enc_input_lengths   = model(
@@ -194,7 +194,7 @@ def main():
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = Transformer(
+    model = AcousticModel(
         config=config['model'],
         vocab_size=len(train_dataset.vocab)
     ).to(device)

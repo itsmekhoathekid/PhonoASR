@@ -2,8 +2,6 @@ from core.encoders import build_encoder
 from core.decoder import build_decoder
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.checkpoint import checkpoint
 
 class AcousticModel(nn.Module):
     def __init__(self, config, vocab_size):
@@ -15,7 +13,7 @@ class AcousticModel(nn.Module):
         self.eos_id = config['eos_id']
         self.blank_id = config['blank_id']
 
-    def forward(self, inputs, decoder_input, tfr=1.0, encoder_mask=None):
+    def forward(self, inputs, decoder_input, encoder_mask=None, tfr=1.0):
         encoder_outputs = self.encoder(inputs, encoder_mask)
         decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, tfr)  
 

@@ -10,33 +10,35 @@ model:
     d_hidden: 256
     num_layers: 2
     embed_dropout: 0.2
-    var_dropout: 0.1
+    var_dropout: 0.1 
+    n_head: 8
+    d_model: 160
+    dropout: 0.2
+    n_layer: 1
+    max_len: 400
   feature_dim: 160   # sync with dataset.py
   name : 'SAA'
   share_weight: False
   pad_id: 0
   sos_id: 1
   eos_id: 2
-  blank_id: 0
-  spec_augment: False
-  mF: 2
-  F: 15
-  mT: 2
-  pS: 0.05
-  
+  blank_id: 4
+  k: 3
+
 
 training:
   epochs: 100
   batch_size: 8
   accumulation_steps: 1
-  save_path: "workspace/Self-Attention-Acoustic/saves"
-  train_path : "workspace/dataset/train_w2i.json"
-  dev_path : "workspace/dataset/test_w2i.json"
-  test_path : "workspace/dataset/test_w2i.json"
-  vocab_path : "workspace/dataset/vocab_w2i.json"
-  log_path: "workspace/Self-Attention-Acoustic/logs"
-  infer_path: "workspace/Self-Attention-Acoustic/logs/results.txt"
+  save_path: "/home/llogn/workspace/phonoasr/saves"
+  train_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_phoneme.json"
+  dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
+  logg: "/home/llogn/workspace/phonoasr/logs/saa_log.log"
+  infer_path: "/home/llogn/workspace/phonoasr/logs/saa_infer.log"
   reload: False
+  ctc_weight: 0.4
 
 optim:
   # type: sgd

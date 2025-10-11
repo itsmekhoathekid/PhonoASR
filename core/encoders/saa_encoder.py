@@ -1,4 +1,4 @@
-from core.atten import (
+from core.modules import (
     MultiHeadAttention,
 )
 from core.modules import (

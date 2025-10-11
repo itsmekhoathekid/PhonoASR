@@ -4,7 +4,7 @@ from core.modules import (
     ProjectionLayer,
     PositionalEncoding
 )
-from core.atten import (
+from core.modules import (
     MultiHeadAttentionBlock
 )
 import torch

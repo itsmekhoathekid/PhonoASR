@@ -1,1 +1,1 @@
-from dataset import Speech2Text, speech_collate_fn
+from .dataset import Speech2Text, speech_collate_fn
