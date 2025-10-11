@@ -2,7 +2,7 @@ from core.modules import (
     MultiHeadAttention,
 )
 from core.modules import (
-    ResidualConnection,
+    ResidualConnectionBase,
 )
 import torch
 import torch.nn as nn
@@ -11,7 +11,7 @@ class HybridEncoderLayer(nn.Module):
     def __init__(self, n_head, d_model, d_hidden, dropout=0.1):
         super(HybridEncoderLayer, self).__init__()
         self.mha = MultiHeadAttention(n_head, d_model, dropout)
-        self.midlayer = ResidualConnection(d_model, dropout)
+        self.midlayer = ResidualConnectionBase(d_model, dropout)
         self.lstm = nn.LSTM(d_model, d_hidden, batch_first=True)
         self.linear = nn.Linear(d_hidden, d_model)
         

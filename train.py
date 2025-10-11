@@ -75,15 +75,14 @@ def train_one_epoch(model, dataloader, optimizer, criterion_ctc, criterion_ep, d
         text_len = batch["text_len"].to(device)
         tokens = batch["tokens"].to(device)
         tokens_lens = batch["tokens_lens"].to(device)
-        # print(speech.shape)
-        # exit()
+
         optimizer.zero_grad()
 
-        enc_out , dec_out, enc_input_lengths   = model(
-            src = speech, 
-            tgt = decoder_input,
-            src_mask = speech_mask,
-            tgt_mask = text_mask
+        enc_out, dec_out = model(
+            speech, 
+            decoder_input,
+            speech_mask,
+            text_mask
         )  # [B, T_text, vocab_size]
 
         # loss_ctc =  criterion_ctc(enc_out, tokens_eos, enc_input_lengths, text_len)
@@ -130,11 +129,11 @@ def evaluate(model, dataloader, optimizer, criterion_ctc, criterion_ep, device, 
 
             optimizer.zero_grad()
 
-            enc_out , dec_out, enc_input_lengths   = model(
-                src = speech, 
-                tgt = decoder_input,
-                src_mask = speech_mask,
-                tgt_mask = text_mask
+            enc_out, dec_out = model(
+                speech, 
+                decoder_input,
+                speech_mask,
+                text_mask
             )  # [B, T_text, vocab_size]
             
             # Bỏ <s> ở đầu nếu có
@@ -209,8 +208,6 @@ def main():
         blank = train_dataset.vocab.get_blank_token(),
         reduction='batchmean',
     ).to(device)
-
-    
 
     # criterion_pe = Kldiv_Loss(pad_idx=train_dataset.vocab.get_pad_token(), reduction='batchmean')
     criterion_pe = CELoss(ignore_index=train_dataset.vocab.get_pad_token(), reduction='mean')

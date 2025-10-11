@@ -91,14 +91,14 @@ class LayerNormalization(nn.Module):
         # eps is to prevent dividing by zero or when std is very small
         return self.alpha * (x - mean) / (std + self.eps) + self.bias
 
-# class ResidualConnectionBase(nn.Module):
-#     def __init__(self, features: int, dropout: float) -> None:
-#         super().__init__()
-#         self.dropout = nn.Dropout(dropout)
-#         self.norm = LayerNormalization(features)
+class ResidualConnectionBase(nn.Module):
+    def __init__(self, features: int, dropout: float) -> None:
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.norm = LayerNormalization(features)
 
-#     def forward(self, x, residual):
-#         return self.norm(x + self.dropout(residual))
+    def forward(self, x, residual):
+        return self.norm(x + self.dropout(residual))
     
 class FeedForwardBlock(nn.Module):
 

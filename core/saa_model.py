@@ -13,42 +13,49 @@ class AcousticModel(nn.Module):
         self.eos_id = config['eos_id']
         self.blank_id = config['blank_id']
 
-    def forward(self, inputs, decoder_input, encoder_mask=None, tfr=1.0):
+    def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
         encoder_outputs = self.encoder(inputs, encoder_mask)
-        decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, tfr)  
+        decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
 
         return encoder_outputs, decoder_outputs
     
-    def recognize(self, enc_inputs, enc_mask=None):
+    def encode(src, src_mask=None):
         """
-        Greedy decode for inference
+        Encode input sequences
         Args:
-            enc_inputs: [1, time, feature] - batch_size = 1
-            speech_length: [1] - lengths of input sequences
-            target_length: int - max target length
-            enc_mask: [1, time] - mask for encoder inputs
+            src: [B, time, feature]
+            src_mask: [B, time]
         Returns:
-            list of lists: token IDs for each batch item
+            enc_outputs: [B, time, feature]
         """
-        encoder_outputs, _ = self.encoder(enc_inputs, enc_mask)
-        device = enc_inputs.device
-        
-        # Khởi tạo decoder input với SOS token
-        decoder_input = torch.tensor([[self.sos_id]], device=device)  # [1, 1]
-        token_list = []
-        
-        for step in range(500):
-            # Gọi decoder với tfr=0.0 (no teacher forcing)
-            with torch.no_grad():
-                logits = self.decoder(decoder_input, encoder_outputs, enc_mask, tfr=0.0)
-            
-            predicted_token = logits[:, -1, :].argmax(dim=-1).item()  
-            token_list.append(predicted_token)
+        enc_outputs = self.encoder(src, src_mask)
+        return enc_outputs
+    
+    def decode(self, decoder_input, encoder_outputs, encoder_mask=None, decoder_mask=None):
+        """
+        Decode sequences
+        Args:
+            decoder_input: [B, M]
+            encoder_outputs: [B, T, feature]
+            encoder_mask: [B, T]
+            decoder_mask: [B, M]
+        Returns:
+            dec_outputs: [B, M, vocab_size]
+        """
+        dec_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
 
-            if predicted_token == self.eos_id:
-                break
-            
-            new_token = torch.tensor([[predicted_token]], device=device)  # [1, 1]
-            decoder_input = torch.cat([decoder_input, new_token], dim=1)  # [1, step+2]
-        
-        return [token_list]
+        return dec_outputs
+
+    def verify(self, tgt, enc_out, src_mask, tgt_mask):
+        """
+        Verify the target sequence.
+        Args:
+            tgt (Tensor): Target sequence tensor of shape (B, U).
+            enc_out (Tensor): Encoded output from the encoder of shape (B, T, d_model).
+            src_mask (Tensor): Mask for the input sequence of shape (B, T).
+            tgt_mask (Tensor): Mask for the target sequence of shape (B, U).
+        Returns:
+            Tensor: Verified output of shape (B, U, vocab_size).
+        """
+        dec_out = self.decoder.verify(tgt, enc_out, src_mask, tgt_mask)
+        return dec_out
