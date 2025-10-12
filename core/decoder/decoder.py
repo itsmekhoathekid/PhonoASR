@@ -65,6 +65,9 @@ class TransformerDecoder(nn.Module):
         self.layers = nn.ModuleList(
             [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(n_layers)]
         )
+        self.tranformers_heads = nn.ModuleList(
+            [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(k)]
+        )
         self.heads = nn.ModuleList(
             [LatentHead(d_model=d_model, latent_dim=d_model, dropout=p_dropout) for _ in range(k)]
         )
@@ -86,7 +89,8 @@ class TransformerDecoder(nn.Module):
         for layer in self.layers:
             out = layer(out, encoder_out, enc_mask, dec_mask)
 
-        latent = [head(out) for head in self.heads]
+        outs = [transformer(out, encoder_out, enc_mask, dec_mask) for transformer in self.tranformers_heads]
+        latent = [head(o) for head, o in zip(self.heads, outs)]
         out = [self.projection(l) for l in latent]  
         return out
 
