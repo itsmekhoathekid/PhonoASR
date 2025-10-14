@@ -1,5 +1,4 @@
-from . import InterleaveHybridAcousticEncoder
-from . import ConformerEncoder
+from . import *
 
 def build_encoder(config, vocab_size):
     try:
@@ -13,5 +12,9 @@ def build_encoder(config, vocab_size):
             return InterleaveHybridAcousticEncoder(n_head, d_model, d_hidden, vocab_size, dropout, n_layer)
         elif config["name"] == 'Conformer':
             return ConformerEncoder(config['enc'])
+        elif config['name'] == 'SpeechTransformer':
+            return TransformerEncoder(config['enc'])
+        elif config['name'] == 'TASA':
+            return TASA_encoder(config['enc'])
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")

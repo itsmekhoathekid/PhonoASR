@@ -43,10 +43,10 @@ class ConformerEncoder(nn.Module):
         super(ConformerEncoder, self).__init__()
         self.subsampling = Conv2dSubampling(
             in_channels = config["in_channels"],
-            out_channels = config["encoder_dim"],
+            out_channels = config["out_channels"],
         )
         self.input_projection = nn.Sequential(
-            Linear(config["encoder_dim"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
+            Linear(config["out_channels"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
             nn.Dropout(p=config["dropout_rate"]),
         )
         

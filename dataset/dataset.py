@@ -154,3 +154,30 @@ def speech_collate_fn(batch):
         "tokens" : padded_tokens,
         "tokens_lens": tokens_lens
     }
+
+
+import logging
+import os 
+
+def logg(log_file):
+    if not os.path.exists(os.path.dirname(log_file)):
+        os.makedirs(os.path.dirname(log_file))
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()  # vẫn in ra màn hình
+        ]
+    )
+
+
+def calculate_mask(lengths, max_len):
+    """Tạo mask cho các tensor có chiều dài khác nhau"""
+    mask = torch.arange(max_len, device=lengths.device)[None, :] < lengths[:, None]
+    return mask
+
+def causal_mask(batch_size, size):
+    """Tạo mask cho decoder để tránh nhìn thấy tương lai"""
+    mask = torch.tril(torch.ones(size, size)).bool()
+    return mask.unsqueeze(0).expand(batch_size, -1, -1)  # [B, T, T]

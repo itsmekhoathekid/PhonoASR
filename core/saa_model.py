@@ -9,9 +9,6 @@ class AcousticModel(nn.Module):
         self.encoder = build_encoder(config, vocab_size)
         self.decoder = build_decoder(config, vocab_size)
 
-        self.sos_id = config['sos_id']
-        self.eos_id = config['eos_id']
-        self.blank_id = config['blank_id']
 
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
         encoder_outputs, encoder_mask = self.encoder(inputs, encoder_mask)
