@@ -14,12 +14,12 @@ class AcousticModel(nn.Module):
         self.blank_id = config['blank_id']
 
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
-        encoder_outputs = self.encoder(inputs, encoder_mask)
+        encoder_outputs, encoder_mask = self.encoder(inputs, encoder_mask)
         decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
 
         return encoder_outputs, decoder_outputs
     
-    def encode(src, src_mask=None):
+    def encode(self, src, src_mask=None):
         """
         Encode input sequences
         Args:

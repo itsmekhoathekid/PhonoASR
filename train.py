@@ -72,10 +72,8 @@ def train_one_epoch(model, dataloader, optimizer, criterion_ctc, criterion_ep, d
         speech_mask = batch["fbank_mask"].to(device)
         text_mask = batch["text_mask"].to(device)
         decoder_input = batch["decoder_input"].to(device)
-        text_len = batch["text_len"].to(device)
-        tokens = batch["tokens"].to(device)
-        tokens_lens = batch["tokens_lens"].to(device)
-
+        fbank_len = batch["fbank_len"].to(device)
+        
         optimizer.zero_grad()
 
         enc_out, dec_out = model(

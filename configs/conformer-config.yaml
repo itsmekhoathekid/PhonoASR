@@ -1,0 +1,62 @@
+model:
+  enc: 
+    input_dim: 80
+    encoder_dim: 256
+    num_attention_heads: 8
+    feed_forward_expansion_factor : 4
+    dropout_rate: 0.1
+    conv_kernel_size: 31
+    num_encoder_layers: 1
+    output_dim: 256
+    in_channels: 1
+    out_channels: 32
+  dec: 
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+  name : 'Conformer'
+  share_weight: False
+  pad_id: 0
+  sos_id: 1
+  eos_id: 2
+  blank_id: 4
+  k: 3
+
+training:
+  epochs: 100
+  batch_size: 8
+  accumulation_steps: 1
+  save_path: "/home/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  logg : "/home/anhkhoa/TASA/logs/Conformer.log"
+  logg : "/home/anhkhoa/TASA/logs/Conformer_infer.log"
+  reload: False
+  ctc_weight: 0.4
+
+optim:
+  # type: sgd
+  # lr: 0.0005
+  # momentum: 0.9
+  # weight_decay: 0
+  # begin_to_adjust_lr: 60
+  # nesterov: None
+  # decay_rate: 0.5
+
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 15000
+
+loss:
+
+
+  

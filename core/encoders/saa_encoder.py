@@ -38,5 +38,5 @@ class InterleaveHybridAcousticEncoder(nn.Module):
         out = self.linear2(x)
         # ctc_out = self.ctc_proj(out)  # [B, T, vocab_size]
 
-        return out      # [B, T, d_hidden]
+        return out, mask
 
