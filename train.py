@@ -22,25 +22,25 @@ from speechbrain.nnet.schedulers import NoamScheduler
 # Cấu hình logger
 
 
-def reload_model(model, optimizer, checkpoint_path):
-    """
-    Reload model and optimizer state from a checkpoint.
-    """
+def reload_model(model, optimizer, checkpoint_path, model_name):
     past_epoch = 0
     path_list = [path for path in os.listdir(checkpoint_path)]
     if len(path_list) > 0:
         for path in path_list:
-            if ".ckpt" not in path:
+            try:
                 past_epoch = max(int(path.split("_")[-1]), past_epoch)
+            except:
+                continue
         
-        load_path = os.path.join(checkpoint_path, f"{model.model_name}_epoch_{past_epoch}")
+        load_path = os.path.join(checkpoint_path, f"{model_name}_epoch_{past_epoch}")
         checkpoint = torch.load(load_path)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        logging.info(f"Reloaded model from {load_path} at epoch {past_epoch}")
     else:
-        print("No checkpoint found. Starting from scratch.")
+        logging.info("No checkpoint found. Starting from scratch.")
     
-    return past_epoch+1, model, optimizer
+    return past_epoch + 1, model, optimizer
 
 def make_block_targets(target, k, pad_id=-100, device='cpu'):
     """
@@ -235,7 +235,7 @@ def main():
     start_epoch = 1
     if config['training']['reload']:
         checkpoint_path = config['training']['save_path']
-        start_epoch, model, optimizer = reload_model(model, optimizer, checkpoint_path)
+        start_epoch, model, optimizer = reload_model(model, optimizer, checkpoint_path, config['model']['model_name'])
     num_epochs = config["training"]["epochs"]
 
     

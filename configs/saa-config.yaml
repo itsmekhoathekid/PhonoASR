@@ -12,6 +12,7 @@ model:
     n_head: 4
     dropout: 0.1
   name : 'SAA'
+  model_name: 'SAA'
   share_weight: False
   pad_id: 0
   sos_id: 1
