@@ -1,11 +1,11 @@
 import torch
-from utils.dataset import Speech2Text, speech_collate_fn
-from models import Transformer
+from dataset import Speech2Text, speech_collate_fn
+from core import AcousticModel
 from tqdm import tqdm
 import argparse
 import yaml
 import os 
-from utils import logg, causal_mask, calculate_mask
+from dataset import logg, causal_mask, calculate_mask
 from jiwer import wer, cer
 
 
@@ -13,14 +13,14 @@ def load_config(config_path: str) -> dict:
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
 
-def load_model(config: dict, vocab_len: int, device: torch.device, epoch : int) -> Transformer:
+def load_model(config: dict, vocab_len: int, device: torch.device, epoch : int):
     checkpoint_path = os.path.join(
         config['training']['save_path'],
         f"{config['model']['model_name']}_epoch_{epoch}"
     )
     print(f"Loading checkpoint from: {checkpoint_path}")
-    model = Transformer(
-        config = config['model'],
+    model = AcousticModel(
+        config=config['model'],
         vocab_size=vocab_len
     ).to(device)
     checkpoint = torch.load(checkpoint_path, map_location=device)

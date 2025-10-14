@@ -1,0 +1,57 @@
+training:
+  epochs: 100
+  batch_size: 16
+  save_path: "/home/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  reload: False
+  logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
+  ctc_weight: 0.3
+  result: "/home/anhkhoa/PhonoASR/result_2.txt"
+  type: "word"
+  
+
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 15000
+
+model:
+  enc:
+    in_features: 640
+    n_layers: 6
+    d_model: 256
+    ff_size: 1024
+    h: 4
+    p_dropout: 0.1
+  dec:
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+  k: 3
+  model_name: "TASA"
+  name : 'TASA'
+
+# optim:
+#   type: sgd
+#   lr: 0.0001
+#   momentum: 0.9
+#   weight_decay: 0
+#   begin_to_adjust_lr: 60
+#   nesterov: None
+#   decay_rate: 0.5
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
+
+
