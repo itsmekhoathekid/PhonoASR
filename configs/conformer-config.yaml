@@ -11,29 +11,31 @@ model:
     in_channels: 1
     out_channels: 32
     name : 'Conformer'
+    d_model: 256
   dec: 
-    n_layer: 3
+    n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 3
+    k: 1
   model_name : 'Conformer'
-  k: 3
+  k: 1
 
 training:
   epochs: 100
   batch_size: 8
   accumulation_steps: 1
   save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_w2i.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_w2i.json"
   logg : "/home/anhkhoa/TASA/logs/Conformer.log"
   logg : "/home/anhkhoa/TASA/logs/Conformer_infer.log"
   reload: False
   ctc_weight: 0.4
+  type_training: 'ctc-kldiv'
 
 optim:
   # type: sgd
