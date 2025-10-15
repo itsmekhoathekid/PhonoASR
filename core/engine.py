@@ -12,7 +12,7 @@ class Engine:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.checkpoint_path = config['training']['save_path']
         self.model, self.optimizer, self.scheduler = self.inits(vocab_size=len(vocab))
-        self.alpha_k = [1.0] if self.config['model']['k'] == 1 else [0.2 for _ in range(self.config['model']['k'])]
+        self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [0.2 for _ in range(self.config['model']['dec']['k'])]
         self.type_training = self.config['training']['type_training']
         
         self.ctc_loss = CTCLoss(blank=vocab.get_blank_token(), reduction='batchmean').to(self.device)
