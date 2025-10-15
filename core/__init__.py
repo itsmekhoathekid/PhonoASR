@@ -1,1 +1,1 @@
-from .saa_model import AcousticModel
+from .model import AcousticModel

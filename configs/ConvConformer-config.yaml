@@ -1,0 +1,71 @@
+model:
+  enc:
+    type: "conv-conformer"
+    input_dim: 80
+    encoder_dim: 144
+    num_attention_heads: 8
+    feed_forward_expansion_factor: 4
+    dropout_rate: 0.1
+    conv_kernel_size: 31
+    num_encoder_layers: 1
+    output_dim: 256
+    in_channels: 1
+    out_channels: 32
+    conv_config:
+      size: 144
+      linear_units: 576
+      fuse_type: "concat_fusion"
+      kernel_sizes: "7, 15, 23, 31"
+      merge_conv_kernel_size: 3
+      use_non_linear: true
+      use_linear_after_conv: true
+      activation: "swish"
+      gate_activation: "swish"
+  dec: 
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+  name: "ConvConformer"
+  model_name: "ConvConformer"
+  pad_id: 0
+  sos_id: 1
+  eos_id: 2
+  blank_id: 4
+  share_weight: false
+  k: 3
+
+
+training:
+  epochs: 100
+  batch_size: 8
+  accumulation_steps: 1
+  save_path: "/home/llogn/workspace/phonoasr/saves"
+  train_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_phoneme.json"
+  dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
+  logg: "/home/llogn/workspace/phonoasr/logs/saa_log.log"
+  reload: false
+  max_grad_norm: 200
+  result: "workspace/Conformer/result.txt"
+  type: "normal"
+  ctc_weight: 0.4
+
+
+optim:
+  type: "adam"
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 10000
+
+
+rnnt_loss:
+  blank: 0
+  reduction: "mean"

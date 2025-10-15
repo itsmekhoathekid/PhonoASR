@@ -10,7 +10,7 @@ def build_encoder(config, vocab_size):
             n_layer = config['enc']['n_layer']
 
             return InterleaveHybridAcousticEncoder(n_head, d_model, d_hidden, vocab_size, dropout, n_layer)
-        elif config["name"] == 'Conformer':
+        elif config["name"] == 'Conformer' or config["name"] == 'ConvConformer':
             return ConformerEncoder(config['enc'])
         elif config['name'] == 'SpeechTransformer':
             return TransformerEncoder(config['enc'])
