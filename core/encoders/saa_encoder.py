@@ -24,13 +24,19 @@ class HybridEncoderLayer(nn.Module):
         return out
     
 class InterleaveHybridAcousticEncoder(nn.Module):
-    def __init__(self, n_head, d_model, d_hidden, vocab_size, dropout=0.1, n_layer=1):
+    def __init__(self, config, vocab_size):
         super(InterleaveHybridAcousticEncoder, self).__init__()
+        self.n_head = config['enc']['n_head']
+        self.d_model = config['enc']['d_model']
+        self.d_hidden = config['enc']['d_hidden']
+        self.dropout = config['enc'].get('dropout', 0.1)
+        self.n_layer = config['enc']['n_layer']
+        
         self.layers = nn.ModuleList([
-            HybridEncoderLayer(n_head, d_model, d_hidden, dropout) for _ in range(n_layer)
+            HybridEncoderLayer(self.n_head, self.d_model, self.d_hidden, self.dropout) for _ in range(self.n_layer)
         ])
-        self.linear2 = nn.Linear(d_model, d_hidden)
-        self.ctc_proj = nn.Linear(d_hidden, vocab_size)
+        self.linear2 = nn.Linear(self.d_model, self.d_hidden)
+        self.ctc_proj = nn.Linear(self.d_hidden, vocab_size)
 
     def forward(self, x, mask=None): 
         for layer in self.layers:
