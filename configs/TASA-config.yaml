@@ -2,15 +2,16 @@ training:
   epochs: 100
   batch_size: 16
   save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_w2i.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_w2i.json"
   reload: False
   logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
   ctc_weight: 0.3
   result: "/home/anhkhoa/PhonoASR/result_2.txt"
   type: "word"
+  type_training : "ctc-kldiv"
   
 
 optim:
@@ -31,15 +32,15 @@ model:
     ff_size: 1024
     h: 4
     p_dropout: 0.1
+    name: 'TASA'
   dec:
     n_layer: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-  k: 3
+    k: 1
   model_name: "TASA"
-  name : 'TASA'
 
 # optim:
 #   type: sgd

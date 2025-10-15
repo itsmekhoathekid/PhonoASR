@@ -5,20 +5,15 @@ model:
     d_hidden: 256       
     dropout: 0.2
     n_layer: 3
+    name : 'SAA'
   dec: 
     n_layer: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-  name : 'SAA'
+    k: 3
   model_name: 'SAA'
-  share_weight: False
-  pad_id: 0
-  sos_id: 1
-  eos_id: 2
-  blank_id: 4
-  k: 3
 
 training:
   epochs: 100

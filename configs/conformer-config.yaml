@@ -10,19 +10,15 @@ model:
     output_dim: 256
     in_channels: 1
     out_channels: 32
+    name : 'Conformer'
   dec: 
     n_layer: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-  name : 'Conformer'
+    k: 3
   model_name : 'Conformer'
-  share_weight: False
-  pad_id: 0
-  sos_id: 1
-  eos_id: 2
-  blank_id: 4
   k: 3
 
 training:

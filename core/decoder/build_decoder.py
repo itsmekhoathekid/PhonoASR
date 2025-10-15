@@ -8,7 +8,7 @@ def build_decoder(config, vocab_size):
         d_hidden = config['dec']['ff_size']
         n_head = config['dec']['n_head']
         dropout = config['dec']['dropout']
-        k = config['k']
+        k = config['dec']['k']
 
         return TransformerDecoder(vocab_size, n_layer, d_model, d_hidden, n_head, dropout, k)
     except KeyError as e:

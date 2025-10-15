@@ -153,7 +153,8 @@ class TASA_encoder(nn.Module):
             
             x, previous_attention_scores = layer(x, mask, previous_attention_scores)
 
-        return x , mask
+        input_lens = torch.sum(mask, dim=1) # [B]
+        return x , mask, input_lens
 
 class TransformerEncoderLayer(nn.Module):
     def __init__(
@@ -239,5 +240,6 @@ class TransformerEncoder(nn.Module):
         for layer in self.layers:
             out = layer(out, mask_atten)
         
-        return out, mask
+        enc_input_lengths = torch.sum(mask, dim=1) # [B]
+        return out, mask, enc_input_lengths
 

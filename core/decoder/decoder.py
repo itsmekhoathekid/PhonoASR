@@ -43,16 +43,19 @@ class LatentHead(nn.Module):
         return self.residual(x, lambda x : self.tanh(self.linear(x)))
 
 class EmbeddingModule(nn.Module):
-    def __init__(self, vocab_size, d_model, dropout):
+    def __init__(self, vocab_size, d_model, dropout, k):
         super(EmbeddingModule, self).__init__()
         self.embedding = nn.Embedding(vocab_size, d_model)
-        self.projection = nn.Linear(d_model * 3, d_model)
+        if k != 1:
+            self.projection = nn.Linear(d_model * k, d_model)
+
         self.pos_enc = PositionalEncoding(d_model)
         self.dropout = nn.Dropout(dropout)
-    
+        self.k = k
     def forward(self, x):
         x = self.embedding(x) # (B, M, 3) -> (B, M, 3, d_model)
-        x = self.projection(x.view(x.size(0), x.size(1), -1))
+        if self.k != 1:
+            x = self.projection(x.view(x.size(0), x.size(1), -1))
 
         x = self.pos_enc(x)
         return self.dropout(x)
@@ -61,12 +64,12 @@ class EmbeddingModule(nn.Module):
 class TransformerDecoder(nn.Module):
     def __init__(self, vocab_size: int, n_layers: int, d_model: int, ff_size: int, h: int, p_dropout: float, k : int) -> None:
         super().__init__()
-        self.emb = EmbeddingModule(vocab_size=vocab_size, d_model=d_model, dropout=p_dropout)
+        self.emb = EmbeddingModule(vocab_size=vocab_size, d_model=d_model, dropout=p_dropout, k = k)
         self.layers = nn.ModuleList(
             [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(n_layers)]
         )
         self.enc_linears = nn.ModuleList(
-            [nn.Linear(in_features=d_model, out_features=d_model) for _ in range(3)]
+            [nn.Linear(in_features=d_model, out_features=d_model) for _ in range(k)]
         )
         self.heads = nn.ModuleList(
             [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(k)]
