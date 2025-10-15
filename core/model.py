@@ -12,6 +12,7 @@ class AcousticModel(nn.Module):
 
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
         encoder_outputs, encoder_mask = self.encoder(inputs, encoder_mask)
+
         decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
 
         return encoder_outputs, decoder_outputs

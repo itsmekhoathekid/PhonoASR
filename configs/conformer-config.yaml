@@ -17,6 +17,7 @@ model:
     n_head: 4
     dropout: 0.1
   name : 'Conformer'
+  model_name : 'Conformer'
   share_weight: False
   pad_id: 0
   sos_id: 1
