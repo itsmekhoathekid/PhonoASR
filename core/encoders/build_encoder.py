@@ -5,10 +5,10 @@ def build_encoder(config, vocab_size):
         if config["name"] == 'SAA':
             return InterleaveHybridAcousticEncoder(config, vocab_size)
         elif config["name"] == 'Conformer' or config["name"] == 'ConvConformer':
-            return ConformerEncoder(config['enc'])
+            return ConformerEncoder(config)
         elif config['name'] == 'SpeechTransformer':
-            return TransformerEncoder(config['enc'])
+            return TransformerEncoder(config)
         elif config['name'] == 'TASA':
-            return TASA_encoder(config['enc'])
+            return TASA_encoder(config)
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")

@@ -50,7 +50,7 @@ class Vocab:
 
 
 class Speech2Text(Dataset):
-    def __init__(self, json_path, vocab_path, apply_spec_augment=True):
+    def __init__(self, json_path, vocab_path, apply_spec_augment=True, type_training = "ctc-kldiv"):
         super().__init__()
         self.data = load_json(json_path)
         self.vocab = Vocab(vocab_path)
@@ -65,6 +65,7 @@ class Speech2Text(Dataset):
             n_fft=512,
             win_length=25,
         )
+        self.type_training = type_training
 
 
     def __len__(self):
@@ -95,8 +96,12 @@ class Speech2Text(Dataset):
     def __getitem__(self, idx):
         current_item = self.data[idx]
         wav_path = current_item["wav_path"]
-        encoded_text = torch.tensor(current_item["encoded_text"] + [[self.eos_token, self.eos_token, self.eos_token]], dtype=torch.long)
-        decoder_input = torch.tensor([[self.sos_token, self.sos_token, self.sos_token]] + current_item["encoded_text"], dtype=torch.long)
+        if self.type_training == "ce":
+            encoded_text = torch.tensor(current_item["encoded_text"] + [[self.eos_token, self.eos_token, self.eos_token]], dtype=torch.long)
+            decoder_input = torch.tensor([[self.sos_token, self.sos_token, self.sos_token]] + current_item["encoded_text"], dtype=torch.long)
+        else:
+            encoded_text = torch.tensor(current_item["encoded_text"] + [self.eos_token], dtype=torch.long)
+            decoder_input = torch.tensor([self.sos_token] + current_item["encoded_text"], dtype=torch.long)
         tokens = torch.tensor(current_item["encoded_text"], dtype=torch.long)
         fbank = self.extract_from_path(wav_path).float()  # [T, 512]
 

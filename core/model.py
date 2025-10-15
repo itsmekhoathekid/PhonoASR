@@ -6,16 +6,20 @@ import torch.nn as nn
 class AcousticModel(nn.Module):
     def __init__(self, config, vocab_size):
         super(AcousticModel, self).__init__()
-        self.encoder = build_encoder(config, vocab_size)
-        self.decoder = build_decoder(config, vocab_size)
-
-
+        self.encoder = build_encoder(config['model']['enc'], vocab_size)
+        self.decoder = build_decoder(config['model'], vocab_size)
+        self.config = config
+        if self.config['training']['type_training'] == 'ctc-kldiv':
+            self.ctc_lin = nn.Linear(config['model']['enc']['d_model'], vocab_size)
+        
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
-        encoder_outputs, encoder_mask = self.encoder(inputs, encoder_mask)
+        encoder_outputs, encoder_mask, encoder_lengths = self.encoder(inputs, encoder_mask)
 
         decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
-
-        return encoder_outputs, decoder_outputs
+        if self.config['training']['type_training'] == 'ctc-kldiv':
+            encoder_outputs = self.ctc_lin(encoder_outputs)  # [B, T, vocab_size]
+            encoder_outputs = encoder_outputs.log_softmax(dim=-1)
+        return encoder_outputs, decoder_outputs, encoder_lengths
     
     def encode(self, src, src_mask=None):
         """

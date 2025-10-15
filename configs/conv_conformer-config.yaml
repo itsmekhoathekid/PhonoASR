@@ -21,20 +21,16 @@ model:
       use_linear_after_conv: true
       activation: "swish"
       gate_activation: "swish"
+    name: "ConvConformer"
   dec: 
     n_layer: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
+    k: 3
   name: "ConvConformer"
   model_name: "ConvConformer"
-  pad_id: 0
-  sos_id: 1
-  eos_id: 2
-  blank_id: 4
-  share_weight: false
-  k: 3
 
 
 training:

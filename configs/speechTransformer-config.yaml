@@ -11,6 +11,7 @@ training:
   ctc_weight: 0.3
   result: "/home/anhkhoa/PhonoASR/result_2.txt"
   type: "word"
+  type_training : "ce"
   
 
 optim:
@@ -31,15 +32,16 @@ model:
     ff_size: 1024
     h: 4
     p_dropout: 0.1
+    name: 'SpeechTransformer'
   dec:
     n_layer: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-  k: 3
+    k: 3
   model_name: "SpeechTransformer"
-  name : 'SpeechTransformer'
+
 
 # optim:
 #   type: sgd

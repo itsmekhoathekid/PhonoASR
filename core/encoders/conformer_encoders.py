@@ -75,7 +75,7 @@ class ConformerEncoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
         
-        return x, mask
+        return x, mask, x_length
 
     def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
         # lengths: (B,) trên đúng device
