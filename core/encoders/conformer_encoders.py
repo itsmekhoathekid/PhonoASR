@@ -50,8 +50,6 @@ class ConformerEncoder(nn.Module):
             nn.Dropout(p=config["dropout_rate"]),
         )
         
-       
-        
         self.layers = nn.ModuleList([
             ConformerBlock(
                 d_model=config["encoder_dim"],
@@ -59,7 +57,7 @@ class ConformerEncoder(nn.Module):
                 ff_ratio=config["feed_forward_expansion_factor"],
                 dropout=config["dropout_rate"],
                 kernel_size=config["conv_kernel_size"],
-                conv_type=config.get("conv_type", "default"),
+                conv_type=config.get("type", "default"),
                 conv_config=config.get("conv_config", None)
             ) for _ in range(config["num_encoder_layers"])
         ])
