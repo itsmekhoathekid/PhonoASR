@@ -64,7 +64,6 @@ class ConformerEncoder(nn.Module):
             ) for _ in range(config["num_encoder_layers"])
         ])
        
-        self.projected_dim = Linear(config["encoder_dim"], config["output_dim"])
         
 
     def forward(self, x, x_mask, training=True):
@@ -77,7 +76,6 @@ class ConformerEncoder(nn.Module):
         
         for layer in self.layers:
             x = layer(x, mask)
-        x = self.projected_dim(x)
         
         return x, mask
 
