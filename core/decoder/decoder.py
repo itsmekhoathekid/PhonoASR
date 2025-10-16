@@ -5,7 +5,8 @@ from core.modules import (
     PositionalEncoding
 )
 from core.modules import (
-    MultiHeadAttentionBlock
+    MultiHeadAttentionBlock,
+    ConvDec
 )
 import torch
 from torch import nn
@@ -52,11 +53,18 @@ class EmbeddingModule(nn.Module):
         self.pos_enc = PositionalEncoding(d_model)
         self.dropout = nn.Dropout(dropout)
         self.k = k
+        self.enc = ConvDec(
+            num_blocks = 4, 
+            in_channels= d_model ,
+            out_channels=[d_model, d_model, d_model, d_model],
+            kernel_sizes=[3,3,3,3],
+            dropout=dropout,
+        )
     def forward(self, x):
         x = self.embedding(x) # (B, M, 3) -> (B, M, 3, d_model)
         if self.k != 1:
             x = self.projection(x.view(x.size(0), x.size(1), -1))
-
+        x = self.enc(x)
         x = self.pos_enc(x)
         return self.dropout(x)
 
@@ -75,6 +83,7 @@ class TransformerDecoder(nn.Module):
             [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(k)]
         )
         self.projection = ProjectionLayer(d_model=d_model, vocab_size=vocab_size)
+        self.k = k
     
     def forward(self, x: torch.Tensor, encoder_out: torch.Tensor, enc_mask: torch.Tensor, dec_mask: torch.Tensor) -> torch.Tensor:
         """Passes the input `x` through the decoder layers.
@@ -91,7 +100,10 @@ class TransformerDecoder(nn.Module):
         out = self.emb(x)
         for layer in self.layers:
             out = layer(out, encoder_out, enc_mask, dec_mask)
-        enc_outs = [linear(encoder_out) for linear in self.enc_linears]
-        latent = [head(out, enc_out, enc_mask, dec_mask) for head, enc_out in zip(self.heads, enc_outs)]
+        if self.k != 1:
+            enc_outs = [linear(encoder_out) for linear in self.enc_linears]
+            latent = [head(out, enc_out, enc_mask, dec_mask) for head, enc_out in zip(self.heads, enc_outs)]
+        else:
+            latent = [out]
         out = [self.projection(l) for l in latent]  
         return out

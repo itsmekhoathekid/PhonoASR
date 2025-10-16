@@ -36,7 +36,7 @@ def main():
         batch_size= training_cfg['batch_size'],
         shuffle=True,
         collate_fn = speech_collate_fn,
-        num_workers=2
+        num_workers=config['training'].get('num_workers', 2)
     )
 
     dev_dataset = Speech2Text(
@@ -50,7 +50,7 @@ def main():
         batch_size= training_cfg['batch_size'],
         shuffle=True,
         collate_fn = speech_collate_fn,
-        num_workers=2
+        num_workers=config['training'].get('num_workers', 2)
     )
 
     trainer = Engine(config, vocab = train_dataset.vocab)
