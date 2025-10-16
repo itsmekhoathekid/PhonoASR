@@ -5,6 +5,8 @@ import math
 import numpy as np
 from torch import Tensor
 import torch.nn.init as init
+from collections.abc import Iterable
+from itertools import repeat
 
 class ScaledDotProductAttention(nn.Module):
     ''' 
@@ -808,3 +810,175 @@ class ConvDec(nn.Module):
         x = x.transpose(1, 2)  # (batch, seq_len, out_channels)
         
         return x
+
+def pool_time_mask(mask, layer: nn.MaxPool2d, T):
+    # mask: [B, T] (1 = valid, 0 = pad)
+    # Lấy tham số theo trục time (dim=2 của input BxCxTxF)
+    k_t = layer.kernel_size if isinstance(layer.kernel_size, int) else layer.kernel_size[0]
+    s_t = layer.stride if isinstance(layer.stride, int) else layer.stride[0]
+    p_t = layer.padding if isinstance(layer.padding, int) else layer.padding[0]
+    d_t = layer.dilation if isinstance(layer.dilation, int) else layer.dilation[0]
+    ceil = layer.ceil_mode
+
+    # Dùng max_pool1d để OR các bước thời gian trong mỗi cửa sổ
+    # [B, T] -> [B, 1, T] để pool1d
+    m = mask.unsqueeze(1).float()
+    m_pooled = F.max_pool1d(m, kernel_size=k_t, stride=s_t, padding=p_t,
+                            dilation=d_t, ceil_mode=ceil)
+    new_mask = (m_pooled.squeeze(1) > 0.5).to(mask.dtype)  # [B, T_out]
+
+    # T_out tính bởi công thức của pooling (ceil_mode được PyTorch xử lý sẵn)
+    T_out = new_mask.size(1)
+    return new_mask, T_out
+
+def _pair(v):
+    if isinstance(v, Iterable):
+        assert len(v) == 2, "len(v) != 2"
+        return v
+    return tuple(repeat(v, 2))
+
+def infer_conv_output_dim(conv_op, input_dim, sample_inchannel):
+    sample_seq_len = 200
+    sample_bsz = 10
+    x = torch.randn(sample_bsz, sample_inchannel, sample_seq_len, input_dim)
+    # N x C x H x W
+    # N: sample_bsz, C: sample_inchannel, H: sample_seq_len, W: input_dim
+    x = conv_op(x)
+    # N x C x H x W
+    x = x.transpose(1, 2)
+    # N x H x C x W
+    bsz, seq = x.size()[:2]
+    per_channel_dim = x.size()[3]
+    # bsz: N, seq: H, CxW the rest
+    return x.contiguous().view(bsz, seq, -1).size(-1), per_channel_dim
+
+class VGGBlock(torch.nn.Module):
+    """
+    VGG motibated cnn module https://arxiv.org/pdf/1409.1556.pdf
+
+    Args:
+        in_channels: (int) number of input channels (typically 1)
+        out_channels: (int) number of output channels
+        conv_kernel_size: convolution channels
+        pooling_kernel_size: the size of the pooling window to take a max over
+        num_conv_layers: (int) number of convolution layers
+        input_dim: (int) input dimension
+        conv_stride: the stride of the convolving kernel.
+            Can be a single number or a tuple (sH, sW)  Default: 1
+        padding: implicit paddings on both sides of the input.
+            Can be a single number or a tuple (padH, padW). Default: None
+        layer_norm: (bool) if layer norm is going to be applied. Default: False
+
+    Shape:
+        Input: BxCxTxfeat, i.e. (batch_size, input_size, timesteps, features)
+        Output: BxCxTxfeat, i.e. (batch_size, input_size, timesteps, features)
+    """
+
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        conv_kernel_size,
+        pooling_kernel_size,
+        num_conv_layers,
+        input_dim,
+        conv_stride=1,
+        padding=None,
+        layer_norm=False,
+    ):
+        assert (
+            input_dim is not None
+        ), "Need input_dim for LayerNorm and infer_conv_output_dim"
+        super(VGGBlock, self).__init__()
+        self.in_channels = in_channels # 64
+        self.out_channels = out_channels # 3
+        self.conv_kernel_size = _pair(conv_kernel_size) # 2 
+        self.pooling_kernel_size = _pair(pooling_kernel_size) # 2 
+        self.num_conv_layers = num_conv_layers 
+        self.padding = (
+            tuple(e // 2 for e in self.conv_kernel_size)
+            if padding is None
+            else _pair(padding)
+        )
+        self.conv_stride = _pair(conv_stride)
+
+        self.layers = nn.ModuleList()
+        for layer in range(num_conv_layers):
+            conv_op = nn.Conv2d(
+                in_channels if layer == 0 else out_channels,
+                out_channels,
+                self.conv_kernel_size,
+                stride=self.conv_stride,
+                padding=self.padding,
+            )
+            self.layers.append(conv_op)
+            if layer_norm:
+                conv_output_dim, per_channel_dim = infer_conv_output_dim(
+                    conv_op, input_dim, in_channels if layer == 0 else out_channels
+                )
+                self.layers.append(nn.LayerNorm(per_channel_dim))
+                input_dim = per_channel_dim
+            self.layers.append(nn.ReLU())
+
+        if self.pooling_kernel_size is not None:
+            pool_op = nn.MaxPool2d(kernel_size=self.pooling_kernel_size, ceil_mode=True)
+            self.layers.append(pool_op)
+            self.total_output_dim, self.output_dim = infer_conv_output_dim(
+                pool_op, input_dim, out_channels
+            )
+
+    def forward(self, x, mask):
+        B, C, T, Fdim = x.shape  # x: [B, C, T, F]
+
+        for layer in self.layers:
+            x = layer(x)
+
+            if isinstance(layer, nn.Conv2d):
+                # cập nhật T theo conv (như bạn đang làm)
+                k = layer.kernel_size[0]; s = layer.stride[0]
+                d = layer.dilation[0]; p = layer.padding[0]
+                out_T = (T + 2*p - d*(k - 1) - 1) // s + 1
+
+                # cách 1: giữ logic calc_data_len của bạn
+                pad_len = T - mask.sum(dim=1)
+                data_len = mask.sum(dim=1)
+                new_len = calc_data_len(
+                    result_len=out_T, pad_len=pad_len, data_len=data_len,
+                    kernel_size=k, stride=s,
+                )
+                mask = get_mask_from_lens(new_len, out_T)
+                T = out_T
+
+            elif isinstance(layer, nn.MaxPool2d):
+                # cập nhật mask theo time-pooling (OR các bước trong mỗi cửa sổ)
+                mask, T = pool_time_mask(mask, layer, T)
+
+        return x, mask
+
+class VGGFrontEnd(nn.Module):
+    def __init__(self, num_blocks, in_channel, out_channels, conv_kernel_sizes, pooling_kernel_sizes, num_conv_layers, layer_norms, input_dim):
+        super().__init__()
+        self.blocks = nn.ModuleList()
+        for i in range(num_blocks):
+            self.blocks.append(
+                VGGBlock(
+                    in_channels=in_channel if i == 0 else out_channels[i - 1],
+                    out_channels=out_channels[i],
+                    conv_kernel_size=conv_kernel_sizes,
+                    pooling_kernel_size=pooling_kernel_sizes[i],
+                    num_conv_layers=num_conv_layers[i],
+                    input_dim=input_dim,  
+                    conv_stride=1,
+                    padding=None,
+                    layer_norm=layer_norms[i]
+                )
+                
+            )
+            input_dim = self.blocks[-1].output_dim
+    
+    def forward(self, x, mask):
+        for conv_layer in self.blocks:
+            x, mask = conv_layer(x.float(), mask)
+        return x, mask
+
+

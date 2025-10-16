@@ -26,13 +26,14 @@ scheduler:
 
 model:
   enc:
-    in_features: 640
+    input_dim : 80
+    in_features: 1280
     n_layers: 6
     d_model: 256
     ff_size: 1024
     h: 4
     p_dropout: 0.1
-    name: 'VGGTransformerEncoder'
+    name: 'VGGTransformer'
   dec:
     n_layer: 3
     d_model: 256
@@ -40,7 +41,7 @@ model:
     n_head: 4
     dropout: 0.1
     k: 3
-  model_name: "VGGTransformerEncoder"
+  model_name: "VGGTransformer"
 
 
 # optim:

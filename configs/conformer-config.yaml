@@ -38,14 +38,6 @@ training:
   type_training: 'ctc-kldiv'
 
 optim:
-  # type: sgd
-  # lr: 0.0005
-  # momentum: 0.9
-  # weight_decay: 0
-  # begin_to_adjust_lr: 60
-  # nesterov: None
-  # decay_rate: 0.5
-
   type: adam
   lr: 0.001
   weight_decay: 0.0001

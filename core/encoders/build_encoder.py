@@ -10,5 +10,7 @@ def build_encoder(config, vocab_size):
             return TransformerEncoder(config)
         elif config['name'] == 'TASA':
             return TASA_encoder(config)
+        elif config['name'] == 'VGGTransformer':
+            return VGGTransformerEncoder(config)
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")

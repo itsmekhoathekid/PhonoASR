@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from core.modules import ConvolutionFrontEnd, FeedForwardBlock, ResidualConnection, ResidualForTASA, PositionalEncoding
+from core.modules import *
 from core.modules import TASA_attention, MultiHeadAttentionBlock
 
 def calc_data_len(
@@ -242,4 +242,61 @@ class TransformerEncoder(nn.Module):
         
         enc_input_lengths = torch.sum(mask, dim=1) # [B]
         return out, mask, enc_input_lengths
+
+
+class VGGTransformerEncoder(nn.Module):
+    def __init__(
+        self,
+        enc_config
+    ):
+        super().__init__()
+        self.linear = nn.Linear(in_features=enc_config['in_features'], out_features=enc_config['d_model'])
+        self.pe = PositionalEncoding(enc_config['d_model'])
+        
+
+        self.layers = nn.ModuleList(
+            [
+                TransformerEncoderLayer(
+                    d_model=enc_config['d_model'],
+                    ff_size=enc_config['ff_size'],
+                    h=enc_config['h'],
+                    p_dropout=enc_config['p_dropout']
+                )
+                for _ in range(enc_config['n_layers'])
+            ]
+        )
+
+        self.frontend = VGGFrontEnd(
+            num_blocks = 2,
+            in_channel=1,
+            out_channels=[32, 64],
+            conv_kernel_sizes=[3, 3],
+            pooling_kernel_sizes=[2, 2],
+            num_conv_layers=[2, 2],
+            layer_norms=[True, True],
+            input_dim= enc_config['input_dim']
+        )
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        mask: torch.Tensor = None,
+    ) -> torch.Tensor:
+        
+        x = x.unsqueeze(1)  # [batch, channels, time, features]
+        # print("x shape before frontend:", x.shape)  # [batch, 1, time, features]
+        x, mask = self.frontend(x, mask)  # [batch, channels, time, features]
+        # print("x shape after frontend:", x.shape)
+        x = x.transpose(1, 2).contiguous()   # batch, time, channels, features
+        x = x.reshape(x.shape[0], x.shape[1], -1) # [batch, time, C * features]
+        lengths = torch.sum(mask, dim=1)  # [B]
+
+        out = self.linear(x)
+        out = self.pe(out)
+        mask_atten = mask.unsqueeze(1).unsqueeze(1)
+
+        for layer in self.layers:
+            out = layer(out, mask_atten)
+        
+        return out, mask, lengths
 
