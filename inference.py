@@ -99,6 +99,8 @@ import torch
 
 import torch
 
+# Self-Speculative Decoding 
+
 class GreedyMutiplePredictor:
     def __init__(self, model, vocab, device, max_len=50, n_heads=3, tau=0.85):
         self.model = model

@@ -16,7 +16,7 @@ class Engine:
         self.type_training = self.config['training']['type_training']
         
         self.ctc_loss = CTCLoss(blank=vocab.get_blank_token(), reduction='batchmean').to(self.device)
-        self.kldiv_loss = Kldiv_Loss(reduction='batchmean').to(self.device)
+        self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
         self.ce_loss = CELoss(ignore_index=vocab.get_pad_token(), reduction='mean').to(self.device)
 
 
