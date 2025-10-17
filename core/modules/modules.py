@@ -369,6 +369,7 @@ class FeedForwardModule(nn.Module):
         super(FeedForwardModule, self).__init__()
         self.linear1 = Linear(d_model, d_ff)
         self.linear2 = Linear(d_ff, d_model)
+        self.layer_norm = LayerNormalization(d_model)
         self.dropout = nn.Dropout(dropout)
         if activation == "relu":
             self.activation = nn.ReLU()
@@ -377,8 +378,19 @@ class FeedForwardModule(nn.Module):
         else:
             raise ValueError("Only relu and swish are supported.")
 
+        self.block = nn.Sequential(
+            self.layer_norm,
+            self.linear1,
+            self.activation,
+            self.dropout, 
+            self.linear2, 
+            self.dropout
+        )
+            
+
+
     def forward(self, x):
-        return self.linear2(self.dropout(self.activation(self.linear1(x))))
+        return self.block(x)
 
 
 class ConvolutionalModule(nn.Module):
