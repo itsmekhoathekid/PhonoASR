@@ -54,30 +54,6 @@ model:
     k: 3
   model_name: "ConvRNNT"
 
-model:
-  type: transducer
-  cnn_encoder:
-    local_cnn_encoder: 
-        kernel_size: 5
-        stride: 1
-        feature_dim: 160
-        dim_out: 160
-    global_cnn_encoder:
-        n_layers: 1
-        kernel_size_pw: 1
-        kernel_size_dw: 3
-        stride: 1
-        input_dim: 160  
-        hidden_dim: 320
-        n_dropout: 0.3
-    dim_out: 160
-  enc:
-      type: lstm
-      hidden_size: 320
-      output_size: 320
-      n_layers: 1
-      bidirectional: True
-
 rnnt_loss:
   blank: 4
   reduction: "mean"  

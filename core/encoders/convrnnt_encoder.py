@@ -314,5 +314,5 @@ class ConvRNNTEncoder(nn.Module):
             outputs = outputs
 
         logits = self.output_proj(outputs)
-
-        return logits, hidden
+        length = input_lengths
+        return logits, hidden, length
