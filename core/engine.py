@@ -89,6 +89,7 @@ class Engine:
 
             enc_out, dec_out, enc_lens = self.model(
                 speech, 
+                fbank_len,
                 decoder_input,
                 speech_mask,
                 text_mask
@@ -130,6 +131,7 @@ class Engine:
 
                 enc_out, dec_out, enc_lens = self.model(
                     speech, 
+                    fbank_len,
                     decoder_input,
                     speech_mask,
                     text_mask
