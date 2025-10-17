@@ -280,9 +280,9 @@ class ConvRNNTEncoder(nn.Module):
 
         self.input_bn = nn.BatchNorm1d(config['cnn_enc_out'])
 
-    def forward(self, inputs, input_lengths):
+    def forward(self, inputs, mask):
         assert inputs.dim() == 3  # [B, T, F]
-
+        input_lengths = mask.sum(-1) # [B]
         # Sử dụng CNN encoder trước
         inputs = self.cnn_encoder(inputs)
 
@@ -302,7 +302,7 @@ class ConvRNNTEncoder(nn.Module):
 
         self.lstm.flatten_parameters()
         
-        outputs, hidden = self.lstm(packed_inputs)
+        outputs, _ = self.lstm(packed_inputs)
 
         if input_lengths is not None:
             unpacked_outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
@@ -314,5 +314,5 @@ class ConvRNNTEncoder(nn.Module):
             outputs = outputs
 
         logits = self.output_proj(outputs)
-        length = input_lengths
-        return logits, hidden, length
+
+        return logits, mask, input_lengths
