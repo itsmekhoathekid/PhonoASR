@@ -359,10 +359,9 @@ class ResidualConnectionCM(nn.Module):
     def __init__(self, features: int, dropout: float) -> None:
         super().__init__()
         self.dropout = nn.Dropout(dropout)
-        self.norm = LayerNormalization(features)
 
     def forward(self, x, sublayer, mutiplier):
-        return x + mutiplier * self.norm(x + self.dropout(sublayer(x)))
+        return x + mutiplier * sublayer(x)
     
 class FeedForwardModule(nn.Module):
     def __init__(self, d_model, d_ff, dropout, activation):

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from core.modules import Linear, Conv2dSubampling, FeedForwardModule, ConvolutionalModule, ResidualConnectionCM, MultiConvolutionalGatingMLP
+from core.modules import Linear, Conv2dSubampling, FeedForwardModule, ConvolutionalModule, ResidualConnectionCM, MultiConvolutionalGatingMLP, LayerNormalization
 from core.modules import MultiHeadedSelfAttentionModule
 
 class ConformerBlock(nn.Module):
@@ -30,12 +30,15 @@ class ConformerBlock(nn.Module):
         self.residual_connections = nn.ModuleList([
             ResidualConnectionCM(d_model, dropout) for _ in range(4)
         ])
+
+        self.layer_norm = LayerNormalization(d_model)
     
     def forward(self, x, mask):
         x = self.residual_connections[0](x, self.ffm1, 0.5)
         x = self.residual_connections[1](x, lambda x: self.attention(x, mask), 1.0)
         x = self.residual_connections[2](x, self.conv_module, 1.0)
         x = self.residual_connections[3](x, self.ffm2, 0.5)
+        x = self.layer_norm(x)
         return x
 
 class ConformerEncoder(nn.Module):
@@ -43,10 +46,10 @@ class ConformerEncoder(nn.Module):
         super(ConformerEncoder, self).__init__()
         self.subsampling = Conv2dSubampling(
             in_channels = config["in_channels"],
-            out_channels = config["out_channels"],
+            out_channels = config["encoder_dim"],
         )
         self.input_projection = nn.Sequential(
-            Linear(config["out_channels"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
+            Linear(config["encoder_dim"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
             nn.Dropout(p=config["dropout_rate"]),
         )
         
@@ -61,7 +64,8 @@ class ConformerEncoder(nn.Module):
                 conv_config=config.get("conv_config", None)
             ) for _ in range(config["num_encoder_layers"])
         ])
-       
+
+        self.projection = nn.Linear(config["encoder_dim"], config.get("projection_dim", config["encoder_dim"]))
         
 
     def forward(self, x, x_mask, training=True):
@@ -75,6 +79,7 @@ class ConformerEncoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
         
+        x = self.projection(x)
         return x, mask, x_length
 
     def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
