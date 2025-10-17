@@ -23,12 +23,12 @@ unzip -o voices.zip
 cd /
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
-    python workspace/TASA/utils/phoneme_construct.py
+        
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
-    python workspace/TASA/utils/char_construct.py
+    python workspace/PhonoASR/dataset/char_construct.py
 else
     echo "Preprocessing for normal model"
-    python workspace/TASA/utils/construct.py
+    python workspace/PhonoASR/dataset/construct.py
 fi
-mkdir workspace/TASA/saves
+mkdir workspace/PhonoASR/saves

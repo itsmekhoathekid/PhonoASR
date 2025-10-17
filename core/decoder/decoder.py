@@ -44,7 +44,7 @@ class LatentHead(nn.Module):
         return self.residual(x, lambda x : self.tanh(self.linear(x)))
 
 class EmbeddingModule(nn.Module):
-    def __init__(self, vocab_size, d_model, dropout, k):
+    def __init__(self, vocab_size, d_model, dropout, k, conv_dec : bool = False):
         super(EmbeddingModule, self).__init__()
         self.embedding = nn.Embedding(vocab_size, d_model)
         if k != 1:
@@ -53,18 +53,20 @@ class EmbeddingModule(nn.Module):
         self.pos_enc = PositionalEncoding(d_model)
         self.dropout = nn.Dropout(dropout)
         self.k = k
-        self.enc = ConvDec(
-            num_blocks = 4, 
-            in_channels= d_model ,
-            out_channels=[d_model, d_model, d_model, d_model],
-            kernel_sizes=[3,3,3,3],
-            dropout=dropout,
-        )
+        if conv_dec:
+            self.enc = ConvDec(
+                num_blocks = 4, 
+                in_channels= d_model ,  
+                out_channels=[d_model, d_model, d_model, d_model],
+                kernel_sizes=[3,3,3,3],
+                dropout=dropout,
+            )
     def forward(self, x):
         x = self.embedding(x) # (B, M, 3) -> (B, M, 3, d_model)
         if self.k != 1:
             x = self.projection(x.view(x.size(0), x.size(1), -1))
-        x = self.enc(x)
+        if hasattr(self, 'enc'):
+            x = self.enc(x)
         x = self.pos_enc(x)
         return self.dropout(x)
 

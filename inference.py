@@ -20,7 +20,7 @@ def load_model(config: dict, vocab_len: int, device: torch.device, epoch : int):
     )
     print(f"Loading checkpoint from: {checkpoint_path}")
     model = AcousticModel(
-        config=config['model'],
+        config=config,
         vocab_size=vocab_len
     ).to(device)
     checkpoint = torch.load(checkpoint_path, map_location=device)
@@ -70,7 +70,7 @@ class GreedyMPStackPredictor:
         self.device = device
         self.max_len = max_len
     def greedy_decode(self, src, src_mask):
-        enc_out, src_mask = self.model.encode(src, src_mask)
+        enc_out, src_mask, src_len = self.model.encode(src, src_mask)
         decoder_input = torch.tensor([[[self.sos, self.sos, self.sos]]], dtype=torch.long).to(self.device)
         
         for _ in range(self.max_len):
@@ -206,11 +206,13 @@ def main():
 
     train_dataset = Speech2Text(
         json_path=config['training']['train_path'],
-        vocab_path=config['training']['vocab_path']
+        vocab_path=config['training']['vocab_path'],
+        type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
     test_dataset = Speech2Text(
         json_path=config['training']['test_path'],
-        vocab_path=config['training']['vocab_path']
+        vocab_path=config['training']['vocab_path'],
+        type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
