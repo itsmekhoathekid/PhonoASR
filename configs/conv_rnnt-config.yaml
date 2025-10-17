@@ -7,9 +7,9 @@ training:
   test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
   vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
   reload: False
-  logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
+  logg : "/home/anhkhoa/PhonoASR/logs/ConvRNNT.log"
   ctc_weight: 0.3
-  result: "/home/anhkhoa/PhonoASR/result_2.txt"
+  result: "/home/anhkhoa/PhonoASR/result.txt"
   type: "word"
   type_training : "ce"
   
