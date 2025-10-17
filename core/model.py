@@ -14,7 +14,6 @@ class AcousticModel(nn.Module):
         
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
         encoder_outputs, encoder_mask, encoder_lengths = self.encoder(inputs, encoder_mask)
-
         decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
         if self.config['training']['type_training'] == 'ctc-kldiv':
             encoder_outputs = self.ctc_lin(encoder_outputs)  # [B, T, vocab_size]
