@@ -993,4 +993,11 @@ class VGGFrontEnd(nn.Module):
             x, mask = conv_layer(x.float(), mask)
         return x, mask
 
+class ResidualForBase(nn.Module):
+    def __init__(self, features: int, dropout: float) -> None:
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.norm = LayerNormalization(features)
 
+    def forward(self, x, residual):
+        return self.norm(x + self.dropout(residual))
