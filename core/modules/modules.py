@@ -358,7 +358,8 @@ class ResidualConnectionCM(nn.Module):
     
     def __init__(self, features: int, dropout: float) -> None:
         super().__init__()
-        self.dropout = nn.Dropout(dropout)
+        # self.norm = LayerNormalization(features)
+        # self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, sublayer, mutiplier):
         return x + mutiplier * sublayer(x)
@@ -393,17 +394,29 @@ class FeedForwardModule(nn.Module):
 
 
 class ConvolutionalModule(nn.Module):
-    def __init__(self, d_model, kernel_size, dropout):
+    def __init__(self, d_model, kernel_size, dropout, ver = 'old'):
         super(ConvolutionalModule, self).__init__()
         self.layer_norm = LayerNormalization(d_model)
         self.pointwise_conv1 = nn.Conv1d(d_model, 2 * d_model, kernel_size=1, stride=1, padding=0)
         self.glu = nn.GLU(dim=1)
         self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=kernel_size, stride=1,
                                         padding=(kernel_size - 1) // 2, groups=d_model)
-        self.batch_norm = nn.BatchNorm1d(d_model)
-        self.swish = Swish()
-        self.pointwise_conv2 = nn.Conv1d(d_model, d_model, kernel_size=1, stride=1, padding=0)
-        self.dropout = nn.Dropout(dropout)
+        self.ver = ver
+        if ver == 'old':
+            self.after_conv = nn.Sequential(
+                nn.BatchNorm1d(d_model),
+                Swish(),
+                nn.Conv1d(d_model, d_model, kernel_size=1, stride=1, padding=0),
+                nn.Dropout(dropout)
+            )
+        elif ver == 'new':
+            self.after_conv =  nn.Sequential(
+                nn.LayerNorm(d_model),
+                Swish(),
+                nn.Linear(d_model, d_model),
+                nn.Dropout(dropout)
+            )
+
 
     def forward(self, x):
         # x: (batch, time, dim)
@@ -412,11 +425,14 @@ class ConvolutionalModule(nn.Module):
         x = self.pointwise_conv1(x)  # (batch, 2*dim, time)
         x = self.glu(x)  # (batch, dim, time)
         x = self.depthwise_conv(x)  # (batch, dim, time)
-        x = self.batch_norm(x)  # (batch, dim, time)
-        x = self.swish(x)  # (batch, dim, time)
-        x = self.pointwise_conv2(x)  # (batch, dim, time)
-        x = self.dropout(x)  # (batch, dim, time)
-        return x.transpose(1, 2)  # (batch, time, dim)
+        if self.ver == 'new':
+            x = x.transpose(1, 2)  # (batch, time, dim)
+            x = self.after_conv(x)  # (batch, dim, time)
+        else:
+            x = self.after_conv(x)  # (batch, dim, time)
+            x.transpose(1, 2)  # (batch, time, dim)
+
+        return x
 
 def get_activation(act):
 
