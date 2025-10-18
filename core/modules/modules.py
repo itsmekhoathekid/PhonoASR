@@ -401,6 +401,7 @@ class ConvolutionalModule(nn.Module):
         self.glu = nn.GLU(dim=1)
         self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=kernel_size, stride=1,
                                         padding=(kernel_size - 1) // 2, groups=d_model)
+        self.ver = ver
         if ver == 'old':
             self.after_conv = nn.Sequential(
                 nn.BatchNorm1d(d_model),
@@ -424,8 +425,14 @@ class ConvolutionalModule(nn.Module):
         x = self.pointwise_conv1(x)  # (batch, 2*dim, time)
         x = self.glu(x)  # (batch, dim, time)
         x = self.depthwise_conv(x)  # (batch, dim, time)
-        x = self.after_conv(x)  # (batch, dim, time)
-        return x.transpose(1, 2)  # (batch, time, dim)
+        if self.ver == 'new':
+            x = x.transpose(1, 2)  # (batch, time, dim)
+            x = self.after_conv(x)  # (batch, dim, time)
+        else:
+            x = self.after_conv(x)  # (batch, dim, time)
+            x.transpose(1, 2)  # (batch, time, dim)
+
+        return x
 
 def get_activation(act):
 
