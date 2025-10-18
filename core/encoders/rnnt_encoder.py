@@ -9,7 +9,6 @@ import torch.nn as nn
 class RNNTEncoder(nn.Module):
     def __init__(self, config):
         super(RNNTEncoder, self).__init__()
-        input_size, hidden_size, output_size, n_layers, dropout=0.2, bidirectional=False
         self.input_size = config["input_size"]
         self.hidden_size = config["hidden_size"]
         self.output_size = config["output_size"]
@@ -27,7 +26,7 @@ class RNNTEncoder(nn.Module):
         )
         
         self.output_proj = nn.Linear(
-            2 * self.hidden_size if bidirectional else self.hidden_size,
+            2 * self.hidden_size if self.bidirectional else self.hidden_size,
             self.output_size, bias=True
         )
 
@@ -71,4 +70,4 @@ class RNNTEncoder(nn.Module):
         logits = self.output_proj(outputs)
 
 
-        return logits, mask
+        return logits, mask, input_lengths
