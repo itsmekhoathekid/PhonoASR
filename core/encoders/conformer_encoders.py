@@ -65,7 +65,7 @@ class ConformerEncoder(nn.Module):
             ) for _ in range(config["num_encoder_layers"])
         ])
 
-        self.projection = nn.Linear(config["encoder_dim"], config.get("projection_dim", config["encoder_dim"]))
+        self.ln = LayerNormalization(config["encoder_dim"])
         
 
     def forward(self, x, x_mask, training=True):
@@ -79,7 +79,7 @@ class ConformerEncoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
         
-        x = self.projection(x)
+        x = self.ln(x)
         return x, mask, x_length
 
     def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
