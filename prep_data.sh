@@ -23,7 +23,7 @@ unzip -o voices.zip
 cd /
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
-        
+    python workspace/PhonoASR/dataset/phoneme_construct.py
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
     python workspace/PhonoASR/dataset/char_construct.py

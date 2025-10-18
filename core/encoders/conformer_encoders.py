@@ -24,7 +24,7 @@ class ConformerBlock(nn.Module):
                 conv_config["gate_activation"]
             )
         else:
-            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout)
+            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver = 'new')
         self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="swish")
 
         self.residual_connections = nn.ModuleList([
@@ -65,7 +65,7 @@ class ConformerEncoder(nn.Module):
             ) for _ in range(config["num_encoder_layers"])
         ])
 
-        self.projection = nn.Linear(config["encoder_dim"], config.get("projection_dim", config["encoder_dim"]))
+        self.ln = LayerNormalization(config["encoder_dim"])
         
 
     def forward(self, x, x_mask, training=True):
@@ -79,7 +79,7 @@ class ConformerEncoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
         
-        x = self.projection(x)
+        x = self.ln(x)
         return x, mask, x_length
 
     def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
