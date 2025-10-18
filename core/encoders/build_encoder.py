@@ -14,5 +14,7 @@ def build_encoder(config, vocab_size):
             return VGGTransformerEncoder(config)
         elif config['name'] == 'ConvRNNT':
             return ConvRNNTEncoder(config)
+        elif config['name'] == 'RNNT':
+            return RNNTEncoder(config)
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")
