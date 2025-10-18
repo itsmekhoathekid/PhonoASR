@@ -24,9 +24,9 @@ class ConformerBlock(nn.Module):
                 conv_config["gate_activation"]
             )
         else:
-            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout)
+            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver == 'new')
         self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="swish")
-
+        
         self.residual_connections = nn.ModuleList([
             ResidualConnectionCM(d_model, dropout) for _ in range(4)
         ])
