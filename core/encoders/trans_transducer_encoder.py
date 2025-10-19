@@ -10,12 +10,12 @@ import math
 class TransformerTransducerEncoder(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.in_features = config['enc']['in_features']
-        self.d_model = config['enc']['d_model']
-        self.ff_size = config['enc']['ff_size']
-        self.h = config['enc']['h']
-        self.p_dropout = config['enc'].get('dropout', 0.1)
-        self.n_layers = config['enc']['n_layer']
+        in_features = config['in_features']
+        d_model = config['d_model']
+        ff_size = config['ff_size']
+        h = config['h']
+        p_dropout = config.get('dropout', 0.1)
+        n_layers = config['n_layer']
 
         self.linear = nn.Linear(in_features=in_features, out_features=d_model)
         self.pe = PositionalEncoding(d_model)

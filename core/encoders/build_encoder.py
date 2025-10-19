@@ -16,5 +16,7 @@ def build_encoder(config, vocab_size):
             return ConvRNNTEncoder(config)
         elif config['name'] == 'RNNT':
             return RNNTEncoder(config)
+        elif config['name'] == 'TransformerTransducer':
+            return TransformerTransducerEncoder(config)
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")
