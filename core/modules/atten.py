@@ -1,4 +1,4 @@
-from .modules import ScaledDotProductAttention
+from .modules import ScaledDotProductAttention, FeedForwardBlock, ResidualConnection
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
@@ -317,3 +317,32 @@ class TASA_attention(nn.Module):
 
         out = (A @ value).transpose(1, 2).contiguous().view(B, T, self.h * self.d_k)
         return self.w_o(out), A
+
+
+class Self_Attention_Block(nn.Module):
+    def __init__(
+        self,
+        d_model: int,
+        ff_size: int,
+        h: int,
+        p_dropout: float,
+    ) -> None:
+        super().__init__()
+
+        self.attention = MultiHeadAttentionBlock(d_model, h, p_dropout)
+        self.feed_forward = FeedForwardBlock(d_model, ff_size,  p_dropout)
+        self.dropout = nn.Dropout(p_dropout)
+        self.residual_connections = nn.ModuleList(
+            ResidualConnection(d_model, p_dropout) for _ in range(2)
+        )
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        mask: torch.Tensor = None,
+    ) -> torch.Tensor:
+
+        x = self.residual_connections[0](x, lambda x: self.attention(x, x, x, mask))
+        x = self.residual_connections[1](x, lambda x : self.feed_forward(x))
+        self.dropout(x)
+        return x
