@@ -10,10 +10,6 @@ import librosa
 from speechbrain.lobes.features import Fbank
 import speechbrain as sb
 
-
-# [{idx : {encoded_text : Tensor, wav_path : text} }]
-
-
 def load_json(path):
     """
     Load a json file and return the content as a dictionary.
@@ -45,10 +41,6 @@ class Vocab:
     def __len__(self):
         return len(self.vocab)
 
-
-
-
-
 class Speech2Text(Dataset):
     def __init__(self, json_path, vocab_path, apply_spec_augment=True, type_training = "ctc-kldiv"):
         super().__init__()
@@ -72,26 +64,15 @@ class Speech2Text(Dataset):
         return len(self.data)
 
     def get_fbank(self, waveform, sample_rate=16000):
-
-        # mel_extractor = T.MelSpectrogram(
-        #     sample_rate=sample_rate,
-        #     n_fft=512,
-        #     win_length=int(0.025 * sample_rate),
-        #     hop_length=int(0.010 * sample_rate),
-        #     n_mels=80,  
-        #     power=2.0
-        # )
-
-        # log_mel = mel_extractor(waveform.unsqueeze(0))
-        # log_mel = torchaudio.functional.amplitude_to_DB(log_mel, multiplier=10.0, amin=1e-10, db_multiplier=0)
-
-        # return log_mel.squeeze(0).transpose(0, 1)  # [T, 80]
         fbank = self.fbank(waveform)
         return fbank.squeeze(0)  # [T, 80]
 
     def extract_from_path(self, wave_path):
         sig  = sb.dataio.dataio.read_audio(wave_path)
-        return self.get_fbank(sig.unsqueeze(0))
+
+        features = self.get_fbank(sig.unsqueeze(0))
+        
+        return features
 
     def __getitem__(self, idx):
         current_item = self.data[idx]
@@ -125,8 +106,6 @@ def causal_mask(batch_size, size):
     """Tạo mask cho decoder để tránh nhìn thấy tương lai"""
     mask = torch.tril(torch.ones(size, size)).bool()
     return mask.unsqueeze(0).expand(batch_size, -1, -1)  # [B, T, T]
-
-# print(causal_mask(1, 3))
 
 def speech_collate_fn(batch):
     decoder_outputs = [item["decoder_input"].detach().clone() for item in batch]
