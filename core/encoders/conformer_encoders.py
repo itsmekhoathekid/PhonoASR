@@ -36,7 +36,7 @@ class ConformerBlock(nn.Module):
     def forward(self, x, mask):
         x = self.residual_connections[0](x, self.ffm1, 0.5)
         x = self.residual_connections[1](x, lambda x: self.attention(x, mask), 1.0)
-        x = self.residual_connections[2](x, self.conv_module, 1.0)
+        x = self.residual_connections[2](x, lambda x : self.conv_module(x, mask), 1.0)
         x = self.residual_connections[3](x, self.ffm2, 0.5)
         x = self.layer_norm(x)
         return x
@@ -79,7 +79,7 @@ class ConformerEncoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
         
-        x = self.ln(x)
+
         return x, mask, x_length
 
     def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
