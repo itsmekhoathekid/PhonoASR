@@ -414,7 +414,7 @@ class ConvolutionalModule(nn.Module):
             )
 
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         # x: (batch, time, dim)
         x = self.layer_norm(x)
         x = x.transpose(1, 2)  # (batch, dim, time)
@@ -426,8 +426,10 @@ class ConvolutionalModule(nn.Module):
             x = self.after_conv(x)  # (batch, dim, time)
         else:
             x = self.after_conv(x)  # (batch, dim, time)
-            x = x.transpose(1, 2)  # (batch, time, dim)
-
+            # x = x.transpose(1, 2)  # (batch, time, dim)
+            if mask is not None :
+                x.masked_fill_(mask, 0.0)
+            x = x.transpose(1, 2)
         return x
 
 def get_activation(act):
