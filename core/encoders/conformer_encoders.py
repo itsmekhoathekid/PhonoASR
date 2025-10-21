@@ -24,7 +24,7 @@ class ConformerBlock(nn.Module):
                 conv_config["gate_activation"]
             )
         else:
-            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver = 'old')
+            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver = 'old', causal = False)
         self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="gelu")
 
         self.residual_connections = nn.ModuleList([
@@ -35,7 +35,7 @@ class ConformerBlock(nn.Module):
     
     def forward(self, x, mask):
         x = self.residual_connections[0](x, self.ffm1, 0.5)
-        x = self.residual_connections[1](x, lambda x: self.attention(x, mask), 1.0)
+        x = self.residual_connections[1](x, lambda x: self.attention(x,x,x, mask), 1.0)
         x = self.residual_connections[2](x, lambda x : self.conv_module(x, mask), 1.0)
         x = self.residual_connections[3](x, self.ffm2, 0.5)
         x = self.layer_norm(x)

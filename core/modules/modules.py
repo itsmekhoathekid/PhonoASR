@@ -389,13 +389,19 @@ class FeedForwardModule(nn.Module):
 
 
 class ConvolutionalModule(nn.Module):
-    def __init__(self, d_model, kernel_size, dropout, ver = 'old', activation = 'swish'):
+    def __init__(self, d_model, kernel_size, dropout, ver = 'old', activation = 'swish', dilation = 1, causal = False):
         super(ConvolutionalModule, self).__init__()
         self.layer_norm = LayerNormalization(d_model)
         self.pointwise_conv1 = nn.Conv1d(d_model, 2 * d_model, kernel_size=1, stride=1, padding=0)
         self.glu = nn.GLU(dim=1)
+        self.causal = causal
+        if self.causal:
+            self.padding = (kernel_size - 1) * 2 ** (dilation - 1)
+        else:
+            self.padding = (kernel_size - 1) * 2 ** (dilation - 1) // 2
         self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=kernel_size, stride=1,
-                                        padding=(kernel_size - 1) // 2, groups=d_model)
+                                        padding=self.padding, groups=d_model)
+        self.causal = causal
         self.ver = ver
         self.activation = get_activation(activation)
         if ver == 'old':
@@ -427,6 +433,8 @@ class ConvolutionalModule(nn.Module):
         else:
             x = self.after_conv(x)  # (batch, dim, time)
             # x = x.transpose(1, 2)  # (batch, time, dim)
+            if self.causal:
+                x = x[:, :, :-self.padding]
             if mask is not None :
                 x.masked_fill_(mask, 0.0)
             x = x.transpose(1, 2)

@@ -235,13 +235,13 @@ class MultiHeadedSelfAttentionModule(nn.Module):
         self.attention = RelativeMultiHeadAttention(d_model, num_heads, dropout_p)
         self.dropout = nn.Dropout(p=dropout_p)
 
-    def forward(self, inputs: Tensor, mask: Optional[Tensor] = None):
-        batch_size = inputs.size(0)
-        pos_embedding = self.positional_encoding(inputs)
+    def forward(self, q, k, v , mask: Optional[Tensor] = None):
+        batch_size = q.size(0)
+        pos_embedding = self.positional_encoding(q)
         pos_embedding = pos_embedding.repeat(batch_size, 1, 1)
 
-        inputs = self.layer_norm(inputs)
-        outputs = self.attention(inputs, inputs, inputs, pos_embedding=pos_embedding, mask=mask)
+        q = self.layer_norm(q)
+        outputs = self.attention(q, k, v, pos_embedding=pos_embedding, mask=mask)
 
         return self.dropout(outputs)
 
