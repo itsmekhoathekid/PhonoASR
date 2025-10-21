@@ -7,7 +7,7 @@ class ConformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, ff_ratio, dropout, kernel_size, conv_type, conv_config=None):
         super(ConformerBlock, self).__init__()
         
-        self.ffm1 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="swish")
+        self.ffm1 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="gelu")
         self.attention = MultiHeadedSelfAttentionModule(d_model, n_heads, dropout)
         
         if conv_type != "default":
@@ -24,8 +24,8 @@ class ConformerBlock(nn.Module):
                 conv_config["gate_activation"]
             )
         else:
-            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver = 'new')
-        self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="swish")
+            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver = 'old')
+        self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="gelu")
 
         self.residual_connections = nn.ModuleList([
             ResidualConnectionCM(d_model, dropout) for _ in range(4)

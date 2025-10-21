@@ -371,12 +371,7 @@ class FeedForwardModule(nn.Module):
         self.linear2 = Linear(d_ff, d_model)
         self.layer_norm = LayerNormalization(d_model)
         self.dropout = nn.Dropout(dropout)
-        if activation == "relu":
-            self.activation = nn.ReLU()
-        elif activation == "swish":
-            self.activation = Swish()
-        else:
-            raise ValueError("Only relu and swish are supported.")
+        self.activation = get_activation(activation)
 
         self.block = nn.Sequential(
             self.layer_norm,
@@ -394,7 +389,7 @@ class FeedForwardModule(nn.Module):
 
 
 class ConvolutionalModule(nn.Module):
-    def __init__(self, d_model, kernel_size, dropout, ver = 'old'):
+    def __init__(self, d_model, kernel_size, dropout, ver = 'old', activation = 'swish'):
         super(ConvolutionalModule, self).__init__()
         self.layer_norm = LayerNormalization(d_model)
         self.pointwise_conv1 = nn.Conv1d(d_model, 2 * d_model, kernel_size=1, stride=1, padding=0)
@@ -402,17 +397,18 @@ class ConvolutionalModule(nn.Module):
         self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=kernel_size, stride=1,
                                         padding=(kernel_size - 1) // 2, groups=d_model)
         self.ver = ver
+        self.activation = get_activation(activation)
         if ver == 'old':
             self.after_conv = nn.Sequential(
                 nn.BatchNorm1d(d_model),
-                Swish(),
+                self.activation,
                 nn.Conv1d(d_model, d_model, kernel_size=1, stride=1, padding=0),
                 nn.Dropout(dropout)
             )
         elif ver == 'new':
             self.after_conv =  nn.Sequential(
                 nn.LayerNorm(d_model),
-                Swish(),
+                self.activation,
                 nn.Linear(d_model, d_model),
                 nn.Dropout(dropout)
             )
@@ -430,7 +426,7 @@ class ConvolutionalModule(nn.Module):
             x = self.after_conv(x)  # (batch, dim, time)
         else:
             x = self.after_conv(x)  # (batch, dim, time)
-            x.transpose(1, 2)  # (batch, time, dim)
+            x = x.transpose(1, 2)  # (batch, time, dim)
 
         return x
 
@@ -443,6 +439,7 @@ def get_activation(act):
         "relu": torch.nn.ReLU,
         "selu": torch.nn.SELU,
         "swish": Swish,
+        "gelu": torch.nn.GELU,
     }
 
     return activation_funcs[act]()
