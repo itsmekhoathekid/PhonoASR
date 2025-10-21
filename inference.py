@@ -205,13 +205,13 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     train_dataset = Speech2Text(
-        json_path=config['training']['train_path'],
-        vocab_path=config['training']['vocab_path'],
+        training_config=config['training'],
+        type='train',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
     test_dataset = Speech2Text(
-        json_path=config['training']['test_path'],
-        vocab_path=config['training']['vocab_path'],
+        training_config=config['training'],
+        type='test',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
     test_loader = torch.utils.data.DataLoader(

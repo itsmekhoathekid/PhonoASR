@@ -26,8 +26,8 @@ def main():
 
     # ==== Load Dataset ====
     train_dataset = Speech2Text(
-        json_path=training_cfg['train_path'],
-        vocab_path=training_cfg['vocab_path'],
+        training_cfg,
+        type='train',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
 
@@ -40,8 +40,8 @@ def main():
     )
 
     dev_dataset = Speech2Text(
-        json_path=training_cfg['dev_path'],
-        vocab_path=training_cfg['vocab_path'],
+        training_cfg,
+        type='dev',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
 

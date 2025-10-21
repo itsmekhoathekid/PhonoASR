@@ -35,6 +35,10 @@ training:
   reload: False
   ctc_weight: 0.4
   type_training: 'ce'
+  sample_rate : 16000
+  n_mels : 80
+  n_fft : 512
+  win_length : 25
 
 optim:
   type: adam
