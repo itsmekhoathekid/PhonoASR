@@ -355,56 +355,58 @@ class LayerNormalization(nn.Module):
 
 
 class ResidualConnectionCM(nn.Module):
-    
     def __init__(self, features: int, dropout: float) -> None:
         super().__init__()
-        # self.norm = LayerNormalization(features)
-        # self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout)
+        self.norm = LayerNormalization(features)
 
     def forward(self, x, sublayer, mutiplier):
-        return x + mutiplier * sublayer(x)
+        return x + mutiplier * self.norm(x + self.dropout(sublayer(x)))
     
 class FeedForwardModule(nn.Module):
     def __init__(self, d_model, d_ff, dropout, activation):
         super(FeedForwardModule, self).__init__()
-        self.block = nn.Sequential(
-            nn.LayerNorm(d_model),
-            nn.Linear(d_model, d_ff),
-            get_activation(activation),
-            nn.Dropout(dropout),\
-            nn.Linear(d_ff, d_model),
-            nn.Dropout(dropout)
-        )
-        
+        self.ln = LayerNormalization(d_model)
+        self.linear1 = Linear(d_model, d_ff)
+        self.linear2 = Linear(d_ff, d_model)
+        self.dropout = nn.Dropout(dropout)
+        if activation == "relu":
+            self.activation = nn.ReLU()
+        elif activation == "swish":
+            self.activation = Swish()
+        else:
+            raise ValueError("Only relu and swish are supported.")
+
     def forward(self, x):
-        return self.block(x)
+        return self.linear2(self.dropout(self.activation(self.linear1(self.ln(x)))))
+
 
 
 class ConvolutionalModule(nn.Module):
-    def __init__(self, d_model, kernel_size, dropout, ver = 'old', activation = 'swish', dilation = 1, causal = False):
+    def __init__(self, d_model, kernel_size, dropout):
         super(ConvolutionalModule, self).__init__()
-        self.layer_norm = nn.LayerNorm(d_model)
-        self.module = nn.Sequential(
-            nn.Conv1d(in_channels=d_model, out_channels=2 * d_model, kernel_size=1),
-            nn.GLU(dim=1),
-            nn.Conv1d(
-                d_model,
-                d_model,
-                kernel_size=kernel_size,
-                padding="same",
-                groups=d_model,
-            ),
-            nn.BatchNorm1d(d_model),
-            get_activation(activation),
-            nn.Conv1d(in_channels=d_model, out_channels=d_model, kernel_size=1),
-            nn.Dropout(dropout),
-        )
-    
+        self.layer_norm = LayerNormalization(d_model)
+        self.pointwise_conv1 = nn.Conv1d(d_model, 2 * d_model, kernel_size=1, stride=1, padding=0)
+        self.glu = nn.GLU(dim=1)
+        self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=kernel_size, stride=1,
+                                        padding=(kernel_size - 1) // 2, groups=d_model)
+        self.batch_norm = nn.BatchNorm1d(d_model)
+        self.swish = Swish()
+        self.pointwise_conv2 = nn.Conv1d(d_model, d_model, kernel_size=1, stride=1, padding=0)
+        self.dropout = nn.Dropout(dropout)
+
     def forward(self, x):
+        # x: (batch, time, dim)
         x = self.layer_norm(x)
-        x = x.transpose(1, 2)  # (batch, d_model, time)
-        x = self.module(x)
-        return x.transpose(1,2)
+        x = x.transpose(1, 2)  # (batch, dim, time)
+        x = self.pointwise_conv1(x)  # (batch, 2*dim, time)
+        x = self.glu(x)  # (batch, dim, time)
+        x = self.depthwise_conv(x)  # (batch, dim, time)
+        x = self.batch_norm(x)  # (batch, dim, time)
+        x = self.swish(x)  # (batch, dim, time)
+        x = self.pointwise_conv2(x)  # (batch, dim, time)
+        x = self.dropout(x)  # (batch, dim, time)
+        return x.transpose(1, 2)  # (batch, time, dim)
 
 def get_activation(act):
 

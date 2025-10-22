@@ -7,7 +7,7 @@ class ConformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, ff_ratio, dropout, kernel_size, conv_type, conv_config=None):
         super(ConformerBlock, self).__init__()
         
-        self.ffm1 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="gelu")
+        self.ffm1 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="swish")
         self.attention = MultiHeadedSelfAttentionModule(d_model, n_heads, dropout)
         
         if conv_type != "default":
@@ -24,18 +24,18 @@ class ConformerBlock(nn.Module):
                 conv_config["gate_activation"]
             )
         else:
-            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout, ver = 'old', causal = False)
-        self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="gelu")
+            self.conv_module = ConvolutionalModule(d_model, kernel_size, dropout)
+        self.ffm2 = FeedForwardModule(d_model, ff_ratio * d_model, dropout, activation="swish")
 
-        
-        self.layer_norm = nn.LayerNorm(d_model)
+        self.residual_connections = nn.ModuleList([
+            ResidualConnectionCM(d_model, dropout) for _ in range(4)
+        ])
     
     def forward(self, x, mask):
-        x = x + 1/2 * self.ffm1(x)
-        x = x + self.attention(x, mask)
-        x = x + self.conv_module(x)
-        x = x + 1/2 * self.ffm2(x)
-        x = self.layer_norm(x)
+        x = self.residual_connections[0](x, self.ffm1, 0.5)
+        x = self.residual_connections[1](x, lambda x: self.attention(x, mask), 1.0)
+        x = self.residual_connections[2](x, self.conv_module, 1.0)
+        x = self.residual_connections[3](x, self.ffm2, 0.5)
         return x
 
 class ConformerEncoder(nn.Module):
@@ -61,8 +61,6 @@ class ConformerEncoder(nn.Module):
                 conv_config=config.get("conv_config", None)
             ) for _ in range(config["num_encoder_layers"])
         ])
-
-        self.ln = LayerNormalization(config["encoder_dim"])
         
 
     def forward(self, x, x_mask, training=True):
