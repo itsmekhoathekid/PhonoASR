@@ -367,23 +367,15 @@ class ResidualConnectionCM(nn.Module):
 class FeedForwardModule(nn.Module):
     def __init__(self, d_model, d_ff, dropout, activation):
         super(FeedForwardModule, self).__init__()
-        self.linear1 = Linear(d_model, d_ff)
-        self.linear2 = Linear(d_ff, d_model)
-        self.layer_norm = LayerNormalization(d_model)
-        self.dropout = nn.Dropout(dropout)
-        self.activation = get_activation(activation)
-
         self.block = nn.Sequential(
-            self.layer_norm,
-            self.linear1,
-            self.activation,
-            self.dropout, 
-            self.linear2, 
-            self.dropout
+            nn.LayerNorm(d_model),
+            nn.Linear(d_model, d_ff),
+            get_activation(activation),
+            nn.Dropout(dropout),\
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(dropout)
         )
-            
-
-
+        
     def forward(self, x):
         return self.block(x)
 
@@ -391,54 +383,28 @@ class FeedForwardModule(nn.Module):
 class ConvolutionalModule(nn.Module):
     def __init__(self, d_model, kernel_size, dropout, ver = 'old', activation = 'swish', dilation = 1, causal = False):
         super(ConvolutionalModule, self).__init__()
-        self.layer_norm = LayerNormalization(d_model)
-        self.pointwise_conv1 = nn.Conv1d(d_model, 2 * d_model, kernel_size=1, stride=1, padding=0)
-        self.glu = nn.GLU(dim=1)
-        self.causal = causal
-        if self.causal:
-            self.padding = (kernel_size - 1) * 2 ** (dilation - 1)
-        else:
-            self.padding = (kernel_size - 1) * 2 ** (dilation - 1) // 2
-        self.depthwise_conv = nn.Conv1d(d_model, d_model, kernel_size=kernel_size, stride=1,
-                                        padding=self.padding, groups=d_model)
-        self.causal = causal
-        self.ver = ver
-        self.activation = get_activation(activation)
-        if ver == 'old':
-            self.after_conv = nn.Sequential(
-                nn.BatchNorm1d(d_model),
-                self.activation,
-                nn.Conv1d(d_model, d_model, kernel_size=1, stride=1, padding=0),
-                nn.Dropout(dropout)
-            )
-        elif ver == 'new':
-            self.after_conv =  nn.Sequential(
-                nn.LayerNorm(d_model),
-                self.activation,
-                nn.Linear(d_model, d_model),
-                nn.Dropout(dropout)
-            )
-
-
-    def forward(self, x, mask=None):
-        # x: (batch, time, dim)
+        self.layer_norm = nn.LayerNorm(d_model)
+        self.module = nn.Sequential(
+            nn.Conv1d(in_channels=d_model, out_channels=2 * d_model, kernel_size=1),
+            nn.GLU(dim=1),
+            nn.Conv1d(
+                d_model,
+                d_model,
+                kernel_size=kernel_size,
+                padding="same",
+                groups=d_model,
+            ),
+            nn.BatchNorm1d(d_model),
+            get_activation(activation),
+            nn.Conv1d(in_channels=d_model, out_channels=d_model, kernel_size=1),
+            nn.Dropout(dropout),
+        )
+    
+    def forward(self, x):
         x = self.layer_norm(x)
-        x = x.transpose(1, 2)  # (batch, dim, time)
-        x = self.pointwise_conv1(x)  # (batch, 2*dim, time)
-        x = self.glu(x)  # (batch, dim, time)
-        x = self.depthwise_conv(x)  # (batch, dim, time)
-        if self.ver == 'new':
-            x = x.transpose(1, 2)  # (batch, time, dim)
-            x = self.after_conv(x)  # (batch, dim, time)
-        else:
-            x = self.after_conv(x)  # (batch, dim, time)
-            # x = x.transpose(1, 2)  # (batch, time, dim)
-            if self.causal:
-                x = x[:, :, :-self.padding]
-            if mask is not None :
-                x.masked_fill_(mask, 0.0)
-            x = x.transpose(1, 2)
-        return x
+        x = x.transpose(1, 2)  # (batch, d_model, time)
+        x = self.module(x)
+        return x.transpose(1,2)
 
 def get_activation(act):
 
