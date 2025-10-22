@@ -208,6 +208,43 @@ class RelativeMultiHeadAttention(nn.Module):
         return pos_score
 
 
+# class MultiHeadedSelfAttentionModule(nn.Module):
+#     """
+#     Conformer employ multi-headed self-attention (MHSA) while integrating an important technique from Transformer-XL,
+#     the relative sinusoidal positional encoding scheme. The relative positional encoding allows the self-attention
+#     module to generalize better on different input length and the resulting encoder is more robust to the variance of
+#     the utterance length. Conformer use prenorm residual units with dropout which helps training
+#     and regularizing deeper models.
+
+#     Args:
+#         d_model (int): The dimension of model
+#         num_heads (int): The number of attention heads.
+#         dropout_p (float): probability of dropout
+
+#     Inputs: inputs, mask
+#         - **inputs** (batch, time, dim): Tensor containing input vector
+#         - **mask** (batch, 1, time2) or (batch, time1, time2): Tensor containing indices to be masked
+
+#     Returns:
+#         - **outputs** (batch, time, dim): Tensor produces by relative multi headed self attention module.
+#     """
+#     def __init__(self, d_model: int, num_heads: int, dropout_p: float = 0.1):
+#         super(MultiHeadedSelfAttentionModule, self).__init__()
+#         self.positional_encoding = RelPositionalEncoding(d_model)
+#         self.layer_norm = nn.LayerNorm(d_model)
+#         self.attention = RelativeMultiHeadAttention(d_model, num_heads, dropout_p)
+#         self.dropout = nn.Dropout(p=dropout_p)
+
+#     def forward(self, q, k, v , mask: Optional[Tensor] = None):
+#         batch_size = q.size(0)
+#         pos_embedding = self.positional_encoding(q)
+#         pos_embedding = pos_embedding.repeat(batch_size, 1, 1)
+
+#         q = self.layer_norm(q)
+#         outputs = self.attention(q, k, v, pos_embedding=pos_embedding, mask=mask)
+
+#         return self.dropout(outputs)
+
 class MultiHeadedSelfAttentionModule(nn.Module):
     """
     Conformer employ multi-headed self-attention (MHSA) while integrating an important technique from Transformer-XL,
@@ -230,18 +267,16 @@ class MultiHeadedSelfAttentionModule(nn.Module):
     """
     def __init__(self, d_model: int, num_heads: int, dropout_p: float = 0.1):
         super(MultiHeadedSelfAttentionModule, self).__init__()
-        self.positional_encoding = RelPositionalEncoding(d_model)
+        # self.positional_encoding = RelPositionalEncoding(d_model)
         self.layer_norm = nn.LayerNorm(d_model)
-        self.attention = RelativeMultiHeadAttention(d_model, num_heads, dropout_p)
+        self.attention = MultiHeadAttentionBlock(d_model, num_heads, dropout_p)
         self.dropout = nn.Dropout(p=dropout_p)
 
-    def forward(self, q, k, v , mask: Optional[Tensor] = None):
-        batch_size = q.size(0)
-        pos_embedding = self.positional_encoding(q)
-        pos_embedding = pos_embedding.repeat(batch_size, 1, 1)
+    def forward(self, x , mask: Optional[Tensor] = None):
 
-        q = self.layer_norm(q)
-        outputs = self.attention(q, k, v, pos_embedding=pos_embedding, mask=mask)
+
+        x = self.layer_norm(x)
+        outputs = self.attention(x, x, x, mask = mask)
 
         return self.dropout(outputs)
 
