@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from core.modules import Linear, Conv2dSubampling, FeedForwardModule, ConvolutionalModule, ResidualConnectionCM, MultiConvolutionalGatingMLP, LayerNormalization
-from core.modules import MultiHeadedSelfAttentionModule
+from core.modules import MultiHeadedSelfAttentionModule, PositionalEncoding
 
 class ConformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, ff_ratio, dropout, kernel_size, conv_type, conv_config=None):
@@ -30,12 +30,12 @@ class ConformerBlock(nn.Module):
         self.residual_connections = nn.ModuleList([
             ResidualConnectionCM(d_model, dropout) for _ in range(4)
         ])
-
+        
         self.layer_norm = LayerNormalization(d_model)
     
     def forward(self, x, mask):
         x = self.residual_connections[0](x, self.ffm1, 0.5)
-        x = self.residual_connections[1](x, lambda x: self.attention(x,x,x, mask), 1.0)
+        x = self.residual_connections[1](x, lambda x: self.attention(x, mask), 1.0)
         x = self.residual_connections[2](x, lambda x : self.conv_module(x, mask), 1.0)
         x = self.residual_connections[3](x, self.ffm2, 0.5)
         x = self.layer_norm(x)
@@ -52,7 +52,7 @@ class ConformerEncoder(nn.Module):
             Linear(config["encoder_dim"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
             nn.Dropout(p=config["dropout_rate"]),
         )
-        
+        self.pe = PositionalEncoding(config["encoder_dim"])
         self.layers = nn.ModuleList([
             ConformerBlock(
                 d_model=config["encoder_dim"],
@@ -73,7 +73,7 @@ class ConformerEncoder(nn.Module):
         x, x_length = self.subsampling(x, x_length)  # (batch, time', dim)
         x = self.input_projection(x)  # (batch, time', dim)
 
-
+        x = self.pe(x)  # (batch, time', dim)
         mask = self._generate_mask(x_length, x.size(1)) # (batch, time')
         
         for layer in self.layers:
