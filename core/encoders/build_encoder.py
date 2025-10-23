@@ -1,4 +1,4 @@
-from . import *
+from . import * 
 
 def build_encoder(config, vocab_size):
     try:
@@ -18,5 +18,14 @@ def build_encoder(config, vocab_size):
             return RNNTEncoder(config)
         elif config['name'] == 'TransformerTransducer':
             return TransformerTransducerEncoder(config)
+        elif config['name'] == 'SBConformer':
+            return ModifiedSBConformerEncoder(
+                num_layers=config["num_encoder_layers"],
+                d_model=config["encoder_dim"],
+                nhead=config["num_attention_heads"],
+                d_ffn = config["encoder_dim"] * config["feed_forward_expansion_factor"],
+                dropout = config["dropout_rate"],
+                kernel_size=config["conv_kernel_size"]
+            )
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")
