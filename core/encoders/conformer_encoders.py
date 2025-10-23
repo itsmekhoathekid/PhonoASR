@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from core.modules import Linear, Conv2dSubampling, FeedForwardModule, ConvolutionalModule, ResidualConnectionCM, MultiConvolutionalGatingMLP, LayerNormalization
-from core.modules import MultiHeadedSelfAttentionModule, PositionalEncoding, RelPositionalEncoding
+from core.modules import MultiHeadedSelfAttentionModule, PositionalEncoding, RelPositionalEncoding, ConvolutionFrontEnd
 
 class ConformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, ff_ratio, dropout, kernel_size, conv_type, conv_config=None):
@@ -41,12 +41,25 @@ class ConformerBlock(nn.Module):
 class ConformerEncoder(nn.Module):
     def __init__(self, config):
         super(ConformerEncoder, self).__init__()
-        self.subsampling = Conv2dSubampling(
-            in_channels = config["in_channels"],
-            out_channels = config["encoder_dim"],
+        # self.subsampling = Conv2dSubampling(
+        #     in_channels = config["in_channels"],
+        #     out_channels = config["encoder_dim"],
+        # )
+
+        self.subsampling = ConvolutionFrontEnd(
+            in_channels=1,
+            num_blocks=3,
+            num_layers_per_block=2,
+            out_channels=[8, 16, 32],
+            kernel_sizes=[3, 3, 3],
+            strides=[1, 2, 2],
+            residuals=[True, True, True],
+            activation=nn.ReLU,        
+            norm=nn.BatchNorm2d,            
+            dropout=0.1,
         )
         self.input_projection = nn.Sequential(
-            Linear(config["encoder_dim"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
+            Linear(640, config["encoder_dim"]),
             nn.Dropout(p=config["dropout_rate"]),
         )
 
@@ -64,13 +77,13 @@ class ConformerEncoder(nn.Module):
         
 
     def forward(self, x, x_mask, training=True):
-        x_length = x_mask.sum(-1)  # (B,)
-        x, x_length = self.subsampling(x, x_length)  # (batch, time', dim)
-        x = self.input_projection(x)  # (batch, time', dim)
-
-
-        mask = self._generate_mask(x_length, x.size(1)) # (batch, time')
-        
+        x = x.unsqueeze(1)  # [batch, channels, time, features]
+        x, mask = self.subsampling(x, x_mask)  # [batch, channels, time, features]
+        x = x.transpose(1, 2).contiguous()   # batch, time, channels, features
+        x = x.reshape(x.shape[0], x.shape[1], -1) # [batch, time, C * features]
+        x_length = mask.sum(-1)
+        x = self.input_projection(x)  # [batch, time, d_model]
+        mask = mask.unsqueeze(1)  
         for layer in self.layers:
             x = layer(x, mask)
         
