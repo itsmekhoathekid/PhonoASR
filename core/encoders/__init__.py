@@ -1,5 +1,5 @@
 from .saa_encoder import InterleaveHybridAcousticEncoder
-from .conformer_encoders import ConformerEncoder
+from .conformer_encoders import ConformerEncoder, ModifiedSBConformerEncoder
 from .convrnnt_encoder import ConvRNNTEncoder
 from .rnnt_encoder import RNNTEncoder
 from .trans_transducer_encoder import TransformerTransducerEncoder

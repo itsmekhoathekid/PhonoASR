@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from core.modules import Linear, Conv2dSubampling, FeedForwardModule, ConvolutionalModule, ResidualConnectionCM, MultiConvolutionalGatingMLP, LayerNormalization
-from core.modules import MultiHeadedSelfAttentionModule, PositionalEncoding
+from core.modules import MultiHeadedSelfAttentionModule, PositionalEncoding, RelPositionalEncoding
 
 class ConformerBlock(nn.Module):
     def __init__(self, d_model, n_heads, ff_ratio, dropout, kernel_size, conv_type, conv_config=None):
@@ -77,6 +77,61 @@ class ConformerEncoder(nn.Module):
 
         return x, mask, x_length
 
+    def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
+        # lengths: (B,) trên đúng device
+        device = lengths.device
+        # Phòng khi lengths > max_len do làm tròn/stride ở subsampling
+        lengths = lengths.clamp_max(max_len)
+
+        # (1, T') so với (B, 1) -> (B, T'), True là PAD
+        seq_range = torch.arange(max_len, device=device)
+        mask = seq_range.unsqueeze(0).expand(lengths.size(0), -1) >= lengths.unsqueeze(1)
+        return mask.unsqueeze(1)
+
+
+from speechbrain.lobes.models.transformer.Conformer import ConformerEncoder as SBConformerEncoder  
+
+class ModifiedSBConformerEncoder(nn.Module):
+    def __init__(self, num_layers, d_model, nhead, d_ffn, dropout, kernel_size):
+        super(ModifiedSBConformerEncoder, self).__init__()
+        self.encoder = SBConformerEncoder(
+            num_layers=num_layers,
+            d_model=d_model,
+            nhead=nhead,
+            d_ffn=d_ffn,
+            dropout=dropout,
+            kernel_size=kernel_size,
+            kdim=d_model // nhead,
+            vdim=d_model // nhead,
+        )
+        self.positional_encoding = RelPositionalEncoding(d_model)
+        self.subsampling = Conv2dSubampling(
+            in_channels = 1,
+            out_channels = d_model,
+        )
+        self.projection = nn.Sequential(
+            Linear(d_model * (((80 - 1) // 2 - 1) // 2), d_model),
+            nn.Dropout(p=dropout),
+        )
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, x, x_mask, training=True):
+        x_length = x_mask.sum(-1)  # (B,)
+        x, x_length = self.subsampling(x, x_length)  # (batch, time', dim)
+        x = self.projection(x)  # (batch, time', dim)
+        x = self.dropout(x)
+
+        mask = self._generate_mask(x_length, x.size(1))
+        batch_size = x.size(0)
+        pos_embedding = self.positional_encoding(x)
+
+        out, _ = self.encoder(
+            src = x ,
+            src_key_padding_mask = mask.squeeze(1),
+            pos_embs = pos_embedding,
+        )  # (time, batch, dim)
+
+        return out, mask, mask.sum(-1).squeeze(1)  # lengths: (batch,)
     def _generate_mask(self, lengths: torch.Tensor, max_len: int) -> torch.Tensor:
         # lengths: (B,) trên đúng device
         device = lengths.device
