@@ -48,18 +48,18 @@ class ConformerEncoder(nn.Module):
 
         self.subsampling = ConvolutionFrontEnd(
             in_channels=1,
-            num_blocks=3,
-            num_layers_per_block=2,
-            out_channels=[8, 16, 32],
-            kernel_sizes=[3, 3, 3],
-            strides=[1, 2, 2],
-            residuals=[True, True, True],
+            num_blocks=2,
+            num_layers_per_block=1,
+            out_channels=[64, 32],
+            kernel_sizes=[3, 3],
+            strides=[2, 2],
+            residuals=[False, False],
             activation=nn.ReLU,        
             norm=nn.BatchNorm2d,            
             dropout=0.1,
         )
         self.input_projection = nn.Sequential(
-            Linear(640, config["encoder_dim"]),
+            Linear(config['projection_dim'], config["encoder_dim"]),
             nn.Dropout(p=config["dropout_rate"]),
         )
 
