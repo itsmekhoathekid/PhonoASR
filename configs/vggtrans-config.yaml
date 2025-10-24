@@ -26,6 +26,14 @@ scheduler:
 
 model:
   enc:
+    subsampling:
+      num_blocks: 2
+      out_channels: [32, 64]
+      kernel_sizes: [3, 3]
+      pooling_kernel_sizes: [2, 2]
+      num_conv_layers : [2, 2]
+      layer_norms: [True, True]
+      dropout: 0.1
     input_dim : 80
     in_features: 1280
     n_layers: 6

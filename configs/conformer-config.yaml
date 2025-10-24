@@ -1,5 +1,13 @@
 model:
-  enc: 
+  enc:
+    subsampling:
+      num_blocks: 2
+      num_layers_per_block: 1
+      out_channels: [16, 32]
+      kernel_sizes: [3, 3]
+      strides: [ 2, 2]
+      residuals: [ True, True]
+      dropout: 0.1 
     input_dim: 80
     encoder_dim: 256
     num_attention_heads: 8
@@ -39,6 +47,7 @@ training:
   n_mels : 80
   n_fft : 512
   win_length : 25
+  result: "/home/anhkhoa/PhonoASR/results"
 
 optim:
   type: adam

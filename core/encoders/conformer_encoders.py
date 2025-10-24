@@ -48,12 +48,12 @@ class ConformerEncoder(nn.Module):
 
         self.subsampling = ConvolutionFrontEnd(
             in_channels=1,
-            num_blocks=2,
-            num_layers_per_block=1,
-            out_channels=[64, 32],
-            kernel_sizes=[3, 3],
-            strides=[2, 2],
-            residuals=[False, False],
+            num_blocks=config['subsampling']['num_blocks'],
+            num_layers_per_block=config['subsampling']['num_layers_per_block'],
+            out_channels=config['subsampling']['out_channels'],
+            kernel_sizes=config['subsampling']['kernel_sizes'],
+            strides=config['subsampling']['strides'],
+            residuals=config['subsampling']['residuals'],
             activation=nn.ReLU,        
             norm=nn.BatchNorm2d,            
             dropout=0.1,
