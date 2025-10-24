@@ -112,15 +112,15 @@ class TASA_encoder(nn.Module):
 
         self.frontend = ConvolutionFrontEnd(
             in_channels=1,
-            num_blocks=3,
-            num_layers_per_block=2,
-            out_channels=[8, 16, 32],
-            kernel_sizes=[3, 3, 3],
-            strides=[1, 2, 2],
-            residuals=[True, True, True],
+            num_blocks=enc_config['subsampling']['num_blocks'],
+            num_layers_per_block=enc_config['subsampling']['num_layers_per_block'],
+            out_channels=enc_config['subsampling']['out_channels'],
+            kernel_sizes=enc_config['subsampling']['kernel_sizes'],
+            strides=enc_config['subsampling']['strides'],
+            residuals=enc_config['subsampling']['residuals'],
             activation=nn.ReLU,        
             norm=nn.BatchNorm2d,            
-            dropout=0.1,
+            dropout=enc_config['subsampling']['dropout'],
         )
 
         self.layers = nn.ModuleList(
@@ -209,15 +209,15 @@ class TransformerEncoder(nn.Module):
 
         self.frontend = ConvolutionFrontEnd(
             in_channels=1,
-            num_blocks=3,
-            num_layers_per_block=2,
-            out_channels=[8, 16, 32],
-            kernel_sizes=[3, 3, 3],
-            strides=[1, 2, 2],
-            residuals=[True, True, True],
+            num_blocks=enc_config['subsampling']['num_blocks'],
+            num_layers_per_block=enc_config['subsampling']['num_layers_per_block'],
+            out_channels=enc_config['subsampling']['out_channels'],
+            kernel_sizes=enc_config['subsampling']['kernel_sizes'],
+            strides=enc_config['subsampling']['strides'],
+            residuals=enc_config['subsampling']['residuals'],
             activation=nn.ReLU,        
             norm=nn.BatchNorm2d,            
-            dropout=0.1,
+            dropout=enc_config['subsampling']['dropout'],
         )
 
 
@@ -267,13 +267,13 @@ class VGGTransformerEncoder(nn.Module):
         )
 
         self.frontend = VGGFrontEnd(
-            num_blocks = 2,
+            num_blocks = enc_config['subsampling']['num_blocks'],
             in_channel=1,
-            out_channels=[32, 64],
-            conv_kernel_sizes=[3, 3],
-            pooling_kernel_sizes=[2, 2],
-            num_conv_layers=[2, 2],
-            layer_norms=[True, True],
+            out_channels=enc_config['subsampling']['out_channels'],
+            conv_kernel_sizes=enc_config['subsampling']['kernel_sizes'],
+            pooling_kernel_sizes=enc_config['subsampling']['pooling_kernel_sizes'],
+            num_conv_layers=enc_config['subsampling']['num_conv_layers'],
+            layer_norms=enc_config['subsampling']['layer_norms'],
             input_dim= enc_config['input_dim']
         )
 

@@ -1,8 +1,16 @@
 model:
   enc:
+    subsampling:
+      num_blocks: 2
+      num_layers_per_block: 1
+      out_channels: [16, 32]
+      kernel_sizes: [3, 3]
+      strides: [ 2, 2]
+      residuals: [ True, True]
+      dropout: 0.1 
     type: "conv-conformer"
     input_dim: 80
-    encoder_dim: 144
+    encoder_dim: 256
     num_attention_heads: 8
     feed_forward_expansion_factor: 4
     dropout_rate: 0.1
@@ -12,7 +20,7 @@ model:
     in_channels: 1
     out_channels: 32
     conv_config:
-      size: 144
+      size: 256
       linear_units: 576
       fuse_type: "concat_fusion"
       kernel_sizes: "7, 15, 23, 31"
@@ -22,8 +30,9 @@ model:
       activation: "swish"
       gate_activation: "swish"
     name: "ConvConformer"
+    projection_dim: 640
   dec: 
-    n_layer: 3
+    n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
@@ -37,17 +46,18 @@ training:
   epochs: 100
   batch_size: 8
   accumulation_steps: 1
-  save_path: "/home/llogn/workspace/phonoasr/saves"
-  train_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_phoneme.json"
-  dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
-  test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
-  vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
-  logg: "/home/llogn/workspace/phonoasr/logs/saa_log.log"
+  save_path: "/home/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  logg : "/home/anhkhoa/TASA/logs/Conformer.log"
   reload: false
   max_grad_norm: 200
   result: "workspace/Conformer/result.txt"
   type: "normal"
   ctc_weight: 0.4
+  type_training: "ce"
 
 
 optim:
