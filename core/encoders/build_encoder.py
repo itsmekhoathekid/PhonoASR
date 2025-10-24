@@ -27,5 +27,7 @@ def build_encoder(config, vocab_size):
                 dropout = config["dropout_rate"],
                 kernel_size=config["conv_kernel_size"]
             )
+        elif config['name'] == 'Zipformer':
+            return ZipformerEncoder(config)
     except KeyError as e:
         raise ValueError(f"Missing configuration parameter: {e}")
