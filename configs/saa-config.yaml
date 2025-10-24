@@ -24,10 +24,11 @@ training:
   dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
   test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
   vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
-  logg: "/home/llogn/workspace/phonoasr/logs/saa_log.log"
-  infer_path: "/home/llogn/workspace/phonoasr/logs/saa_infer.log"
+  logg: "/home/llogn/workspace/phonoasr/logs/SAA.log"
+  result: "/home/llogn/workspace/phonoasr/result.txt"
   reload: False
   ctc_weight: 0.4
+  type_training: 'ce'
 
 optim:
   # type: sgd
