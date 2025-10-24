@@ -1,30 +1,29 @@
 training:
   epochs: 100
-  batch_size: 8
+  batch_size: 2
   accumulation_steps: 1
-  save_path: "workspace/Zipformer/saves"
-  voice_path: "workspace/dataset/voices"
-  train_path : "workspace/dataset/train_w2i.json"
-  dev_path : "workspace/dataset/test_w2i.json"
-  test_path : "workspace/dataset/test_w2i.json"
-  vocab_path : "workspace/dataset/vocab_w2i.json"
-  log_path: "workspace/Zipformer/logs"
-  result: "workspace/Zipformer/result.txt"
+  save_path: "/home/llogn/workspace/phonoasr/saves"
+  train_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_phoneme.json"
+  dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
+  logg: "/home/llogn/workspace/phonoasr/logs/Zipformer.log"
+  result: "/home/llogn/workspace/phonoasr/result.txt"
   reload: False
   ctc_weight: 0.4
   type_training: 'ce'
 
 model:
-  conv_embeded: 
-    output_dim: 640
-    num_blocks: 2
-    num_layers_per_block: 1
-    out_channels: [64, 32]
-    kernel_sizes: [3,3]
-    strides: [2,2]
-    residuals: [False, False]
-    dropout: 0.1
   enc:
+    conv_embeded: 
+      output_dim: 640
+      num_blocks: 2
+      num_layers_per_block: 1
+      out_channels: [64, 32]
+      kernel_sizes: [3,3]
+      strides: [2,2]
+      residuals: [False, False]
+      dropout: 0.1
     output_downsampling_factor: 2
     downsampling_factor: [2, 2, 2, 2, 2, 2]
     encoder_dim: [192,256,256,256,256,256]

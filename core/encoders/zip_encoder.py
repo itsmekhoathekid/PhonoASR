@@ -4,15 +4,15 @@ import math
 import random
 import warnings
 from typing import List, Optional, Tuple, Union, Callable
-from utils.dataset import calculate_mask
+from dataset import calculate_mask
 import torch
-from core.zip_modules import (
+from core.modules.zip_modules import (
     Identity,  
 )
-from core.zip_modules import (
+from core.modules.zip_modules import (
     ScaledLinear, 
 )
-from core.zip_modules import (
+from core.modules.zip_modules import (
     ActivationDropoutAndLinear,
     Balancer,
     BiasNorm,
@@ -28,31 +28,30 @@ from core.zip_modules import (
 )
 from torch import Tensor, nn
 
-from core.zip_modules import torch_autocast
+from core.modules.zip_modules import torch_autocast
 
-from core.zip_modules import Conv2dSubsampling
+from core.modules.zip_modules import Conv2dSubsampling
 
 class ZipformerEncoder(nn.Module):
     def __init__(self, config):
         super().__init__()
-        # conv_dims = config['conv_embeded']['conv_dims']
-        output_downsampling_factor = self._to_tuple(config['enc']['output_downsampling_factor'])
-        downsampling_factor = self._to_tuple(config['enc']['downsampling_factor'])
-        encoder_dim = self._to_tuple(config['enc']['encoder_dim'])
-        num_encoder_layers = self._to_tuple(config['enc']['num_encoder_layers'])
-        encoder_unmasked_dim = self._to_tuple(config['enc']['encoder_unmasked_dim'])
-        query_head_dim = self._to_tuple(config['enc']['query_head_dim'])
-        pos_head_dim = self._to_tuple(config['enc']['pos_head_dim'])
-        value_head_dim = self._to_tuple(config['enc']['value_head_dim'])
-        num_heads = self._to_tuple(config['enc']['num_heads'])
-        feedforward_dim = self._to_tuple(config['enc']['feedforward_dim'])
-        cnn_module_kernel = self._to_tuple(config['enc']['cnn_module_kernel'])
-        pos_dim = config['enc']['pos_dim']
-        dropout = config['enc']['dropout']
-        warmup_batches = config['enc']['warmup_batches']
-        causal = config['enc']['causal']
-        chunk_size = self._to_tuple(config['enc']['chunk_size'])
-        left_context_frames = self._to_tuple(config['enc']['left_context_frames'])
+        output_downsampling_factor = self._to_tuple(config['output_downsampling_factor'])
+        downsampling_factor = self._to_tuple(config['downsampling_factor'])
+        encoder_dim = self._to_tuple(config['encoder_dim'])
+        num_encoder_layers = self._to_tuple(config['num_encoder_layers'])
+        encoder_unmasked_dim = self._to_tuple(config['encoder_unmasked_dim'])
+        query_head_dim = self._to_tuple(config['query_head_dim'])
+        pos_head_dim = self._to_tuple(config['pos_head_dim'])
+        value_head_dim = self._to_tuple(config['value_head_dim'])
+        num_heads = self._to_tuple(config['num_heads'])
+        feedforward_dim = self._to_tuple(config['feedforward_dim'])
+        cnn_module_kernel = self._to_tuple(config['cnn_module_kernel'])
+        pos_dim = config['pos_dim']
+        dropout = config['dropout']
+        warmup_batches = config['warmup_batches']
+        causal = config['causal']
+        chunk_size = self._to_tuple(config['chunk_size'])
+        left_context_frames = self._to_tuple(config['left_context_frames'])
 
         self.conv_embeded = Conv2dSubsampling(
             in_channels=1,
@@ -109,8 +108,9 @@ class ZipformerEncoder(nn.Module):
         x = self.encoder(conv_out, conv_len, conv_mask)
         x, x_len = x[0], x[1]
         x = x.transpose(0,1)
+        conv_mask = calculate_mask(x_len, x.size(1))
         
-        return x, x_mask, x_len
+        return x, conv_mask, x_len
 
 class EncoderInterface(nn.Module):
     def forward(
