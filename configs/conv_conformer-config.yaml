@@ -1,12 +1,12 @@
 model:
   enc:
     subsampling:
-      num_blocks: 2
-      num_layers_per_block: 1
-      out_channels: [16, 32]
-      kernel_sizes: [3, 3]
-      strides: [ 2, 2]
-      residuals: [ True, True]
+      num_blocks: 3
+      num_layers_per_block: 2
+      out_channels: [8,  16, 32]
+      kernel_sizes: [3, 3, 3]
+      strides: [1, 2, 2]
+      residuals: [ True, True, True]
       dropout: 0.1 
     type: "conv-conformer"
     input_dim: 80
