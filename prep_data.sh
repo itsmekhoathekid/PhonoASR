@@ -38,6 +38,7 @@ if [[ "$2" == "vivos" ]]; then
     gdown 1v75mLO-TVfPXe27o54JMlXD5cQ81eaVG 
     gdown 1YgTF-NbHuweHWr2LahS_X9j--laGDnIK
     unzip -o voices.zip
+    base_wav_path=$(pwd)/voices
 
 elif [[ "$2" == "commonvoice" ]]; then
     echo "Downloading Common Voice dataset..."
@@ -46,18 +47,19 @@ elif [[ "$2" == "commonvoice" ]]; then
     gdown 1fM54Z9VCTVzTmib_KvGqM5GpCS8deW0V
     gdown 1vVjQCCMvVZvButmMquAKsTMx_FVHshh-
     unzip -o clips.zip
+    base_wav_path=$(pwd)/clips
 fi
 
 
 cd /
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
-    python workspace/PhonoASR/dataset/phoneme_construct.py --dataset "$2"
+    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "phoneme" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
-    python workspace/PhonoASR/dataset/char_construct.py --dataset "$2"
+    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "char" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
 else
     echo "Preprocessing for normal model"
-    python workspace/PhonoASR/dataset/construct.py --dataset "$2"
+    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "word" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
 fi
 mkdir workspace/PhonoASR/saves
