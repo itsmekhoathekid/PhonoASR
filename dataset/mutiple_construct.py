@@ -56,27 +56,28 @@ class DatasetPreparing:
                     if word not in vocab:
                         vocab[word] = len(vocab)
             elif self.type_tokenizer == "phoneme":
-                try:
-                    initial, rhyme, tone = analyse_Vietnamese(word)
-                    if initial not in vocab:
-                        vocab[initial] = len(vocab)
-                    if rhyme not in vocab:
-                        vocab[rhyme] = len(vocab)
-                    if tone not in vocab:
-                        vocab[tone] = len(vocab)
-                except:
-                    if word in wrong2correct.keys():
-                        correct_word = wrong2correct[word]
-                        try:
-                            initial, rhyme, tone = analyse_Vietnamese(correct_word)
-                            if initial not in vocab:
-                                vocab[initial] = len(vocab)
-                            if rhyme not in vocab:
-                                vocab[rhyme] = len(vocab)
-                            if tone not in vocab:
-                                vocab[tone] = len(vocab)
-                        except:
-                            unprocsssed.append(word)
+                for word in text.split():
+                    try:
+                        initial, rhyme, tone = analyse_Vietnamese(word)
+                        if initial not in vocab:
+                            vocab[initial] = len(vocab)
+                        if rhyme not in vocab:
+                            vocab[rhyme] = len(vocab)
+                        if tone not in vocab:
+                            vocab[tone] = len(vocab)
+                    except:
+                        if word in wrong2correct.keys():
+                            correct_word = wrong2correct[word]
+                            try:
+                                initial, rhyme, tone = analyse_Vietnamese(correct_word)
+                                if initial not in vocab:
+                                    vocab[initial] = len(vocab)
+                                if rhyme not in vocab:
+                                    vocab[rhyme] = len(vocab)
+                                if tone not in vocab:
+                                    vocab[tone] = len(vocab)
+                            except:
+                                unprocsssed.append(word)
         self.save_data(vocab, f"{self.type_tokenizer}_vocab_{dataset}.json")    
         return vocab, list(set(unprocsssed))
     
