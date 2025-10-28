@@ -41,7 +41,7 @@ class DatasetPreparing:
         }
 
         for idx, item in data.items():
-            if dataset == "vivos":
+            if dataset == "vivos" or dataset == "vietmed":
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])
@@ -88,7 +88,7 @@ class DatasetPreparing:
         for idx, item in data.items():
             
             data_res = {}
-            if dataset == "vivos":
+            if dataset == "vivos" or dataset == "vietmed":
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])

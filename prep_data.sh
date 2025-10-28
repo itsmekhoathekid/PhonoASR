@@ -21,7 +21,7 @@ elif [[ -z "$2" ]]; then
     echo "No option specified. IDK what to do man."
     exit 1
 
-elif [[ "$2" != "vivos" && "$2" != "commonvoice" ]]; then
+elif [[ "$2" != "vivos" && "$2" != "commonvoice"  && "$2" != "vietmed" ]]; then
     echo "Invalid second argument. Use --help for instructions."
     exit 1
 fi
@@ -38,7 +38,7 @@ if [[ "$2" == "vivos" ]]; then
     gdown 1v75mLO-TVfPXe27o54JMlXD5cQ81eaVG 
     gdown 1YgTF-NbHuweHWr2LahS_X9j--laGDnIK
     unzip -o voices.zip
-    base_wav_path=$(pwd)/voices
+    base_wav_path=$(pwd)/voices/voices
 
 elif [[ "$2" == "commonvoice" ]]; then
     echo "Downloading Common Voice dataset..."
@@ -47,7 +47,14 @@ elif [[ "$2" == "commonvoice" ]]; then
     gdown 1fM54Z9VCTVzTmib_KvGqM5GpCS8deW0V
     gdown 1vVjQCCMvVZvButmMquAKsTMx_FVHshh-
     unzip -o clips.zip
-    base_wav_path=$(pwd)/clips
+    base_wav_path=$(pwd)/clips/clips
+elif [[ "$2" == "vietmed" ]]; then
+    echo "Downloading VietMed dataset..."
+    gdown 1hTVAZXY3kdfCJVSzUZuhzS3U7SFB-xHp
+    gdown 1IPbjiHUCBvUgQ_k2PRz9vYJdJLiZM2aC
+    gdown 1WVe0yHlCuMyEuvR9huJdatOwrpA5-njr
+    gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
+    unzip -o wav.zip
 fi
 
 
