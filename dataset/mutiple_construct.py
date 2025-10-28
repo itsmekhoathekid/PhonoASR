@@ -27,7 +27,7 @@ class DatasetPreparing:
         with open(data_path, "w", encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
-    def create_vocab(self, json_path, wrong2correct, dataset):
+    def create_vocab(self, json_path, wrong2correct, dataset, vocab_path):
         unprocsssed = []
         data = self.load_json(json_path)
 
@@ -78,10 +78,10 @@ class DatasetPreparing:
                                     vocab[tone] = len(vocab)
                             except:
                                 unprocsssed.append(word)
-        self.save_data(vocab, f"{self.type_tokenizer}_vocab_{dataset}.json")    
+        self.save_data(vocab, vocab_path)    
         return vocab, list(set(unprocsssed))
     
-    def process_data(self, data_path, vocab, default_data_path, save_path, type = "stack", dataset = "vivos"):
+    def process_data(self, data_path, vocab, default_data_path, save_path, dataset = "vivos", type = "stack"):
         data = self.load_json(data_path)
 
 
@@ -119,8 +119,10 @@ class DatasetPreparing:
                         initial, rhyme, tone = analyse_Vietnamese(word)
                         word_list = [vocab.get(initial, unk_id), vocab.get(rhyme, unk_id), vocab.get(tone, unk_id)]
                         if type == "stack":
+                            # print("hi")
                             tokens.append(word_list)
                         else:
+                            # print("hi")
                             tokens += word_list
                             tokens += [vocab["<space>"]]
                     except:
@@ -167,11 +169,12 @@ parser.add_argument("--train_path", type=str, required=True, help="Path to the i
 parser.add_argument("--test_path", type=str, required=True, help="Path to save the processed data json file")
 parser.add_argument("--valid_path", type=str, required=False, help="Path to save the vocabulary json file")
 parser.add_argument("--base_wav_path", type=str, required=True, help="Base path to the wav files")
+parser.add_argument("--base_path", type=str, required=True, help="Base path to the wav files")
 args = parser.parse_args()
 
 dataset = args.dataset
 data_preparer = DatasetPreparing(dataset_name=dataset, base_wav_path=args.base_wav_path, type_tokenizer=args.type_tokenizer)
-vocab, unprocossed = data_preparer.create_vocab(args.train_path, wrong2correct, dataset)
+vocab, unprocossed = data_preparer.create_vocab(args.train_path, wrong2correct, dataset, os.path.join(args.base_path, f"{args.type_tokenizer}_vocab_{args.dataset}.json"))
 
 data_preparer.process_data(args.train_path,
              vocab,

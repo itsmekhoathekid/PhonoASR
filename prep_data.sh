@@ -38,7 +38,7 @@ if [[ "$2" == "vivos" ]]; then
     gdown 1v75mLO-TVfPXe27o54JMlXD5cQ81eaVG 
     gdown 1YgTF-NbHuweHWr2LahS_X9j--laGDnIK
     unzip -o voices.zip
-    base_wav_path=$(pwd)/voices/voices
+    base_wav_path=$(pwd)/voices
 
 elif [[ "$2" == "commonvoice" ]]; then
     echo "Downloading Common Voice dataset..."
@@ -47,17 +47,17 @@ elif [[ "$2" == "commonvoice" ]]; then
     gdown 1fM54Z9VCTVzTmib_KvGqM5GpCS8deW0V
     gdown 1vVjQCCMvVZvButmMquAKsTMx_FVHshh-
     unzip -o clips.zip
-    base_wav_path=$(pwd)/clips/clips
+    base_wav_path=$(pwd)/clips
 elif [[ "$2" == "vietmed" ]]; then
     echo "Downloading VietMed dataset..."
     gdown 1hTVAZXY3kdfCJVSzUZuhzS3U7SFB-xHp
     gdown 1IPbjiHUCBvUgQ_k2PRz9vYJdJLiZM2aC
     gdown 1WVe0yHlCuMyEuvR9huJdatOwrpA5-njr
     gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
-    base_wav_path=$(pwd)/wav/wav
+    base_wav_path=$(pwd)/wav
     unzip -o wav.zip
 fi
-
+base_path=$(pwd)
 
 cd /
 if [[ "$1" == "phoneme" ]]; then
@@ -76,13 +76,15 @@ if [[ "$1" == "phoneme" ]]; then
         --type_tokenizer "phoneme" \
         --train_path "$train_path" \
         --test_path "$test_path" \
-        --base_wav_path "$base_wav_path"
+        --base_wav_path "$base_wav_path" \
+        --base_path "$base_path"
+        
     
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
-    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "char" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
+    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "char" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path" --base_path "$base_path"
 else
     echo "Preprocessing for normal model"
-    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "word" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
+    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "word" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path" --base_path "$base_path"
 fi
 mkdir workspace/PhonoASR/saves
