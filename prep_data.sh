@@ -54,6 +54,7 @@ elif [[ "$2" == "vietmed" ]]; then
     gdown 1IPbjiHUCBvUgQ_k2PRz9vYJdJLiZM2aC
     gdown 1WVe0yHlCuMyEuvR9huJdatOwrpA5-njr
     gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
+    base_wav_path=$(pwd)/wav/wav
     unzip -o wav.zip
 fi
 
@@ -61,7 +62,22 @@ fi
 cd /
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
-    python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "phoneme" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
+
+    if [[ "$2" == "vietmed" ]]; then
+        train_path="workspace/dataset/labeled_medical_data_train_transcript.json"
+        test_path="workspace/dataset/labeled_medical_data_test_transcript.json"
+    else
+        train_path="workspace/dataset/train.json"
+        test_path="workspace/dataset/test.json"
+    fi
+
+    python workspace/PhonoASR/dataset/mutiple_construct.py \
+        --dataset "$2" \
+        --type_tokenizer "phoneme" \
+        --train_path "$train_path" \
+        --test_path "$test_path" \
+        --base_wav_path "$base_wav_path"
+    
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
     python workspace/PhonoASR/dataset/mutiple_construct.py --dataset "$2" --type_tokenizer "char" --train_path "workspace/dataset/train.json" --test_path "workspace/dataset/test.json" --base_wav_path "$base_wav_path"
