@@ -172,7 +172,7 @@ class Engine:
                 'optimizer_state_dict': self.optimizer.state_dict(),
             }, model_filename)
 
-            self.scheduler.save(self.config['training']['save_path'] + '/scheduler.ckpt')
+            self.scheduler.save(self.config['training']['save_path'] + f'/scheduler_{self.config['enc']['name']}.ckpt')
     
     def make_block_targets(self, target, k, pad_id=-100, device='cpu'):
         """
