@@ -56,6 +56,14 @@ elif [[ "$2" == "vietmed" ]]; then
     gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
     base_wav_path=$(pwd)/wav
     unzip -o wav.zip
+elif [[ "$2" == "lsvsc" ]]; then
+    echo "Downloading LSVSC dataset..."
+    gdown 1EcyKmU_-TnoEqyV9FFSLMyyDqIn2pa2N
+    gdown 1bX646Tu_geOhoCZjn6l_4ohUgga18Qw_
+    gdown 1IChYihRLp7O2cRFIpOi8jEvLnrySm1Bf
+    gdown 1bTLibQ8rmXo82YXViUr7wc2JZ5oIg9xQ
+    base_wav_path=$(pwd)/LSVSC_100
+    unzip -o LSVSC_100.rar
 fi
 base_path=$(pwd)
 
@@ -66,6 +74,10 @@ if [[ "$1" == "phoneme" ]]; then
     if [[ "$2" == "vietmed" ]]; then
         train_path="workspace/dataset/labeled_medical_data_train_transcript.json"
         test_path="workspace/dataset/labeled_medical_data_test_transcript.json"
+    elif [[ "$2" == "lsvsc" ]]; then
+        train_path="workspace/dataset/LSVSC_train.json"
+        test_path="workspace/dataset/LSVSC_test.json"
+        valid_path="workspace/dataset/LSVSC_valid.json"
     else
         train_path="workspace/dataset/train.json"
         test_path="workspace/dataset/test.json"
@@ -77,7 +89,8 @@ if [[ "$1" == "phoneme" ]]; then
         --train_path "$train_path" \
         --test_path "$test_path" \
         --base_wav_path "$base_wav_path" \
-        --base_path "$base_path"
+        --base_path "$base_path" \
+        --valid_path "$valid_path"
         
     
 elif [[ "$1" == "char" ]]; then
