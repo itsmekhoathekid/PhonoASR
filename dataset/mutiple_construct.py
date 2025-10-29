@@ -45,6 +45,8 @@ class DatasetPreparing:
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])
+            elif dataset == "lsvsc":
+                text = self.normalize_transcript(item['text'])
             
 
             if self.type_tokenizer == "word":
@@ -93,6 +95,8 @@ class DatasetPreparing:
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])
+            elif dataset == "lsvsc":
+                text = self.normalize_transcript(item['text'])
             
 
             if self.type_tokenizer == "word":
@@ -100,14 +104,14 @@ class DatasetPreparing:
                 tokens = [vocab.get(word, unk_id) for word in text.split()]
                 data_res['encoded_text'] = tokens
                 data_res['text'] = text
-                data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
+                # data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
             
             elif self.type_tokenizer == "char":
                 unk_id = vocab["<unk>"]
                 tokens = [vocab.get(word, unk_id) for word in text.strip()]
                 data_res['encoded_text'] = tokens
                 data_res['text'] = text
-                data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
+                # data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
             
             elif self.type_tokenizer == "phoneme":
                 unk_id = vocab["<unk>"]
@@ -131,7 +135,7 @@ class DatasetPreparing:
 
                 data_res['encoded_text'] = tokens[:-1] if type != "stack" else tokens
                 data_res['text'] = text
-                data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
+            data_res['wav_path'] = os.path.join(default_data_path, item['voice']) if dataset != "lsvsc" else os.path.join(default_data_path, item['wav'])
             res.append(data_res)
         self.save_data(res, save_path)
         print(f"Data saved to {save_path}")
