@@ -81,6 +81,7 @@ class DatasetPreparing:
                             except:
                                 unprocsssed.append(word)
         self.save_data(vocab, vocab_path)    
+        print(f"Vocabulary saved to {vocab_path}")
         return vocab, list(set(unprocsssed))
     
     def process_data(self, data_path, vocab, default_data_path, save_path, dataset = "vivos", type = "stack"):

@@ -1,40 +1,41 @@
 training:
   epochs: 100
-  batch_size: 2
+  batch_size: 6
   accumulation_steps: 1
-  save_path: "/home/llogn/workspace/phonoasr/saves"
-  train_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_phoneme.json"
-  dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
-  test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
-  vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
-  logg: "/home/llogn/workspace/phonoasr/logs/Zipformer.log"
-  result: "/home/llogn/workspace/phonoasr/result.txt"
+  save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
+  train_path : "/datastore/npl/Speech2Text/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
+  test_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/datastore/npl/Speech2Text/dataset/phoneme_vocab_lsvsc.json"
+  logg: "/datastore/npl/Speech2Text/PhonoASR/logs/Zipformer.log"
+  result: "/datastore/npl/Speech2Text/PhonoASR/result.txt"
   reload: False
   ctc_weight: 0.4
   type_training: 'ce'
+  type: 'word'
 
 model:
   enc:
     conv_embeded: 
-      output_dim: 640
+      input_dim: 80
       num_blocks: 2
       num_layers_per_block: 1
       out_channels: [64, 32]
       kernel_sizes: [3,3]
-      strides: [2,2]
+      strides: [1,2]
       residuals: [False, False]
       dropout: 0.1
     output_downsampling_factor: 2
-    downsampling_factor: [2, 2, 2, 2, 2, 2]
-    encoder_dim: [192,256,256,256,256,256]
+    downsampling_factor: [2,2,3,4,3,2]
+    encoder_dim: [192,256,384,512,384,256]
     num_encoder_layers: [2,2,1,1,1,1]
-    encoder_unmasked_dim: [192,256,256,256,256,256]
+    encoder_unmasked_dim: [192,256,384,512,384,256]
     query_head_dim: 32
     pos_head_dim: 4
     value_head_dim: 12     # paper
-    num_heads: [4,4,4,4,4,4]  # paper
-    feedforward_dim: [512,768,768,768,768,768]  # paper
-    cnn_module_kernel: [15,15,15,15,15,15]     # paper
+    num_heads: [4,4,4,8,4,4]  # paper
+    feedforward_dim: [512,768,1024,1536,1024,768]  # paper
+    cnn_module_kernel: [31,31,15,15,15,31]     # paper
     pos_dim: 192
     dropout: 0.1  
     warmup_batches: 4000.0
@@ -44,7 +45,7 @@ model:
     name: 'Zipformer'
   dec: 
     n_layer: 3
-    d_model: 256
+    d_model: 512
     ff_size: 1024
     n_head: 4
     dropout: 0.1
@@ -52,14 +53,6 @@ model:
   model_name: 'Zipformer'
 
 optim:
-  # type: sgd
-  # lr: 0.0005
-  # momentum: 0.9
-  # weight_decay: 0
-  # begin_to_adjust_lr: 60
-  # nesterov: None
-  # decay_rate: 0.5
-
   type: adam
   lr: 0.001
   weight_decay: 0.0001
@@ -68,5 +61,3 @@ optim:
 scheduler:
   lr_initial: 0.001
   n_warmup_steps: 15000
-
-rnnt_loss:
