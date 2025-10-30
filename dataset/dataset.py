@@ -88,6 +88,9 @@ class Speech2Text(Dataset):
         if self.type_training == "ce":
             encoded_text = torch.tensor(current_item["encoded_text"] + [[self.eos_token, self.eos_token, self.eos_token]], dtype=torch.long)
             decoder_input = torch.tensor([[self.sos_token, self.sos_token, self.sos_token]] + current_item["encoded_text"], dtype=torch.long)
+        elif self.type_training == 'transducer':
+            encoded_text = torch.tensor(current_item["encoded_text"] + [self.eos_token], dtype=torch.long)
+            decoder_input = torch.tensor([self.sos_token] + current_item["encoded_text"] + [self.pad_token], dtype=torch.long)
         else:
             encoded_text = torch.tensor(current_item["encoded_text"] + [self.eos_token], dtype=torch.long)
             decoder_input = torch.tensor([self.sos_token] + current_item["encoded_text"], dtype=torch.long)
