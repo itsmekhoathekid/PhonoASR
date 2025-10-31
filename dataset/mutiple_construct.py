@@ -27,7 +27,7 @@ class DatasetPreparing:
         with open(data_path, "w", encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
-    def create_vocab(self, json_path, wrong2correct, dataset):
+    def create_vocab(self, json_path, wrong2correct, dataset, vocab_path):
         unprocsssed = []
         data = self.load_json(json_path)
 
@@ -45,6 +45,8 @@ class DatasetPreparing:
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])
+            elif dataset == "lsvsc":
+                text = self.normalize_transcript(item['text'])
             
 
             if self.type_tokenizer == "word":
@@ -56,31 +58,33 @@ class DatasetPreparing:
                     if word not in vocab:
                         vocab[word] = len(vocab)
             elif self.type_tokenizer == "phoneme":
-                try:
-                    initial, rhyme, tone = analyse_Vietnamese(word)
-                    if initial not in vocab:
-                        vocab[initial] = len(vocab)
-                    if rhyme not in vocab:
-                        vocab[rhyme] = len(vocab)
-                    if tone not in vocab:
-                        vocab[tone] = len(vocab)
-                except:
-                    if word in wrong2correct.keys():
-                        correct_word = wrong2correct[word]
-                        try:
-                            initial, rhyme, tone = analyse_Vietnamese(correct_word)
-                            if initial not in vocab:
-                                vocab[initial] = len(vocab)
-                            if rhyme not in vocab:
-                                vocab[rhyme] = len(vocab)
-                            if tone not in vocab:
-                                vocab[tone] = len(vocab)
-                        except:
-                            unprocsssed.append(word)
-        self.save_data(vocab, f"{self.type_tokenizer}_vocab_{dataset}.json")    
+                for word in text.split():
+                    try:
+                        initial, rhyme, tone = analyse_Vietnamese(word)
+                        if initial not in vocab:
+                            vocab[initial] = len(vocab)
+                        if rhyme not in vocab:
+                            vocab[rhyme] = len(vocab)
+                        if tone not in vocab:
+                            vocab[tone] = len(vocab)
+                    except:
+                        if word in wrong2correct.keys():
+                            correct_word = wrong2correct[word]
+                            try:
+                                initial, rhyme, tone = analyse_Vietnamese(correct_word)
+                                if initial not in vocab:
+                                    vocab[initial] = len(vocab)
+                                if rhyme not in vocab:
+                                    vocab[rhyme] = len(vocab)
+                                if tone not in vocab:
+                                    vocab[tone] = len(vocab)
+                            except:
+                                unprocsssed.append(word)
+        self.save_data(vocab, vocab_path)    
+        print(f"Vocabulary saved to {vocab_path}")
         return vocab, list(set(unprocsssed))
     
-    def process_data(self, data_path, vocab, default_data_path, save_path, type = "stack", dataset = "vivos"):
+    def process_data(self, data_path, vocab, default_data_path, save_path, dataset = "vivos", type = "stack"):
         data = self.load_json(data_path)
 
 
@@ -92,6 +96,8 @@ class DatasetPreparing:
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])
+            elif dataset == "lsvsc":
+                text = self.normalize_transcript(item['text'])
             
 
             if self.type_tokenizer == "word":
@@ -99,14 +105,14 @@ class DatasetPreparing:
                 tokens = [vocab.get(word, unk_id) for word in text.split()]
                 data_res['encoded_text'] = tokens
                 data_res['text'] = text
-                data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
+                # data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
             
             elif self.type_tokenizer == "char":
                 unk_id = vocab["<unk>"]
                 tokens = [vocab.get(word, unk_id) for word in text.strip()]
                 data_res['encoded_text'] = tokens
                 data_res['text'] = text
-                data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
+                # data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
             
             elif self.type_tokenizer == "phoneme":
                 unk_id = vocab["<unk>"]
@@ -118,8 +124,10 @@ class DatasetPreparing:
                         initial, rhyme, tone = analyse_Vietnamese(word)
                         word_list = [vocab.get(initial, unk_id), vocab.get(rhyme, unk_id), vocab.get(tone, unk_id)]
                         if type == "stack":
+                            # print("hi")
                             tokens.append(word_list)
                         else:
+                            # print("hi")
                             tokens += word_list
                             tokens += [vocab["<space>"]]
                     except:
@@ -128,7 +136,7 @@ class DatasetPreparing:
 
                 data_res['encoded_text'] = tokens[:-1] if type != "stack" else tokens
                 data_res['text'] = text
-                data_res['wav_path'] = os.path.join(default_data_path, item['voice'])
+            data_res['wav_path'] = os.path.join(default_data_path, item['voice']) if dataset != "lsvsc" else os.path.join(default_data_path, item['wav'])
             res.append(data_res)
         self.save_data(res, save_path)
         print(f"Data saved to {save_path}")
@@ -166,11 +174,12 @@ parser.add_argument("--train_path", type=str, required=True, help="Path to the i
 parser.add_argument("--test_path", type=str, required=True, help="Path to save the processed data json file")
 parser.add_argument("--valid_path", type=str, required=False, help="Path to save the vocabulary json file")
 parser.add_argument("--base_wav_path", type=str, required=True, help="Base path to the wav files")
+parser.add_argument("--base_path", type=str, required=True, help="Base path to the wav files")
 args = parser.parse_args()
 
 dataset = args.dataset
 data_preparer = DatasetPreparing(dataset_name=dataset, base_wav_path=args.base_wav_path, type_tokenizer=args.type_tokenizer)
-vocab, unprocossed = data_preparer.create_vocab(args.train_path, wrong2correct, dataset)
+vocab, unprocossed = data_preparer.create_vocab(args.train_path, wrong2correct, dataset, os.path.join(args.base_path, f"{args.type_tokenizer}_vocab_{args.dataset}.json"))
 
 data_preparer.process_data(args.train_path,
              vocab,

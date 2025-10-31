@@ -991,3 +991,4 @@ class ResidualForBase(nn.Module):
 
     def forward(self, x, residual):
         return self.norm(x + self.dropout(residual))
+

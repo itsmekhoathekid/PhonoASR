@@ -1,6 +1,6 @@
 import torch 
 from core.modules import *
-from .model import AcousticModel
+from .model import *
 from speechbrain.nnet.schedulers import NoamScheduler
 import os 
 import logging
@@ -18,13 +18,19 @@ class Engine:
         self.ctc_loss = CTCLoss(blank=vocab.get_blank_token(), reduction='batchmean').to(self.device)
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
         self.ce_loss = CELoss(ignore_index=vocab.get_pad_token(), reduction='mean').to(self.device)
-
+        self.transducer_loss = RNNTLoss(blank=vocab.get_blank_token(), reduction='mean').to(self.device)
 
     def inits(self, vocab_size):
-        model = AcousticModel(
-            config=self.config,
-            vocab_size=vocab_size
-        ).to(self.device)
+        if self.config['training']['type_training'] == 'transducer':
+            model = TransducerAcousticModle(
+                config=self.config,
+                vocab_size=vocab_size
+            ).to(self.device)
+        else:
+            model = AcousticModel(
+                config=self.config,
+                vocab_size=vocab_size
+            ).to(self.device)
         optimizer = Optimizer(model.parameters(), self.config['optim'])
         scheduler = NoamScheduler(
             n_warmup_steps=self.config['scheduler']['n_warmup_steps'],
@@ -47,7 +53,7 @@ class Engine:
             checkpoint = torch.load(load_path)
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.scheduler.load(self.config['training']['save_path'] + '/scheduler.ckpt')
+            self.scheduler.load(self.config['training']['save_path'] + f'/scheduler_{self.config["model"]["enc"]["name"]}.ckpt')
             logging.info(f"Reloaded model from {load_path} at epoch {past_epoch}")
         else:
             logging.info("No checkpoint found. Starting from scratch.")
@@ -68,6 +74,9 @@ class Engine:
             B = tokens_eos.size(0)
             loss_ep = sum(self.alpha_k[i] * self.ce_loss(dec_out[i], tokens_eos[...,i].view(B,-1)) for i in range(len(dec_out)))
             return loss_ep
+        elif self.type_training == 'transducer':
+            loss = self.transducer_loss(enc_out, tokens_eos, enc_lens, text_len)
+            return loss
 
     def train(self, dataloader):
         self.model.train()
@@ -172,7 +181,7 @@ class Engine:
                 'optimizer_state_dict': self.optimizer.state_dict(),
             }, model_filename)
 
-            self.scheduler.save(self.config['training']['save_path'] + '/scheduler.ckpt')
+            self.scheduler.save(self.config['training']['save_path'] + f'/scheduler_{self.config["model"]["enc"]["name"]}.ckpt')
     
     def make_block_targets(self, target, k, pad_id=-100, device='cpu'):
         """
