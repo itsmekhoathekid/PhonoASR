@@ -58,7 +58,7 @@ if [[ "$2" == "vivos" ]]; then
     base_wav_path=$(pwd)/voices
     base_path=$(pwd)
     cd ..
-    python ./PhonoASR/dataset/unzip_voice.py --input "./voices.zip" --output "./voices"
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset/voices"
 
 elif [[ "$2" == "commonvoice" ]]; then
     echo "Downloading Common Voice dataset..."
