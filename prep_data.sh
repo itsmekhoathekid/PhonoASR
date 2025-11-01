@@ -176,5 +176,3 @@ else
     fi
 
 fi
-
-mkdir -p ./PhonoASR/saves
