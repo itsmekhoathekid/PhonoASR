@@ -169,7 +169,9 @@ class Engine:
 
 
             logging.info(f"End of epoch {epoch}: Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {curr_lr:.6f}")
-
+        
+            if not os.path.exists(self.config['training']['save_path']):
+                os.makedirs(self.config['training']['save_path'])
             model_filename = os.path.join(
                 self.config['training']['save_path'],
                 f"{self.config['model']['model_name']}_epoch_{epoch}"
