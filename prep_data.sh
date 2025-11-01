@@ -27,12 +27,38 @@ elif [[ "$2" != "vivos" && "$2" != "commonvoice" && "$2" != "vietmed" && "$2" !=
     exit 1
 fi
 
+if [[ "$3" == "--help" ]]; then
+    echo "Usage: $0 <arg1> <arg2> <dataset_folder>"
+    echo "Folder to store dataset and preprocessed data. Eg: /datastore/npl/Speech2Text/dataset"
+    exit 0
+elif [[ -z "$3" ]]; then
+    echo "Error: Need to specify folder to store dataset and preprocessed data."
+    echo "Use --help for usage."
+    exit 1
+fi
+
+DATA_DIR="$3"
+
 set -e
 
-mkdir -p dataset
-cd dataset
+echo "Creating virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
 
+pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
 pip install gdown librosa speechbrain jiwer
+pip install git+https://github.com/lhotse-speech/lhotse
+pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+
+if [[ -d "dataset" ]]; then
+    echo "Folder 'dataset' already exists. Moving into it..."
+    cd dataset
+else
+    echo "Folder 'dataset' not found. Creating new one..."
+    mkdir dataset
+    cd dataset
+fi
+
 
 if [[ "$2" == "vivos" ]]; then
     echo "Downloading VIVOS dataset..."
@@ -40,7 +66,9 @@ if [[ "$2" == "vivos" ]]; then
     gdown 1v75mLO-TVfPXe27o54JMlXD5cQ81eaVG
     gdown 1YgTF-NbHuweHWr2LahS_X9j--laGDnIK
     base_wav_path=$(pwd)/voices
-    python /datastore/npl/Speech2Text/PhonoASR/unzip_voice.py --input "./voices.zip" --output "./voices"
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./voices.zip" --output "./voices"
 
 elif [[ "$2" == "commonvoice" ]]; then
     echo "Downloading Common Voice dataset..."
@@ -49,7 +77,9 @@ elif [[ "$2" == "commonvoice" ]]; then
     gdown 1fM54Z9VCTVzTmib_KvGqM5GpCS8deW0V
     gdown 1vVjQCCMvVZvButmMquAKsTMx_FVHshh-
     base_wav_path=$(pwd)/clips
-    python /datastore/npl/Speech2Text/PhonoASR/unzip_voice.py --input "./voices.zip" --output "./voices"
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset/voices"
     
 
 elif [[ "$2" == "vietmed" ]]; then
@@ -59,7 +89,9 @@ elif [[ "$2" == "vietmed" ]]; then
     gdown 1WVe0yHlCuMyEuvR9huJdatOwrpA5-njr
     gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
     base_wav_path=$(pwd)/wav
-    python /datastore/npl/Speech2Text/PhonoASR/unzip_voice.py --input "./wav.zip" --output "./wav"
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/wav.zip" --output "./dataset/wav"
 
 elif [[ "$2" == "lsvsc" ]]; then
     echo "Downloading LSVSC dataset..."
@@ -68,30 +100,28 @@ elif [[ "$2" == "lsvsc" ]]; then
     gdown 1XKJRIf32tD0f8hUk4sdSl_E1eYkALG8d
     gdown 1kDBJv-aym-dnK6ztMikBXnZqyJPMsxS4
     base_wav_path=$(pwd)/LSVSC_100/data
-    python /datastore/npl/Speech2Text/PhonoASR/unzip_voice.py --input "./LSVSC_100.zip" --output "./LSVSC_100"
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
     
 fi
 
-base_path=$(pwd)
-
-cd /
+if [[ "$2" == "vietmed" ]]; then
+    train_path="$DATA_DIR/labeled_medical_data_train_transcript.json"
+    test_path="$DATA_DIR/labeled_medical_data_test_transcript.json"
+elif [[ "$2" == "lsvsc" ]]; then
+    train_path="$DATA_DIR/LSVSC_train.json"
+    test_path="$DATA_DIR/LSVSC_test.json"
+    valid_path="$DATA_DIR/LSVSC_valid.json"
+else
+    train_path="$DATA_DIR/train.json"
+    test_path="$DATA_DIR/test.json"
+fi
 
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
 
-    if [[ "$2" == "vietmed" ]]; then
-        train_path="/datastore/npl/Speech2Text/dataset/labeled_medical_data_train_transcript.json"
-        test_path="/datastore/npl/Speech2Text/dataset/labeled_medical_data_test_transcript.json"
-    elif [[ "$2" == "lsvsc" ]]; then
-        train_path="/datastore/npl/Speech2Text/dataset/LSVSC_train.json"
-        test_path="/datastore/npl/Speech2Text/dataset/LSVSC_test.json"
-        valid_path="/datastore/npl/Speech2Text/dataset/LSVSC_valid.json"
-    else
-        train_path="/datastore/npl/Speech2Text/dataset/train.json"
-        test_path="/datastore/npl/Speech2Text/dataset/test.json"
-    fi
-
-    python /datastore/npl/Speech2Text/PhonoASR/dataset/mutiple_construct.py \
+    python ./PhonoASR/dataset/mutiple_construct.py \
         --dataset "$2" \
         --type_tokenizer "phoneme" \
         --train_path "$train_path" \
@@ -99,26 +129,54 @@ if [[ "$1" == "phoneme" ]]; then
         --base_wav_path "$base_wav_path" \
         --base_path "$base_path" \
         --valid_path "$valid_path"
-        
-    
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${train_path%.json}_phoneme.json" \
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${test_path%.json}_phoneme.json" \
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${valid_path%.json}_phoneme.json" \
+
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
-    python /datastore/npl/Speech2Text/PhonoASR/dataset/mutiple_construct.py \
+    python ./PhonoASR/dataset/mutiple_construct.py \
         --dataset "$2" \
         --type_tokenizer "char" \
-        --train_path "/datastore/npl/Speech2Text/dataset/train.json" \
-        --test_path "/datastore/npl/Speech2Text/dataset/test.json" \
+        --train_path "$train_path" \
+        --test_path "$test_path" \
         --base_wav_path "$base_wav_path" \
         --base_path "$base_path"
 
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${train_path%.json}_char.json" \
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${test_path%.json}_char.json" \
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${valid_path%.json}_char.json" \
+
 else
     echo "Preprocessing for normal model"
-    python /datastore/npl/Speech2Text/PhonoASR/dataset/mutiple_construct.py \
+    python ./PhonoASR/dataset/mutiple_construct.py \
         --dataset "$2" \
         --type_tokenizer "word" \
-        --train_path "/datastore/npl/Speech2Text/dataset/train.json" \
-        --test_path "/datastore/npl/Speech2Text/dataset/test.json" \
+        --train_path "$train_path" \
+        --test_path "$test_path" \
         --base_wav_path "$base_wav_path" \
         --base_path "$base_path"
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${train_path%.json}_word.json" \
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${test_path%.json}_word.json" \
+
+    python ./PhonoASR/dataset/check_empty.py \
+        --input "${valid_path%.json}_word.json" \
+
 fi
-mkdir -p /datastore/npl/Speech2Text/PhonoASR/saves
+
+mkdir -p ./PhonoASR/saves

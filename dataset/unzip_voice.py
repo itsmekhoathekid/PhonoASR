@@ -12,6 +12,7 @@ if __name__ == "__main__":
     output_path = args.output
     os.makedirs(output_path, exist_ok=True)
     if input_path.endswith('.zip'):
+        print("Extracting zip file...")
         with zipfile.ZipFile(input_path, 'r') as zip_ref:
             zip_ref.extractall(output_path)
     else:
