@@ -27,17 +27,7 @@ elif [[ "$2" != "vivos" && "$2" != "commonvoice" && "$2" != "vietmed" && "$2" !=
     exit 1
 fi
 
-if [[ "$3" == "--help" ]]; then
-    echo "Usage: $0 <arg1> <arg2> <dataset_folder>"
-    echo "Folder to store dataset and preprocessed data. Eg: /datastore/npl/Speech2Text/dataset"
-    exit 0
-elif [[ -z "$3" ]]; then
-    echo "Error: Need to specify folder to store dataset and preprocessed data."
-    echo "Use --help for usage."
-    exit 1
-fi
-
-DATA_DIR="$3"
+DATA_DIR="$(pwd)"
 
 set -e
 
@@ -79,7 +69,7 @@ elif [[ "$2" == "commonvoice" ]]; then
     base_wav_path=$(pwd)/clips
     base_path=$(pwd)
     cd ..
-    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset/voices"
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/clips.zip" --output "./dataset/clips"
     
 
 elif [[ "$2" == "vietmed" ]]; then
@@ -107,15 +97,17 @@ elif [[ "$2" == "lsvsc" ]]; then
 fi
 
 if [[ "$2" == "vietmed" ]]; then
-    train_path="$DATA_DIR/labeled_medical_data_train_transcript.json"
-    test_path="$DATA_DIR/labeled_medical_data_test_transcript.json"
+    train_path="$DATA_DIR/dataset/labeled_medical_data_train_transcript.json"
+    test_path="$DATA_DIR/dataset/labeled_medical_data_test_transcript.json"
+    valid_path="$DATA_DIR/dataset/labeled_medical_data_dev_transcript.json"
+
 elif [[ "$2" == "lsvsc" ]]; then
-    train_path="$DATA_DIR/LSVSC_train.json"
-    test_path="$DATA_DIR/LSVSC_test.json"
-    valid_path="$DATA_DIR/LSVSC_valid.json"
+    train_path="$DATA_DIR/dataset/LSVSC_train.json"
+    test_path="$DATA_DIR/dataset/LSVSC_test.json"
+    valid_path="$DATA_DIR/dataset/LSVSC_valid.json"
 else
-    train_path="$DATA_DIR/train.json"
-    test_path="$DATA_DIR/test.json"
+    train_path="$DATA_DIR/dataset/train.json"
+    test_path="$DATA_DIR/dataset/test.json"
 fi
 
 if [[ "$1" == "phoneme" ]]; then
@@ -136,8 +128,10 @@ if [[ "$1" == "phoneme" ]]; then
     python ./PhonoASR/dataset/check_empty.py \
         --input "${test_path%.json}_phoneme.json" \
 
-    python ./PhonoASR/dataset/check_empty.py \
-        --input "${valid_path%.json}_phoneme.json" \
+    if [[ -n "$valid_path" ]]; then
+        python ./PhonoASR/dataset/check_empty.py \
+            --input "${valid_path%.json}_phoneme.json"
+    fi
 
 elif [[ "$1" == "char" ]]; then
     echo "Preprocessing for normal model"
@@ -155,8 +149,10 @@ elif [[ "$1" == "char" ]]; then
     python ./PhonoASR/dataset/check_empty.py \
         --input "${test_path%.json}_char.json" \
 
-    python ./PhonoASR/dataset/check_empty.py \
-        --input "${valid_path%.json}_char.json" \
+    if [[ -n "$valid_path" ]]; then
+        python ./PhonoASR/dataset/check_empty.py \
+            --input "${valid_path%.json}_char.json"
+    fi
 
 else
     echo "Preprocessing for normal model"
@@ -174,8 +170,10 @@ else
     python ./PhonoASR/dataset/check_empty.py \
         --input "${test_path%.json}_word.json" \
 
-    python ./PhonoASR/dataset/check_empty.py \
-        --input "${valid_path%.json}_word.json" \
+    if [[ -n "$valid_path" ]]; then
+        python ./PhonoASR/dataset/check_empty.py \
+            --input "${valid_path%.json}_word.json"
+    fi
 
 fi
 
