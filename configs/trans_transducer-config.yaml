@@ -1,6 +1,7 @@
 training:
   epochs: 100
   batch_size: 4
+  num_workers: 4
   save_path: "/home/anhkhoa/PhonoASR/saves"
   train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
   dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"

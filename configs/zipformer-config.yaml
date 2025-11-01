@@ -1,7 +1,7 @@
 training:
   epochs: 100
   batch_size: 6
-  accumulation_steps: 1
+  num_workers: 4
   save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
   train_path : "/datastore/npl/Speech2Text/dataset/LSVSC_train_phoneme.json"
   dev_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
