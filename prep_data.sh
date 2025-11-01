@@ -58,7 +58,7 @@ if [[ "$2" == "vivos" ]]; then
     base_wav_path=$(pwd)/voices
     base_path=$(pwd)
     cd ..
-    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset/voices"
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset"
 
 elif [[ "$2" == "commonvoice" ]]; then
     echo "Downloading Common Voice dataset..."
@@ -69,7 +69,7 @@ elif [[ "$2" == "commonvoice" ]]; then
     base_wav_path=$(pwd)/clips
     base_path=$(pwd)
     cd ..
-    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/clips.zip" --output "./dataset/clips"
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/clips.zip" --output "./dataset"
     
 
 elif [[ "$2" == "vietmed" ]]; then
@@ -81,7 +81,7 @@ elif [[ "$2" == "vietmed" ]]; then
     base_wav_path=$(pwd)/wav
     base_path=$(pwd)
     cd ..
-    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/wav.zip" --output "./dataset/wav"
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/wav.zip" --output "./dataset"
 
 elif [[ "$2" == "lsvsc" ]]; then
     echo "Downloading LSVSC dataset..."
