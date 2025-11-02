@@ -9,6 +9,7 @@ import numpy as np
 import librosa
 from speechbrain.lobes.features import Fbank
 import speechbrain as sb
+import os
 
 def load_json(path):
     """
@@ -51,6 +52,7 @@ class Speech2Text(Dataset):
         elif type == 'test':
             json_path = training_config['test_path']
             
+        self.wave_path = training_config["wave_path"]
         vocab_path = training_config['vocab_path']
         self.data = load_json(json_path)
         self.vocab = Vocab(vocab_path)
@@ -84,7 +86,7 @@ class Speech2Text(Dataset):
 
     def __getitem__(self, idx):
         current_item = self.data[idx]
-        wav_path = current_item["wav_path"]
+        wav_path = os.path.join(self.wave_path, current_item["wav_path"])
         if self.type_training == "ce":
             encoded_text = torch.tensor(current_item["encoded_text"] + [[self.eos_token, self.eos_token, self.eos_token]], dtype=torch.long)
             decoder_input = torch.tensor([[self.sos_token, self.sos_token, self.sos_token]] + current_item["encoded_text"], dtype=torch.long)
