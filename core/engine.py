@@ -155,36 +155,108 @@ class Engine:
         logging.info(f"Average validation loss: {avg_loss:.4f}")
         return avg_loss
 
+    # def run_train_eval(self, train_loader, valid_loader):
+    #     start_epoch = 1 
+    #     if self.config['training']['reload']:
+    #         start_epoch = self.model_load()
+    #     num_epochs = self.config['training']['epochs']
+
+    #     for epoch in range(start_epoch, num_epochs + 1):
+    #         logging.info(f"Epoch {epoch}/{num_epochs}")
+
+    #         train_loss, curr_lr = self.train(train_loader)
+    #         val_loss = self.evaluate(valid_loader)
+
+
+    #         logging.info(f"End of epoch {epoch}: Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {curr_lr:.6f}")
+        
+    #         if not os.path.exists(self.config['training']['save_path']):
+    #             os.makedirs(self.config['training']['save_path'])
+    #         model_filename = os.path.join(
+    #             self.config['training']['save_path'],
+    #             f"{self.config['model']['model_name']}_epoch_{epoch}"
+    #         )
+
+    #         torch.save({
+    #             'epoch': epoch,
+    #             'model_state_dict': self.model.state_dict(),
+    #             'optimizer_state_dict': self.optimizer.state_dict(),
+    #         }, model_filename)
+
+    #         self.scheduler.save(self.config['training']['save_path'] + f'/scheduler_{self.config["model"]["enc"]["name"]}.ckpt')
+    
     def run_train_eval(self, train_loader, valid_loader):
-        start_epoch = 1 
+        start_epoch = 1
         if self.config['training']['reload']:
             start_epoch = self.model_load()
-        num_epochs = self.config['training']['epochs']
+        
+        patience = self.config['training'].get('patience', 5)
+        min_delta = self.config['training'].get('min_delta', 1e-4)
+        # max_epochs = self.config['training'].get('epochs', 100)
 
-        for epoch in range(start_epoch, num_epochs + 1):
-            logging.info(f"Epoch {epoch}/{num_epochs}")
+        best_val_loss = np.inf
+        best_epoch = start_epoch - 1
+        no_improve_count = 0
+        epoch = start_epoch
+        
+        while True:
+            logging.info(f"Epoch {epoch}")
 
             train_loss, curr_lr = self.train(train_loader)
             val_loss = self.evaluate(valid_loader)
 
-
-            logging.info(f"End of epoch {epoch}: Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {curr_lr:.6f}")
-        
-            if not os.path.exists(self.config['training']['save_path']):
-                os.makedirs(self.config['training']['save_path'])
-            model_filename = os.path.join(
-                self.config['training']['save_path'],
-                f"{self.config['model']['model_name']}_epoch_{epoch}"
+            logging.info(
+                f"End of epoch {epoch}: Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, LR: {curr_lr:.6f}"
             )
 
+            # === Lưu checkpoint ===
+            if not os.path.exists(self.config['training']['save_path']):
+                os.makedirs(self.config['training']['save_path'])
+            last_epoch_path = os.path.join(
+                self.config['training']['save_path'], "last_epoch"
+            )
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
-            }, model_filename)
+                'val_loss': val_loss,
+                'train_loss': train_loss,
+            }, last_epoch_path)
 
-            self.scheduler.save(self.config['training']['save_path'] + f'/scheduler_{self.config["model"]["enc"]["name"]}.ckpt')
-    
+            # === Kiểm tra cải thiện ===
+            if best_val_loss - val_loss > min_delta:
+                best_val_loss = val_loss
+                best_epoch = epoch
+                no_improve_count = 0
+
+                best_model_path = os.path.join(
+                    self.config['training']['save_path'], "best_epoch"
+                )
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'val_loss': val_loss,
+                    'train_loss': train_loss,
+                }, best_model_path)
+            else:
+                no_improve_count += 1
+
+            self.scheduler.save(
+                os.path.join(self.config['training']['save_path'], 
+                             f'scheduler_{self.config["model"]["enc"]["name"]}.ckpt')
+            )
+
+            # === Early Stopping ===
+            if no_improve_count >= patience:
+                logging.info(
+                    f"Early stopping triggered at epoch {epoch}. "
+                    f"Best epoch was {best_epoch} with val_loss={best_val_loss:.4f}"
+                )
+                break
+
+            epoch += 1
+
     def make_block_targets(self, target, k, pad_id=-100, device='cpu'):
         """
         target: (B, T)
