@@ -14,8 +14,6 @@ def load_config(config_path):
         return yaml.safe_load(f)
         
 def main():
-    from torch.optim import Adam
-    
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True, help="Path to YAML config file")
     args = parser.parse_args()
@@ -53,10 +51,21 @@ def main():
         num_workers=config['training'].get('num_workers', 4)
     )
 
+    test_dataset = Speech2Text(
+        training_config=config['training'],
+        type='test',
+        type_training= config['training'].get('type_training', 'ctc-kldiv')
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=config['training']['batch_size'] if args.type_decode == "mtp_stack" else 1,  
+        shuffle=False,
+        collate_fn=speech_collate_fn
+    )
+
     trainer = Engine(config, vocab = train_dataset.vocab)
-    trainer.run_train_eval(train_loader, dev_loader)
-
-
+    trainer.run_train(train_loader, dev_loader)
+    trainer.run_eval(test_loader)
 
 if __name__ == "__main__":
     main()
