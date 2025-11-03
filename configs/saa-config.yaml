@@ -1,0 +1,53 @@
+model:
+  enc: 
+    n_head: 8
+    d_model: 80               
+    d_hidden: 256       
+    dropout: 0.2
+    n_layer: 3
+    name : 'SAA'
+  dec: 
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 3
+  model_name: 'SAA'
+
+training:
+  epochs: 100
+  batch_size: 8
+  save_path: "/home/llogn/workspace/phonoasr/saves"
+  train_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_phoneme.json"
+  dev_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  test_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_phoneme.json"
+  vocab_path : "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_phoneme.json"
+  logg: "/home/llogn/workspace/phonoasr/logs/SAA.log"
+  result: "/home/llogn/workspace/phonoasr/result.txt"
+  reload: False
+  ctc_weight: 0.4
+  type_training: 'ce'
+
+optim:
+  # type: sgd
+  # lr: 0.0005
+  # momentum: 0.9
+  # weight_decay: 0
+  # begin_to_adjust_lr: 60
+  # nesterov: None
+  # decay_rate: 0.5
+
+  type: adam
+  lr: 0.0003
+  weight_decay: 0.0
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.0003
+  n_warmup_steps: 15000
+
+loss:
+
+
+  

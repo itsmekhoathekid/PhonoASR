@@ -1,0 +1,48 @@
+from core.modules import (
+    MultiHeadAttention,
+)
+from core.modules import (
+    ResidualConnectionBase,
+)
+import torch
+import torch.nn as nn
+    
+class HybridEncoderLayer(nn.Module):
+    def __init__(self, n_head, d_model, d_hidden, dropout=0.1):
+        super(HybridEncoderLayer, self).__init__()
+        self.mha = MultiHeadAttention(n_head, d_model, dropout)
+        self.midlayer = ResidualConnectionBase(d_model, dropout)
+        self.lstm = nn.LSTM(d_model, d_hidden, batch_first=True)
+        self.linear = nn.Linear(d_hidden, d_model)
+        
+    def forward(self, x, mask=None):
+        atten_out, mask = self.mha(x, x, x, mask)
+        midlayer = self.midlayer(atten_out, x)
+        out, _ = self.lstm(midlayer)
+        out = self.linear(out)
+        out = out + midlayer
+        return out
+    
+class InterleaveHybridAcousticEncoder(nn.Module):
+    def __init__(self, config, vocab_size):
+        super(InterleaveHybridAcousticEncoder, self).__init__()
+        self.n_head = config['enc']['n_head']
+        self.d_model = config['enc']['d_model']
+        self.d_hidden = config['enc']['d_hidden']
+        self.dropout = config['enc'].get('dropout', 0.1)
+        self.n_layer = config['enc']['n_layer']
+        
+        self.layers = nn.ModuleList([
+            HybridEncoderLayer(self.n_head, self.d_model, self.d_hidden, self.dropout) for _ in range(self.n_layer)
+        ])
+        self.linear2 = nn.Linear(self.d_model, self.d_hidden)
+        self.ctc_proj = nn.Linear(self.d_hidden, vocab_size)
+
+    def forward(self, x, mask=None): 
+        for layer in self.layers:
+            x = layer(x, mask)
+        out = self.linear2(x)
+        # ctc_out = self.ctc_proj(out)  # [B, T, vocab_size]
+        lengths = mask.squeeze(1).sum(1)
+        return out, mask, lengths
+

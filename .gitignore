@@ -1,0 +1,10 @@
+venv
+__pycache__
+*.pyc
+saves
+results
+
+*.log
+
+LSVSC_100
+*.json
