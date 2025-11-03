@@ -31,14 +31,14 @@ DATA_DIR="$(pwd)"
 
 set -e
 
-# echo "Creating virtual environment..."
-# python3 -m venv venv
+echo "Creating virtual environment..."
+python3 -m venv venv
 source venv/bin/activate
 
-# pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
-# pip install gdown librosa speechbrain jiwer
-# pip install git+https://github.com/lhotse-speech/lhotse
-# # pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+pip install gdown librosa speechbrain jiwer
+pip install git+https://github.com/lhotse-speech/lhotse
+pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
 if [[ -d "dataset" ]]; then
     echo "Folder 'dataset' already exists. Moving into it..."
@@ -50,51 +50,51 @@ else
 fi
 
 
-# if [[ "$2" == "vivos" ]]; then
-#     echo "Downloading VIVOS dataset..."
-#     gdown 19CV4WZgYez-i2oHV2r9maJofjNqcTX4o
-#     gdown 1v75mLO-TVfPXe27o54JMlXD5cQ81eaVG
-#     gdown 1YgTF-NbHuweHWr2LahS_X9j--laGDnIK
-#     base_wav_path=$(pwd)/voices
-#     base_path=$(pwd)
-#     cd ..
-#     python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset"
+if [[ "$2" == "vivos" ]]; then
+    echo "Downloading VIVOS dataset..."
+    gdown 19CV4WZgYez-i2oHV2r9maJofjNqcTX4o
+    gdown 1v75mLO-TVfPXe27o54JMlXD5cQ81eaVG
+    gdown 1YgTF-NbHuweHWr2LahS_X9j--laGDnIK
+    base_wav_path=$(pwd)/voices
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/voices.zip" --output "./dataset"
 
-# elif [[ "$2" == "commonvoice" ]]; then
-#     echo "Downloading Common Voice dataset..."
-#     gdown 189KSe2sSBD8Y3vaVZKZuU1Ca6OHvJ3DD
-#     gdown 1VtdWkozPypFaZP5pty_ID3hSQyr75Mt0
-#     gdown 1fM54Z9VCTVzTmib_KvGqM5GpCS8deW0V
-#     gdown 1vVjQCCMvVZvButmMquAKsTMx_FVHshh-
-#     base_wav_path=$(pwd)/clips
-#     base_path=$(pwd)
-#     cd ..
-#     python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/clips.zip" --output "./dataset"
+elif [[ "$2" == "commonvoice" ]]; then
+    echo "Downloading Common Voice dataset..."
+    gdown 189KSe2sSBD8Y3vaVZKZuU1Ca6OHvJ3DD
+    gdown 1VtdWkozPypFaZP5pty_ID3hSQyr75Mt0
+    gdown 1fM54Z9VCTVzTmib_KvGqM5GpCS8deW0V
+    gdown 1vVjQCCMvVZvButmMquAKsTMx_FVHshh-
+    base_wav_path=$(pwd)/clips
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/clips.zip" --output "./dataset"
     
 
-# elif [[ "$2" == "vietmed" ]]; then
-#     echo "Downloading VietMed dataset..."
-#     gdown 1hTVAZXY3kdfCJVSzUZuhzS3U7SFB-xHp
-#     gdown 1IPbjiHUCBvUgQ_k2PRz9vYJdJLiZM2aC
-#     gdown 1WVe0yHlCuMyEuvR9huJdatOwrpA5-njr
-#     gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
-#     base_wav_path=$(pwd)/wav
-#     base_path=$(pwd)
-#     cd ..
-#     python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/wav.zip" --output "./dataset"
+elif [[ "$2" == "vietmed" ]]; then
+    echo "Downloading VietMed dataset..."
+    gdown 1hTVAZXY3kdfCJVSzUZuhzS3U7SFB-xHp
+    gdown 1IPbjiHUCBvUgQ_k2PRz9vYJdJLiZM2aC
+    gdown 1WVe0yHlCuMyEuvR9huJdatOwrpA5-njr
+    gdown 1vo7jF2JKpiJ3w5OfKW5f4jypO8e9q5hk
+    base_wav_path=$(pwd)/wav
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/wav.zip" --output "./dataset"
 
-# elif [[ "$2" == "lsvsc" ]]; then
-#     echo "Downloading LSVSC dataset..."
-#     gdown 1ADHw6xJOOWi3HDTtaqr5HLlr6hAxdouQ
-#     gdown 1wOvsfHnX1TDJgLatba5WoqIQ99kd0r_g
-#     gdown 1XKJRIf32tD0f8hUk4sdSl_E1eYkALG8d
-#     gdown 1kDBJv-aym-dnK6ztMikBXnZqyJPMsxS4
-#     base_wav_path=$(pwd)/LSVSC_100/data
-#     base_path=$(pwd)
-#     cd ..
-#     python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
+elif [[ "$2" == "lsvsc" ]]; then
+    echo "Downloading LSVSC dataset..."
+    gdown 1ADHw6xJOOWi3HDTtaqr5HLlr6hAxdouQ
+    gdown 1wOvsfHnX1TDJgLatba5WoqIQ99kd0r_g
+    gdown 1XKJRIf32tD0f8hUk4sdSl_E1eYkALG8d
+    gdown 1kDBJv-aym-dnK6ztMikBXnZqyJPMsxS4
+    base_wav_path=$(pwd)/LSVSC_100/data
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
     
-# fi
+fi
 
 if [[ "$2" == "vietmed" ]]; then
     train_path="$DATA_DIR/dataset/labeled_medical_data_train_transcript.json"
