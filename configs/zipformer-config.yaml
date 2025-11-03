@@ -1,0 +1,63 @@
+training:
+  epochs: 100
+  batch_size: 6
+  num_workers: 4
+  save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
+  train_path : "/datastore/npl/Speech2Text/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
+  test_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/datastore/npl/Speech2Text/dataset/phoneme_vocab_lsvsc.json"
+  logg: "/datastore/npl/Speech2Text/PhonoASR/logs/Zipformer.log"
+  result: "/datastore/npl/Speech2Text/PhonoASR/result.txt"
+  reload: False
+  ctc_weight: 0.4
+  type_training: 'ce'
+  type: 'word'
+
+model:
+  enc:
+    conv_embeded: 
+      input_dim: 80
+      num_blocks: 2
+      num_layers_per_block: 1
+      out_channels: [64, 32]
+      kernel_sizes: [3,3]
+      strides: [1,2]
+      residuals: [False, False]
+      dropout: 0.1
+    output_downsampling_factor: 2
+    downsampling_factor: [2,2,3,4,3,2]
+    encoder_dim: [192,256,384,512,384,256]
+    num_encoder_layers: [2,2,1,1,1,1]
+    encoder_unmasked_dim: [192,256,384,512,384,256]
+    query_head_dim: 32
+    pos_head_dim: 4
+    value_head_dim: 12     # paper
+    num_heads: [4,4,4,8,4,4]  # paper
+    feedforward_dim: [512,768,1024,1536,1024,768]  # paper
+    cnn_module_kernel: [31,31,15,15,15,31]     # paper
+    pos_dim: 192
+    dropout: 0.1  
+    warmup_batches: 4000.0
+    causal: False
+    chunk_size: [-1]
+    left_context_frames: [-1]  
+    name: 'Zipformer'
+  dec: 
+    n_layer: 3
+    d_model: 512
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 3
+  model_name: 'Zipformer'
+
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 15000

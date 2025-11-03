@@ -1,0 +1,70 @@
+training:
+  epochs: 100
+  batch_size: 16
+  num_workers: 4
+  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
+  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
+  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  reload: False
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/vgg-transformer.log"
+  ctc_weight: 0.3
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-vgg-transformer.txt"
+  type: "word"
+  type_training : "ce"
+  
+
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 15000
+
+model:
+  enc:
+    subsampling:
+      num_blocks: 2
+      out_channels: [32, 64]
+      kernel_sizes: [3, 3]
+      pooling_kernel_sizes: [2, 2]
+      num_conv_layers : [2, 2]
+      layer_norms: [True, True]
+      dropout: 0.1
+    input_dim : 80
+    in_features: 1280
+    n_layers: 6
+    d_model: 256
+    ff_size: 1024
+    h: 4
+    p_dropout: 0.1
+    name: 'VGGTransformer'
+  dec:
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 3
+  model_name: "VGGTransformer"
+
+
+# optim:
+#   type: sgd
+#   lr: 0.0001
+#   momentum: 0.9
+#   weight_decay: 0
+#   begin_to_adjust_lr: 60
+#   nesterov: None
+#   decay_rate: 0.5
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
+
+
