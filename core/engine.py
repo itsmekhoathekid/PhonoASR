@@ -3,7 +3,7 @@ from core.modules import *
 
 from .model import *
 from speechbrain.nnet.schedulers import NoamScheduler
-from inference import GreedyMPStackPredictor, GreedyMutiplePredictor, GreedyPredictor
+from core.inference import GreedyMPStackPredictor, GreedyMutiplePredictor, GreedyPredictor
 
 import os 
 import logging
