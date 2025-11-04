@@ -35,7 +35,7 @@ class GreedyPredictor:
         self.max_len = max_len
     def greedy_decode(self, src, src_mask):
         batch = src.size(0)
-        enc_out, src_mask = self.model.encode(src, src_mask)
+        enc_out, src_mask , src_len = self.model.encode(src, src_mask)
         decoder_input = torch.full((batch,1), self.sos, dtype= torch.long, device= self.device)
         
         for _ in range(self.max_len):
@@ -142,7 +142,7 @@ class GreedyMutiplePredictor:
     @torch.no_grad()
     def greedy_decode(self, src, src_mask):
         # ===== 1. Encode =====
-        enc_out, src_mask = self.model.encode(src, src_mask)
+        enc_out, src_mask, src_len = self.model.encode(src, src_mask)
         decoder_input = torch.tensor([[self.sos]], dtype=torch.long, device=self.device)
 
         fwd_pred, fwd_verify = 0, 0
