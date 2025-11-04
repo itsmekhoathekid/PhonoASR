@@ -206,8 +206,8 @@ class Engine:
             total_cer = cer(all_gold_texts, all_predicted_texts)
 
         return {
-            "WER": total_wer,
-            "CER": total_cer
+            "wer": total_wer,
+            "cer": total_cer
         }
 
     def save_checkpoint(self, epoch, wer, cer, mode):
@@ -277,7 +277,7 @@ class Engine:
     def run_eval(self, test_loader):
         self.model.eval()
 
-        type_decode = self.config["infer"]['type_decode']
+        type_decode = self.config["infer"].get('type_decode', 'mtp_stack')
         if type_decode == "mtp_stack":
             predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
         elif type_decode == "mtp":
