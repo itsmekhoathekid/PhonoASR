@@ -210,6 +210,23 @@ class Engine:
             "CER": total_cer
         }
 
+    def save_checkpoint(self, epoch, wer, cer, mode):
+        
+        model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
+        scheduler_name = f"{self.config['model']['model_name']}_scheduler.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}_scheduler.ckpt"
+        torch.save({
+            'epoch': epoch,
+            "wer": wer,
+            "cer": cer,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict()
+        }, os.path.join(
+            self.config['training']['save_path'],
+            model_name
+        ))
+        
+        self.scheduler.save(os.path.join(self.checkpoint_path, scheduler_name))
+
     def run_train(self, train_loader, valid_loader):
         if not os.path.exists(self.config['training']['save_path']):
             os.makedirs(self.config['training']['save_path'])
@@ -223,36 +240,39 @@ class Engine:
             epoch = 1
             best_wer = 1.
 
+        num_epochs = self.config['training'].get('num_epochs', 0) # if 0 then train til early stop
+        
+        patience = self.config['training'].get('patience', 10)
+        no_improve_epochs = 0
+        daily_save = self.config['training'].get('daily_save', True)
+
         while True:
             logging.info(f"Epoch {epoch}")
 
             self.train(train_loader)
             results = self.evaluate(valid_loader)
             current_wer = results["wer"]
+            current_cer = results["cer"]
 
             if current_wer < best_wer:
                 best_wer = current_wer
-                torch.save({
-                    'epoch': epoch,
-                    "wer": best_wer,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict()
-                }, os.path.join(
-                    self.config['training']['save_path'],
-                    f"best_{self.config['model']['model_name']}.ckpt"
-                ))
-
-            torch.save({
-                    'epoch': epoch,
-                    "wer": current_wer,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict()
-                }, os.path.join(
-                    self.config['training']['save_path'],
-                    f"{self.config['model']['model_name']}.ckpt"
-                ))
+                self.save_checkpoint(epoch, best_wer, current_cer,  mode="best")
+                no_improve_epochs = 0
+                
+            else:
+                no_improve_epochs += 1
+                if no_improve_epochs >= patience:
+                    logging.info(f"No improvement for {patience} epochs. Stopping training.")
+                    break
+            if daily_save:
+                self.save_checkpoint(epoch, current_wer, current_cer, mode="latest")
+            epoch += 1
+            logging.info(f"Validation WER: {current_wer:.4f}, Best WER: {best_wer:.4f}")
+            if num_epochs > 0 and epoch > num_epochs:
+                logging.info("Reached maximum number of epochs. Stopping training.")
+                break
             
-            self.scheduler.save(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
+                
 
     def run_eval(self, test_loader):
         self.model.eval()
