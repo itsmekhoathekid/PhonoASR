@@ -267,7 +267,7 @@ class Engine:
             if daily_save:
                 self.save_checkpoint(epoch, current_wer, current_cer, mode="latest")
             epoch += 1
-            logging.info(f"Validation WER: {current_wer:.4f}, Best WER: {best_wer:.4f}")
+            logging.info(f"CER: {current_cer:.4f}, WER: {current_wer:.4f}, Best WER: {best_wer:.4f}")
             if num_epochs > 0 and epoch > num_epochs:
                 logging.info("Reached maximum number of epochs. Stopping training.")
                 break
