@@ -13,9 +13,7 @@ training:
   result: "/home/anhkhoa/PhonoASR/result_2.txt"
   type: "word"
   type_training : "ce"
-  sample_rate : 16000
-  n_mels : 80
-  n_fft : 400
+
   
 
 optim:
@@ -54,14 +52,6 @@ model:
     k: 3
   model_name: "TASA"
 
-# optim:
-#   type: sgd
-#   lr: 0.0001
-#   momentum: 0.9
-#   weight_decay: 0
-#   begin_to_adjust_lr: 60
-#   nesterov: None
-#   decay_rate: 0.5
 
 rnnt_loss:
   blank: 4

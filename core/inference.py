@@ -56,6 +56,8 @@ class GreedyPredictor:
         
         return decoder_input.squeeze(0).cpu().numpy()
 
+
+
 class GreedyMPStackPredictor:
     def __init__(self, model, vocab, device, max_len=150):
         self.model = model
