@@ -58,7 +58,7 @@ def main():
     )
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
-        batch_size=config['training']['batch_size'] if args.type_decode == "mtp_stack" else 1,  
+        batch_size=config['training']['batch_size'] if config['infer']['type_decode'] == "mtp_stack" else 1,  
         shuffle=False,
         collate_fn=speech_collate_fn
     )
