@@ -24,9 +24,9 @@ class Engine:
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
         self.ce_loss = CELoss(ignore_index=vocab.get_pad_token(), reduction='mean').to(self.device)
         self.transducer_loss = RNNTLoss(blank=vocab.get_blank_token(), reduction='mean').to(self.device)
-        self.predictor = self.get_predictor()
         self.vocab = vocab
-
+        self.predictor = self.get_predictor()
+        
     def inits(self, vocab_size):
         if self.config['training']['type_training'] == 'transducer':
             model = TransducerAcousticModle(
