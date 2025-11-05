@@ -24,7 +24,7 @@ class Engine:
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
         self.ce_loss = CELoss(ignore_index=vocab.get_pad_token(), reduction='mean').to(self.device)
         self.transducer_loss = RNNTLoss(blank=vocab.get_blank_token(), reduction='mean').to(self.device)
-
+        self.predictor = self.get_predictor()
         self.vocab = vocab
 
     def inits(self, vocab_size):
@@ -45,6 +45,17 @@ class Engine:
         )
 
         return model, optimizer, scheduler
+
+    def get_predictor(self):
+        type_decode = self.config["infer"]['type_decode']
+        if type_decode == "mtp_stack":
+            predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
+        elif type_decode == "mtp":
+            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device, tau=self.config["infer"]["tau"])
+        else:
+            predictor = GreedyPredictor(self.model, self.vocab, self.device)
+        
+        return predictor
     
     def load_checkpoint(self):
         if os.path.isfile():
@@ -121,28 +132,27 @@ class Engine:
             progress_bar.set_postfix(batch_loss=loss.item())
 
         avg_loss = total_loss / len(dataloader)
-        logging.info(f"Average training loss: {avg_loss:.4f}")
+        logging.info(f"Average training loss: {avg_loss:.4f}, Learning Rate: {curr_lr:.6f}")
         return avg_loss, curr_lr
 
-    def evaluate(self, dataloader):
+    def inference(self, dataloader, save = False):
         self.model.eval()
 
         type_decode = self.config["infer"]['type_decode']
-        if type_decode == "mtp_stack":
-            predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
-        elif type_decode == "mtp":
-            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device, tau=self.config["infer"]["tau"])
-        else:
-            predictor = GreedyPredictor(self.model, self.vocab, self.device)
-
+        type_training = self.config['training']['type_training']
         all_gold_texts = []
         all_predicted_texts = []
+        results = []
         with torch.no_grad():
             for batch in tqdm(dataloader, desc="Evaluating"):
                 src = batch['fbank'].to(self.device)
                 src_mask = batch['fbank_mask'].to(self.device)
                 tokens = batch["tokens"].to(self.device)
-                predicted_tokens = predictor.greedy_decode(src, src_mask)
+                
+                if type_training != "transducer":
+                    predicted_tokens = self.predictor.greedy_decode(src, src_mask)
+                else:
+                    predicted_tokens = self.model.greedy_batch(src, src_mask, max_output_len=self.config['infer'].get('max_output_len', 150))
 
                 batch_size = src.size(0)
                 
@@ -153,14 +163,14 @@ class Engine:
                         
                         predicted_tokens_clean = [
                             token for token in sample_tokens
-                            if token != predictor.sos and token != predictor.eos and token != predictor.blank
+                            if token != self.predictor.sos and token != self.predictor.eos and token != self.predictor.blank
                         ]
-                        predicted_text = [predictor.tokenizer[token] for token in predicted_tokens_clean]
+                        predicted_text = [self.predictor.tokenizer[token] for token in predicted_tokens_clean]
 
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        gold_text = [predictor.tokenizer[token] for token in sample_gold_tokens if token != predictor.blank]
+                        gold_text = [self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank]
                         gold_text_str = ' '.join(gold_text)
-                        predicted_text_str = ' '.join([t for t in predicted_text if t != predictor.blank and t != predictor.eos])
+                        predicted_text_str = ' '.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
                     
                     else:
                         sample_tokens = predicted_tokens[batch_idx]
@@ -168,47 +178,96 @@ class Engine:
                         predicted_tokens_flat = []
                         for triplet in sample_tokens:
                             predicted_tokens_flat.extend(triplet)
-                            predicted_tokens_flat.append(predictor.space)
+                            predicted_tokens_flat.append(self.predictor.space)
                         
                         predicted_tokens_clean = [
                             token for token in predicted_tokens_flat
-                            if token != predictor.sos and token != predictor.eos and token != predictor.blank and token != predictor.pad
+                            if token != self.predictor.sos and token != self.predictor.eos and token != self.ce_losspredictor.blank and token != self.predictor.pad
                         ]
-                        predicted_text = [predictor.tokenizer[token] for token in predicted_tokens_clean]
+                        predicted_text = [self.predictor.tokenizer[token] for token in predicted_tokens_clean]
         
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
                         tokens_cpu_flat = []
                         for triplet in sample_gold_tokens:
                             tokens_cpu_flat.extend(triplet)
-                            tokens_cpu_flat.append(predictor.space)
+                            tokens_cpu_flat.append(self.predictor.space)
                         
-                        gold_text = [predictor.tokenizer[token] for token in tokens_cpu_flat if token not in [predictor.blank, predictor.sos, predictor.eos, predictor.pad]]
+                        gold_text = [self.predictor.tokenizer[token] for token in tokens_cpu_flat if token not in [self.predictor.blank, self.predictor.sos, self.predictor.eos, self.predictor.pad]]
                         gold_text_str = ''.join(gold_text)
-                        gold_text_str = gold_text_str.replace(predictor.tokenizer[predictor.space], ' ')
-                        predicted_text_str = ''.join([t for t in predicted_text if t not in [predictor.blank, predictor.sos, predictor.eos, predictor.pad]])
-                        predicted_text_str = predicted_text_str.replace(predictor.tokenizer[predictor.space], ' ')
+                        gold_text_str = gold_text_str.replace(self.predictor.tokenizer[self.predictor.space], ' ')
+                        predicted_text_str = ''.join([t for t in predicted_text if t not in [self.predictor.blank, self.predictor.sos, self.predictor.eos, self.predictor.pad]])
+                        predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[self.predictor.space], ' ')
 
                     if self.config['training']['type'] == "phoneme":
-                        predicted_text_str = ''.join([t for t in predicted_text if t != predictor.blank and t != predictor.eos])
+                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
                         space_token = self.vocab.get("<space>")
-                        predicted_text_str = predicted_text_str.replace(predictor.tokenizer[space_token], ' ')
+                        predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[space_token], ' ')
 
-                        gold_text_str = ''.join([predictor.tokenizer[token] for token in sample_gold_tokens if token != predictor.blank])
-                        gold_text_str = gold_text_str.replace(predictor.tokenizer[space_token], ' ')
+                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
+                        gold_text_str = gold_text_str.replace(self.predictor.tokenizer[space_token], ' ')
                     elif self.config['training']['type'] == "char":
-                        predicted_text_str = ''.join([t for t in predicted_text if t != predictor.blank and t != predictor.eos])
-                        gold_text_str = ''.join([predictor.tokenizer[token] for token in sample_gold_tokens if token != predictor.blank])
+                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
+                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
                     
                     all_gold_texts.append(gold_text_str)
                     all_predicted_texts.append(predicted_text_str)
+
+                    wer_score = wer(gold_text_str, predicted_text_str)
+                    cer_score = cer(gold_text_str, predicted_text_str)
+
+                    if save:
+                        results.append({
+                            "gold": gold_text_str,
+                            "predicted": predicted_text_str,
+                            "WER": wer_score,
+                            "CER": cer_score,
+                        })
+                        print(f"WER: {wer_score:.4f}, CER: {cer_score:.4f}")
             
             total_wer = wer(all_gold_texts, all_predicted_texts)
             total_cer = cer(all_gold_texts, all_predicted_texts)
+
+            if save:
+                results.append({
+                    "total_WER": total_wer,
+                    "total_CER": total_cer
+                })
+
+                result_path = self.config['training']['result']
+                json.dump(results, open(result_path, "w+"), ensure_ascii=False, indent=4)
 
         return {
             "wer": total_wer,
             "cer": total_cer
         }
+
+    def evaluate(self, dataloader):
+        self.model.eval()
+        total_loss = 0.0
+        progress_bar = tqdm(dataloader, desc="🧪 Evaluating", leave=False)
+        with torch.no_grad():
+            for batch in progress_bar:
+                speech = batch["fbank"].to(self.device)
+                tokens_eos = batch["text"].to(self.device)
+                speech_mask = batch["fbank_mask"].to(self.device)
+                text_mask = batch["text_mask"].to(self.device)
+                decoder_input = batch["decoder_input"].to(self.device)
+                text_len = batch["text_len"].to(self.device)
+
+                enc_out , dec_out, enc_lens   = self.model(
+                    src = speech, 
+                    tgt = decoder_input,
+                    src_mask = speech_mask,
+                    tgt_mask = text_mask
+                )  # [B, T_text, vocab_size]
+                
+                loss = self.get_loss(enc_out, dec_out, enc_lens, text_len, tokens_eos)
+
+                total_loss += loss.item()
+                progress_bar.set_postfix(batch_loss=loss.item())
+        avg_loss = total_loss / len(dataloader)
+        logging.info(f"Average validation loss: {avg_loss:.4f}")
+        return avg_loss
 
     def save_checkpoint(self, epoch, wer, cer, mode):
         
@@ -240,6 +299,7 @@ class Engine:
             epoch = 1
             best_wer = 1.
 
+        log_val_loss = self.config['training'].get('log_val_loss', True)
         num_epochs = self.config['training'].get('num_epochs', 0) # if 0 then train til early stop
         
         patience = self.config['training'].get('patience', 10)
@@ -250,7 +310,10 @@ class Engine:
             logging.info(f"Epoch {epoch}")
 
             self.train(train_loader)
-            results = self.evaluate(valid_loader)
+            results = self.inference(valid_loader)
+            if log_val_loss:
+                val_loss = self.evaluate(valid_loader)
+                logging.info(f"Validation Loss: {val_loss:.4f}")
             current_wer = results["wer"]
             current_cer = results["cer"]
 
@@ -275,104 +338,7 @@ class Engine:
                 
 
     def run_eval(self, test_loader):
-        self.model.eval()
-
-        type_decode = self.config["infer"].get('type_decode', 'mtp_stack')
-        if type_decode == "mtp_stack":
-            predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
-        elif type_decode == "mtp":
-            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device, tau=self.config["infer"]["tau"])
-        else:
-            predictor = GreedyPredictor(self.model, self.vocab, self.device)
-
-        all_gold_texts = []
-        all_predicted_texts = []
-        results = []
-        result_path = self.config['training']['result']
-        with torch.no_grad():
-            for batch in tqdm(test_loader, desc="Testing"):
-                src = batch['fbank'].to(self.device)
-                src_mask = batch['fbank_mask'].to(self.device)
-                tokens = batch["tokens"].to(self.device)
-                predicted_tokens = predictor.greedy_decode(src, src_mask)
-
-                batch_size = src.size(0)
-                
-                # Process each sample in the batch
-                for batch_idx in range(batch_size):
-                    if type_decode != "mtp_stack":
-                        sample_tokens = predicted_tokens[batch_idx]  # [seq_len]
-                        
-                        predicted_tokens_clean = [
-                            token for token in sample_tokens
-                            if token != predictor.sos and token != predictor.eos and token != predictor.blank
-                        ]
-                        predicted_text = [predictor.tokenizer[token] for token in predicted_tokens_clean]
-
-                        sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        gold_text = [predictor.tokenizer[token] for token in sample_gold_tokens if token != predictor.blank]
-                        gold_text_str = ' '.join(gold_text)
-                        predicted_text_str = ' '.join([t for t in predicted_text if t != predictor.blank and t != predictor.eos])
-                    
-                    else:
-                        sample_tokens = predicted_tokens[batch_idx]
-                        
-                        predicted_tokens_flat = []
-                        for triplet in sample_tokens:
-                            predicted_tokens_flat.extend(triplet)
-                            predicted_tokens_flat.append(predictor.space)
-                        
-                        predicted_tokens_clean = [
-                            token for token in predicted_tokens_flat
-                            if token != predictor.sos and token != predictor.eos and token != predictor.blank and token != predictor.pad
-                        ]
-                        predicted_text = [predictor.tokenizer[token] for token in predicted_tokens_clean]
-        
-                        sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        tokens_cpu_flat = []
-                        for triplet in sample_gold_tokens:
-                            tokens_cpu_flat.extend(triplet)
-                            tokens_cpu_flat.append(predictor.space)
-                        
-                        gold_text = [predictor.tokenizer[token] for token in tokens_cpu_flat if token not in [predictor.blank, predictor.sos, predictor.eos, predictor.pad]]
-                        gold_text_str = ''.join(gold_text)
-                        gold_text_str = gold_text_str.replace(predictor.tokenizer[predictor.space], ' ')
-                        predicted_text_str = ''.join([t for t in predicted_text if t not in [predictor.blank, predictor.sos, predictor.eos, predictor.pad]])
-                        predicted_text_str = predicted_text_str.replace(predictor.tokenizer[predictor.space], ' ')
-
-                    if self.config['training']['type'] == "phoneme":
-                        predicted_text_str = ''.join([t for t in predicted_text if t != predictor.blank and t != predictor.eos])
-                        space_token = self.vocab.get("<space>")
-                        predicted_text_str = predicted_text_str.replace(predictor.tokenizer[space_token], ' ')
-
-                        gold_text_str = ''.join([predictor.tokenizer[token] for token in sample_gold_tokens if token != predictor.blank])
-                        gold_text_str = gold_text_str.replace(predictor.tokenizer[space_token], ' ')
-                    elif self.config['training']['type'] == "char":
-                        predicted_text_str = ''.join([t for t in predicted_text if t != predictor.blank and t != predictor.eos])
-                        gold_text_str = ''.join([predictor.tokenizer[token] for token in sample_gold_tokens if token != predictor.blank])
-                    
-                    all_gold_texts.append(gold_text_str)
-                    all_predicted_texts.append(predicted_text_str)
-
-                    wer_score = wer(gold_text_str, predicted_text_str)
-                    cer_score = cer(gold_text_str, predicted_text_str)
-                    results.append({
-                        "gold": gold_text_str,
-                        "predicted": predicted_text_str,
-                        "WER": wer_score,
-                        "CER": cer_score,
-                    })
-                    print(f"WER: {wer_score:.4f}, CER: {cer_score:.4f}")
-            
-            total_wer = wer(all_gold_texts, all_predicted_texts)
-            total_cer = cer(all_gold_texts, all_predicted_texts)
-
-            results.append({
-                "WER": total_wer,
-                "CER": total_cer
-            })
-
-        json.dump(results, open(result_path, "w+"), ensure_ascii=False, indent=4)
+        self.inference(test_loader, save=True)
     
     def make_block_targets(self, target, k, pad_id=-100, device='cpu'):
         """
