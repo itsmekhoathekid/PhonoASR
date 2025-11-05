@@ -101,7 +101,7 @@ class TransducerAcousticModle(nn.Module):
             inner_dim=config['model']['joint']['inner_size'],
             vocab_size=vocab_size,
         )
-        self.pad = config['training'].get('pad_id', 0)
+        self.pad_id = config['training'].get('pad_id', 0)
         self.blank = config['training'].get('blank_id', 0)
         self.sos = config['training'].get('sos_id', 1)
         self.eos = config['training'].get('eos_id', 2)
@@ -152,7 +152,7 @@ class TransducerAcousticModle(nn.Module):
     @torch.no_grad()
     def greedy_batch(self, inputs, input_lengths, max_output_len=200):
         # 1) Encode once for whole batch
-        enc_out, input_lengths = self.encoder(inputs, input_lengths)   # [B, T, D]
+        enc_out, _, input_lengths = self.encoder(inputs, input_lengths)   # [B, T, D]
         enc_out = self.lin_enc(enc_out)
 
         B, T, D = enc_out.size()

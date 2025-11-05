@@ -36,24 +36,33 @@ model:
   k: 1
 
 training:
-  epochs: 100
-  batch_size: 4
-  num_workers: 4
-  save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_w2i.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_w2i.json"
-  logg : "/home/anhkhoa/TASA/logs/Conformer.log"
-  reload: False
-  ctc_weight: 0.4
-  type_training: 'transducer'
-  sample_rate : 16000
-  n_mels : 80
-  n_fft : 512
-  win_length : 25
-  result: "/home/anhkhoa/PhonoASR/results"
+    epochs: 0
+    batch_size: 2
+    num_workers: 
+    save_path: "/home/llogn/workspace/phonoasr/saves"
+    wave_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/voices"
+    train_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_w2i.json"
+    dev_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_w2i.json"
+    test_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_w2i.json"
+    vocab_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_w2i.json"
+    reload: False
+    logg: "/home/llogn/workspace/phonoasr/logs/Conformer.log"
+    # ctc_weight: 0.3
+    result: "/home/llogn/workspace/phonoasr/result.txt"
+    type: "word"
+    type_training: "transducer"
+    sample_rate : 16000
+    n_mels : 80
+    n_fft : 512
+    win_length : 25
+    pad_id: 0
+    blank_id: 0
+    sos_id: 1
+    eos_id: 2
 
+infer: 
+    type_decode: "mtp_stack"
+    
 optim:
   type: adam
   lr: 0.001
@@ -65,6 +74,7 @@ scheduler:
   n_warmup_steps: 15000
 
 loss:
+    blank: 0
 
 
   
