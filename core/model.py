@@ -102,6 +102,9 @@ class TransducerAcousticModle(nn.Module):
             vocab_size=vocab_size,
         )
         self.pad_id = config['training'].get('pad_id', 0)
+        self.blank = config['training'].get('blank_id', 0)
+        self.sos = config['training'].get('sos_id', 1)
+        self.eos = config['training'].get('eos_id', 2)
 
     def forward(self, inputs, targets, inputs_length,  decoder_mask):
         enc_state, _, fbank_len = self.encoder(inputs, inputs_length)
@@ -144,4 +147,51 @@ class TransducerAcousticModle(nn.Module):
             return token_list
 
         results = [decode(enc_states[i], inputs_length[i]) for i in range(batch_size)]
+        return results
+    
+    @torch.no_grad()
+    def greedy_batch(self, inputs, input_lengths, max_output_len=200):
+        # 1) Encode once for whole batch
+        enc_out, _, input_lengths = self.encoder(inputs, input_lengths)   # [B, T, D]
+        enc_out = self.lin_enc(enc_out)
+
+        B, T, D = enc_out.size()
+        hidden = None
+
+        # init decoder input: [B,1]
+        tokens = torch.full((B,1), self.sos, dtype=torch.long, device=inputs.device)
+        dec_state, hidden = self.decoder(tokens, hidden=hidden)        # [B,1,D_dec]
+
+        # keep track finished
+        finished = torch.zeros(B, dtype=torch.bool, device=inputs.device)
+        results = [[] for _ in range(B)]
+
+        t = 0
+        while t < T and not finished.all():
+            # 2) joint: enc_out[:,t,:] + last dec step 
+            enc_step = enc_out[:, t, :].unsqueeze(1)       # [B,1,D]
+            dec_step = dec_state[:, -1, :].unsqueeze(1)    # [B,1,D]
+            logits = self.joint(enc_step, dec_step)        # [B,1,V]
+            preds = logits.softmax(-1).argmax(dim=-1)      # [B,1]
+            preds = preds.squeeze(1)                       # [B]
+
+            # 3) for batch: update tokens one by one
+            for b in range(B):
+                if finished[b]:
+                    continue
+                p = preds[b].item()
+                if p == self.eos:
+                    finished[b] = True
+                elif p not in [self.blank, self.sos]:
+                    results[b].append(p)
+                    token = torch.tensor([[p]], device=inputs.device)
+                    dec_state_b, hidden_b = self.decoder(token, hidden=hidden[b])
+                    dec_state[b] = dec_state_b
+                    hidden[b] = hidden_b
+
+            # time step only advances when blank or eos
+            advance_mask = (preds == self.blank) | (preds == self.eos)
+            if advance_mask.any():
+                t += 1
+
         return results
