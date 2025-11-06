@@ -119,7 +119,7 @@ class TransducerAcousticModle(nn.Module):
     def recognize(self, inputs, inputs_length):
         batch_size = inputs.size(0)
 
-        enc_states, inputs_length = self.encoder(inputs, inputs_length)
+        enc_states,_, inputs_length = self.encoder(inputs, inputs_length)
         zero_token = torch.LongTensor([[self.sos]]) 
         
         if inputs.is_cuda:
@@ -153,8 +153,7 @@ class TransducerAcousticModle(nn.Module):
     def greedy_batch(self, inputs, input_lengths, max_output_len=200):
         # 1) Encode once for whole batch
         enc_out, _, input_lengths = self.encoder(inputs, input_lengths)   # [B, T, D]
-        enc_out = self.lin_enc(enc_out)
-
+            
         B, T, D = enc_out.size()
         hidden = None
 
@@ -179,15 +178,35 @@ class TransducerAcousticModle(nn.Module):
             for b in range(B):
                 if finished[b]:
                     continue
+
                 p = preds[b].item()
+
                 if p == self.eos:
                     finished[b] = True
-                elif p not in [self.blank, self.sos]:
+                    continue
+
+                if p not in [self.blank, self.sos]:
                     results[b].append(p)
+
+                    # 1) token mới cho mẫu b (giữ batch=1)
                     token = torch.tensor([[p]], device=inputs.device)
-                    dec_state_b, hidden_b = self.decoder(token, hidden=hidden[b])
-                    dec_state[b] = dec_state_b
-                    hidden[b] = hidden_b
+
+                    # 2) Lấy hidden của mẫu b và ép contiguous
+                    h, c = hidden
+                    h_b = h.narrow(1, b, 1).contiguous()  # [num_layers, 1, H]
+                    c_b = c.narrow(1, b, 1).contiguous()
+                    hidden_b = (h_b, c_b)
+
+                    # 3) Gọi decoder với keyword args để không nhầm 'length'
+                    dec_state_b, hidden_b = self.decoder(inputs=token, hidden=hidden_b)
+
+                    # 4) Ghi ngược lại vào hidden toàn batch bằng copy_
+                    h[:, b:b+1, :].copy_(hidden_b[0])
+                    c[:, b:b+1, :].copy_(hidden_b[1])
+                    hidden = (h, c)
+
+                    # 5) Cập nhật dec_state cho mẫu b (giữ đúng shape)
+                    dec_state[b:b+1, -1:, :].copy_(dec_state_b[:, -1:, :])
 
             # time step only advances when blank or eos
             advance_mask = (preds == self.blank) | (preds == self.eos)
