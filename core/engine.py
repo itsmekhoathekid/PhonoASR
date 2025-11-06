@@ -1,8 +1,9 @@
-import torch 
+import torch
+from torch.optim.lr_scheduler import LambdaLR
 from core.modules import *
 
 from .model import *
-from speechbrain.nnet.schedulers import NoamScheduler
+# from speechbrain.nnet.schedulers import NoamScheduler
 from core.inference import GreedyMPStackPredictor, GreedyMutiplePredictor, GreedyPredictor
 
 import os 
@@ -19,6 +20,7 @@ class Engine:
         self.model, self.optimizer, self.scheduler = self.inits(vocab_size=len(vocab))
         self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [0.2 for _ in range(self.config['model']['dec']['k'])]
         self.type_training = self.config['training']['type_training']
+        self.warmup = self.config["training"]["n_warmup_steps"]
         
         self.ctc_loss = CTCLoss(blank=vocab.get_blank_token(), reduction='batchmean').to(self.device)
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
@@ -26,6 +28,11 @@ class Engine:
         self.transducer_loss = RNNTLoss(blank=vocab.get_blank_token(), reduction='mean').to(self.device)
         self.vocab = vocab
         self.predictor = self.get_predictor()
+
+    def lambda_lr(self, step):
+        warm_up = self.warmup
+        step += 1
+        return (self.model.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
         
     def inits(self, vocab_size):
         if self.config['training']['type_training'] == 'transducer':
@@ -39,10 +46,13 @@ class Engine:
                 vocab_size=vocab_size
             ).to(self.device)
         optimizer = Optimizer(model.parameters(), self.config['optim'])
-        scheduler = NoamScheduler(
-            n_warmup_steps=self.config['scheduler']['n_warmup_steps'],
-            lr_initial=self.config['scheduler']['lr_initial']
-        )
+        
+        # scheduler = NoamScheduler(
+        #     n_warmup_steps=self.config['scheduler']['n_warmup_steps'],
+        #     lr_initial=self.config['scheduler']['lr_initial']
+        # )
+
+        scheduler = LambdaLR(self.optim, self.lambda_lr)
 
         return model, optimizer, scheduler
 
@@ -123,8 +133,9 @@ class Engine:
             loss.backward()
 
             self.optimizer.step()
+            self.scheduler.step()
 
-            curr_lr, _ = self.scheduler(self.optimizer.optimizer)
+            curr_lr = self.scheduler.get_lr()
 
             total_loss += loss.item()
 
