@@ -182,7 +182,7 @@ class Engine:
                         
                         predicted_tokens_clean = [
                             token for token in predicted_tokens_flat
-                            if token != self.predictor.sos and token != self.predictor.eos and token != self.ce_losspredictor.blank and token != self.predictor.pad
+                            if token != self.predictor.sos and token != self.predictor.eos and token != self.predictor.blank and token != self.predictor.pad
                         ]
                         predicted_text = [self.predictor.tokenizer[token] for token in predicted_tokens_clean]
         
@@ -199,6 +199,7 @@ class Engine:
                         predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[self.predictor.space], ' ')
 
                     if self.config['training']['type'] == "phoneme":
+                        sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
                         predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
                         space_token = self.vocab.get("<space>")
                         predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[space_token], ' ')
@@ -206,6 +207,7 @@ class Engine:
                         gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
                         gold_text_str = gold_text_str.replace(self.predictor.tokenizer[space_token], ' ')
                     elif self.config['training']['type'] == "char":
+                        sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
                         predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
                         gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
                     
