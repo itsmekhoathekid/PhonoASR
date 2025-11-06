@@ -29,6 +29,7 @@ model:
     k: 3
   model_name : 'Conformer'
   k: 3
+  d_model: 256
 
 training:
   epochs: 100
