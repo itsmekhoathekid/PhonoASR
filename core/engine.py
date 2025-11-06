@@ -1,5 +1,6 @@
 import torch
 from torch.optim.lr_scheduler import LambdaLR
+from torch.optim import Adam
 from core.modules import *
 
 from .model import *
@@ -17,10 +18,12 @@ class Engine:
         self.config = config
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.checkpoint_path = config['training']['save_path']
-        self.model, self.optimizer, self.scheduler = self.inits(vocab_size=len(vocab))
+        self.warmup = self.config["scheduler"]["n_warmup_steps"]
+        self.d_model = self.config["model"]["d_model"]
+        self.model, self.optimizer = self.inits(vocab_size=len(vocab))
+        self.scheduler = LambdaLR(self.optimizer, self.lambda_lr)
         self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [0.2 for _ in range(self.config['model']['dec']['k'])]
         self.type_training = self.config['training']['type_training']
-        self.warmup = self.config["training"]["n_warmup_steps"]
         
         self.ctc_loss = CTCLoss(blank=vocab.get_blank_token(), reduction='batchmean').to(self.device)
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
@@ -32,7 +35,7 @@ class Engine:
     def lambda_lr(self, step):
         warm_up = self.warmup
         step += 1
-        return (self.model.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
+        return (self.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
         
     def inits(self, vocab_size):
         if self.config['training']['type_training'] == 'transducer':
@@ -45,16 +48,14 @@ class Engine:
                 config=self.config,
                 vocab_size=vocab_size
             ).to(self.device)
-        optimizer = Optimizer(model.parameters(), self.config['optim'])
+        optimizer = Adam(model.parameters(), lr=self.config['optim']["lr"])
         
         # scheduler = NoamScheduler(
         #     n_warmup_steps=self.config['scheduler']['n_warmup_steps'],
         #     lr_initial=self.config['scheduler']['lr_initial']
         # )
 
-        scheduler = LambdaLR(self.optim, self.lambda_lr)
-
-        return model, optimizer, scheduler
+        return model, optimizer
 
     def get_predictor(self):
         type_decode = self.config["infer"]['type_decode']
@@ -135,16 +136,13 @@ class Engine:
             self.optimizer.step()
             self.scheduler.step()
 
-            curr_lr = self.scheduler.get_lr()
-
             total_loss += loss.item()
 
             # === In loss từng batch ===
             progress_bar.set_postfix(batch_loss=loss.item())
 
         avg_loss = total_loss / len(dataloader)
-        logging.info(f"Average training loss: {avg_loss:.4f}, Learning Rate: {curr_lr:.6f}")
-        return avg_loss, curr_lr
+        logging.info(f"Average training loss: {avg_loss:.4f}")
 
     def inference(self, dataloader, save = False):
         self.model.eval()
@@ -268,10 +266,10 @@ class Engine:
                 text_len = batch["text_len"].to(self.device)
 
                 enc_out , dec_out, enc_lens   = self.model(
-                    src = speech, 
-                    tgt = decoder_input,
-                    src_mask = speech_mask,
-                    tgt_mask = text_mask
+                    speech, 
+                    decoder_input,
+                    speech_mask,
+                    text_mask
                 )  # [B, T_text, vocab_size]
                 
                 loss = self.get_loss(enc_out, dec_out, enc_lens, text_len, tokens_eos)
@@ -312,7 +310,7 @@ class Engine:
             epoch = 1
             best_wer = 1.
 
-        log_val_loss = self.config['training'].get('log_val_loss', True)
+        log_val_loss = self.config['training'].get('log_val_loss', False)
         num_epochs = self.config['training'].get('num_epochs', 0) # if 0 then train til early stop
         
         patience = self.config['training'].get('patience', 10)
