@@ -296,7 +296,11 @@ class TASA_attention(nn.Module):
 
         if mask is not None:
 
-            mask = mask.unsqueeze(1).unsqueeze(2)  # [B, 1, 1, T]
+            if mask.dim() == 2:
+                mask = mask.unsqueeze(1).unsqueeze(1)
+
+            if mask.dim() == 3:
+                mask = mask.unsqueeze(1)
             A = A.masked_fill(mask == 0, -1e9)
 
         A = A.softmax(dim=-1)  # [B, H, T, T]
