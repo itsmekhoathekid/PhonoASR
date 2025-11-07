@@ -68,6 +68,15 @@ class Engine:
         
         return predictor
     
+    def load_checkpoint_old(self, epoch):
+        checkpoint_path = os.path.join(
+        self.config['training']['save_path'],
+            f"{self.config['model']['model_name']}_epoch_{epoch}"
+        )
+        print(f"Loading checkpoint from: {checkpoint_path}")
+        checkpoint = torch.load(checkpoint_path, map_location= self.device)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.model.eval()
     def load_checkpoint(self):
         if os.path.isfile():
             load_path = os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}.ckpt")

@@ -25,8 +25,8 @@ def create_vocab(json_path, wrong2correct, dataset):
         "<s>": 1,
         "</s>": 2,
         "<unk>": 3,
-        "<space>": 4,
-        "<blank>" : 5
+        # "<space>": 4,  # ti xoa cai nay
+        "<blank>" : 4
     }
 
     for idx, item in data.items():
@@ -134,18 +134,18 @@ args = parser.parse_args()
 
 dataset = args.dataset
 
-vocab, unprocossed = create_vocab("workspace/dataset/train.json", wrong2correct, dataset)
-save_data(vocab, "workspace/dataset/vocab_phoneme.json")
+vocab, unprocossed = create_vocab("/home/anhkhoa/transformer_transducer_speeQ/data/train.json", wrong2correct, dataset)
+save_data(vocab, "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme_tasa.json")
 
-process_data("workspace/dataset/train.json",
+process_data("/home/anhkhoa/transformer_transducer_speeQ/data/train.json",
              vocab,
-             "workspace/dataset/voices",
-             "workspace/dataset/train_phoneme.json", dataset)
+             "",
+             "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme_tasa.json", dataset)
 
-process_data("workspace/dataset/test.json",
+process_data("/home/anhkhoa/transformer_transducer_speeQ/data/test.json",
              vocab,
-             "workspace/dataset/voices",
-             "workspace/dataset/test_phoneme.json", dataset)
+             "",
+             "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme_tasa.json", dataset)
 
 if os.path.exists("workspace/dataset/dev.json"):
     process_data("workspace/dataset/dev.json",
