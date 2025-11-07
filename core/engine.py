@@ -75,10 +75,11 @@ class Engine:
             checkpoint = torch.load(load_path)
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
             epoch = checkpoint["epoch"]
             scores = checkpoint["score"]
             
-            self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
+            # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
             logging.info(f"Reloaded model from {load_path} at epoch {epoch}")
         else:
             logging.info("No checkpoint found. Starting from scratch.")
@@ -283,19 +284,20 @@ class Engine:
     def save_checkpoint(self, epoch, wer, cer, mode):
         
         model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
-        scheduler_name = f"{self.config['model']['model_name']}_scheduler.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}_scheduler.ckpt"
+        # scheduler_name = f"{self.config['model']['model_name']}_scheduler.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}_scheduler.ckpt"
         torch.save({
             'epoch': epoch,
             "wer": wer,
             "cer": cer,
             'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict()
         }, os.path.join(
             self.config['training']['save_path'],
             model_name
         ))
         
-        self.scheduler.save(os.path.join(self.checkpoint_path, scheduler_name))
+        # self.scheduler.save(os.path.join(self.checkpoint_path, scheduler_name))
 
     def run_train(self, train_loader, valid_loader):
         if not os.path.exists(self.config['training']['save_path']):
@@ -346,8 +348,6 @@ class Engine:
                 logging.info("Reached maximum number of epochs. Stopping training.")
                 break
             
-                
-
     def run_eval(self, test_loader):
         self.inference(test_loader, save=True)
     
