@@ -7,6 +7,9 @@ from core import *
 import argparse
 import yaml
 
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def load_config(config_path):
