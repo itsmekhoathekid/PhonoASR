@@ -67,36 +67,18 @@ class Engine:
             predictor = GreedyPredictor(self.model, self.vocab, self.device)
         
         return predictor
-    
-    def load_checkpoint_old(self, epoch):
-        checkpoint_path = os.path.join(
-        self.config['training']['save_path'],
-            f"{self.config['model']['model_name']}_epoch_{epoch}"
-        )
-        print(f"Loading checkpoint from: {checkpoint_path}")
-        checkpoint = torch.load(checkpoint_path, map_location= self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.eval()
-    def load_checkpoint(self):
-        if os.path.isfile():
-            load_path = os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}.ckpt")
-            
-            checkpoint = torch.load(load_path)
-            self.model.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-            epoch = checkpoint["epoch"]
-            scores = checkpoint["score"]
-            
-            # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
-            logging.info(f"Reloaded model from {load_path} at epoch {epoch}")
-        else:
-            logging.info("No checkpoint found. Starting from scratch.")
 
-        return {
-            "epoch": epoch,
-            **scores
-        }
+    def load_checkpoint(self):
+        load_path = os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}.ckpt")
+        checkpoint = torch.load(load_path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
+        epoch = checkpoint["epoch"]
+        wer = checkpoint["wer"]
+
+        return checkpoint
     
     def get_loss(self, enc_out, dec_out, enc_lens, text_len, tokens_eos):
         
@@ -358,7 +340,20 @@ class Engine:
                 break
             
     def run_eval(self, test_loader):
-        self.inference(test_loader, save=True)
+        load_path = os.path.join(self.checkpoint_path, f"best_{self.config['model']['model_name']}.ckpt")
+        if os.path.isfile(load_path):
+            checkpoint = torch.load(load_path)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+            epoch = checkpoint["epoch"]
+            
+            # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
+            logging.info(f"Reloaded model from {load_path} at epoch {epoch}")
+            
+            self.inference(test_loader, save=True)
+        else:
+            logging.info("No checkpoint found.")
     
     def make_block_targets(self, target, k, pad_id=-100, device='cpu'):
         """
