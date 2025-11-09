@@ -1,6 +1,6 @@
 import json
 import re
-from word_decomposation import analyse_Vietnamese
+from Vietnamese_utils import analyse_Vietnamese
 
 def normalize_transcript(text):
     text = text.lower()
