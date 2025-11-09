@@ -16,7 +16,7 @@ def load_config(config_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True, help="Path to YAML config file")
-    parser.add_argument("--epoch", type=int, default=1, required=False, help="Epoch to load the model from")
+    # parser.add_argument("--epoch", type=int, default=1, required=False, help="Epoch to load the model from")
     args = parser.parse_args()
 
     config = load_config(args.config)
@@ -46,10 +46,7 @@ def main():
     trainer = Engine(config, vocab = train_dataset.vocab)
     
     print(args.epoch)
-    if args.epoch:
-        trainer.load_checkpoint_old(args.epoch)
-    else:
-        trainer.load_checkpoint()
+    trainer.load_checkpoint()
     
     trainer.run_eval(test_loader)
 

@@ -1,12 +1,12 @@
 training:
   epochs: 100
-  batch_size: 32
+  batch_size: 64
   num_workers: 4
-  save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme_tasa.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme_tasa.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme_tasa.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme_tasa.json"
+  save_path: "/home/anhkhoa/TASA/saves"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
   reload: False
   logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
   ctc_weight: 0.3
@@ -43,7 +43,7 @@ model:
     ff_size: 1024
     h: 4
     p_dropout: 0.1
-    name: 'TASA'
+    name: 'SpeechTransformer'
   dec:
     n_layer: 3
     d_model: 256
@@ -51,7 +51,7 @@ model:
     n_head: 4
     dropout: 0.1
     k: 3
-  model_name: "tasa"
+  model_name: "SpeechTransformer"
   d_model: 256
 
 
