@@ -147,6 +147,9 @@ def is_Vietnamese(word: str) -> tuple[bool, tuple]:
     if former_word != word:
         return False, None
     
+    return is_Vietnamese_word(onset, medial, nucleus, coda)
+
+def is_Vietnamese_word(onset, medial, nucleus, coda, tone):
     if onset == "k" and medial is None and nucleus not in ["i", "e", "ê", "iê", "yê", "ia", "ya","y"]: # allow y as nucleus for "ky"
         return False, None
     
@@ -356,7 +359,7 @@ def convert_Vietnamese_to_IPA(syllable: str) -> list[str]:
        "o": "u",
     }
 
-    non_nasal_final_2_nasal_final = {
+    nasalize_final = {
         "p": "m",
         "t": "n",
         "k": "ŋ",
@@ -372,9 +375,9 @@ def convert_Vietnamese_to_IPA(syllable: str) -> list[str]:
         "<.>": "˧ˀ˩",    # trầm |   trắc (khứ)
     }
 
-    nasal_tone_to_non_nasal_tone = {
-        "~˧˥": "˧˥",     # phù  |   trắc (nhập)
-        "~˧ˀ˩": "˧ˀ˩",    # trầm |   trắc (nhập)
+    denasalize_tone = {
+        "˧˥": "~˧˥",     # phù  |   trắc (nhập)
+        "˧ˀ˩": "~˧ˀ˩",    # trầm |   trắc (nhập)
     }
 
     is_Vietnamese_word, components = is_Vietnamese(syllable)
@@ -390,10 +393,10 @@ def convert_Vietnamese_to_IPA(syllable: str) -> list[str]:
     final = final2ipa[final]
     tone = tone2ipa[tone]
 
-    if final in non_nasal_final_2_nasal_final:
-        final = non_nasal_final_2_nasal_final[final]
-        if tone in nasal_tone_to_non_nasal_tone:
-            tone = nasal_tone_to_non_nasal_tone[tone]
+    if final in nasalize_final:
+        if tone in denasalize_tone:
+            final = nasalize_final[final]
+            tone = denasalize_tone[tone]
 
     return initial, medial, nucleus, final, tone
 
@@ -414,3 +417,203 @@ def analyse_Vietnamese(syllable: str) -> tuple[str]:
         return initial, rhyme, tone
     
     return None
+
+class VietnamesePhonemesToGraphemes:
+    Initial: dict[str, list] = {
+        None: [""],
+        "f": ["ph"],
+        "tʰ": ["th"],
+        "kʷ": ["qu"],
+        "t͡ɕ": ["ch"],
+        "ʈ͡ʂ": ["tr"],
+        "ʝ": ["d"],
+        "v": ["v"],
+        "z": ["gi"],
+        "ɣ": ["gh", "g"],
+        "r": ["r"],
+        "ɲ": ["nh"],
+        "ŋ": ["ng"],
+        "χ": ["kh"],
+        "m": ["m"],
+        "b": ["b"],
+        "k": ["c"],
+        "t": ["t"],
+        "d": ["đ"],
+        "n": ["n"],
+        "s": ["x"],
+        "ʂ": ["s"],
+        "l": ["l"],
+        "h": ["h"],
+    }
+    
+    Glide: dict[str, list] = {
+        None: [""],
+        "w": ["u", "o"],
+    }
+
+    Nucleus: dict[str, list] = {
+        None: [""],
+        "iə": ["iê", "yê", "ia", "ya"],
+        "uə": ["uô", "ua"],
+        "ɯə": ["ươ", "ưa"],
+        "aː": ["a"],
+        "ɔː": ["oo"],
+        "əː": ["ơ"],
+        "i": ["i"],
+        "u": ["u"],
+        "a": ["ă"],
+        "ə": ["â"],
+        "ɛ": ["e"],
+        "e": ["ê"],
+        "ɯ": ["ư"],
+        "ɔ": ["o"],
+        "o": ["ô"],
+    }
+
+    Final: dict[str, list] = {
+        None: [""],
+        "u": ["u"],
+        "o": ["o"],
+        "ŋ̟": ["nh"],
+        "k̟": ["ch"],
+        "ŋ": ["ng"],
+        "i": ["i", "y"],
+        "m": ["m"],
+        "n": ["n"],
+        "p": ["p"],
+        "t": ["t"],
+        "k": ["c", "q"],
+    }
+
+    Tone: dict[str, str] = {
+        "": "",
+        "-": "",
+        "˨˩": '\u0300',
+        "˧˥": '\u0301',
+        "˧ˀ˥": '\u0303',
+        "˧˩": '\u0309',
+        "˧ˀ˩": '\u0323',
+    }
+
+def decompose_Vietnamese_IPA(IPA: str):
+    initials = list(VietnamesePhonemesToGraphemes.Initial)
+    initials.remove(None)
+    glides = list(VietnamesePhonemesToGraphemes.Glide)
+    glides.remove(None)
+    nuclei = list(VietnamesePhonemesToGraphemes.Nucleus)
+    nuclei.remove(None)
+    finals = list(VietnamesePhonemesToGraphemes.Final)
+    finals.remove(None)
+
+    def get_onset(word: str) -> tuple[str, str]:    
+        for initial in initials:
+            if word.startswith(initial):
+                word = word.removeprefix(initial)
+                
+                return initial, word
+
+        return None, word
+
+    def get_medial(word: str) -> tuple[str, str]:
+        for glide in glides:
+            if word.startswith(glide):
+                word = word.removeprefix(glide)
+                
+                return glide, word
+            
+        return None, word
+
+    def get_nucleus(word: str) -> tuple[str, str]:
+        for nucleus in nuclei:
+            if word.startswith(nucleus):
+                word = word.removeprefix(nucleus)
+                
+                return nucleus, word
+
+        return None, word
+
+    def get_coda(word: str) -> tuple[str, str]:
+        for final in finals:
+            if word.startswith(final):
+                word = word.removeprefix(final)
+                
+                return final, word
+        
+        return None, word
+    
+    IPA = IPA.replace("kʷ", "kw")
+    
+    onset, IPA = get_onset(IPA)
+    
+    medial, IPA = get_medial(IPA)
+
+    nucleus, IPA = get_nucleus(IPA)
+
+    coda, tone = get_coda(IPA)
+
+    if onset == "qu":
+        onset = "q"
+        medial = "u"
+    
+    return onset, medial, nucleus, coda, tone
+
+def compose_Vietnamese_word(
+        inital: str, 
+        glide: str, 
+        nucleus: str, 
+        final: str, 
+        tone: str
+    ) -> str:
+
+    onsets = VietnamesePhonemesToGraphemes.Initial[inital]
+    medials = VietnamesePhonemesToGraphemes.Glide[glide]
+    vowels = VietnamesePhonemesToGraphemes.Nucleus[nucleus]
+    codas = VietnamesePhonemesToGraphemes.Final[final]
+    tone = VietnamesePhonemesToGraphemes.Tone[tone]
+
+    denasalize_final = {
+        "m": "p",
+        "n": "t",
+        "ŋ": "k",
+        "ŋ̟": "k̟"
+    }
+
+    nasalize_tone = {
+        "~˧˥": "˧˥",     # phù  |   trắc (nhập)
+        "~˧ˀ˩": "˧ˀ˩",    # trầm |   trắc (nhập)
+    }
+
+    for idx, coda in enumerate(codas):
+        if coda in denasalize_final and tone in nasalize_tone:
+            codas[idx] = denasalize_final[coda]
+            tone = nasalize_tone[tone]
+
+    possible_words = []
+    for onset in onsets:
+        for medial in medials:
+            for vowel in vowels:
+                for coda in codas:
+                    if is_Vietnamese_word(onset, medial, vowel, coda, tone):
+                        # process for the special case of medial + coda (hỏa, thủy, thuở, thỏa, ...)
+                        # in this case, only "thuở" follows the general rule of tone marking, the others are the case that tones are marked on the medial.
+                        if (onset != "q") and (medial != "") and (vowel != "") and (coda == "") and (vowel != "ơ"):
+                            medial += tone
+                        else:
+                            if coda == "" and len(vowel) > 1:
+                                vowel = vowel[0] + tone + vowel[1:]
+                            else:
+                                vowel = vowel + tone
+
+                        word = ""
+                        word += onset
+                        word += medial
+                        word += vowel
+                        word += coda
+
+                        if "gii" in word:
+                            word = re.sub("gii", "gi", word)
+
+                        word = unicodedata.normalize("NFC", word)
+                        possible_words.append(word)
+
+    return possible_words
