@@ -147,7 +147,7 @@ def is_Vietnamese(word: str) -> tuple[bool, tuple]:
     if former_word != word:
         return False, None
     
-    return is_Vietnamese_word(onset, medial, nucleus, coda)
+    return is_Vietnamese_word(onset, medial, nucleus, coda, tone)
 
 def is_Vietnamese_word(onset, medial, nucleus, coda, tone):
     if onset == "k" and medial is None and nucleus not in ["i", "e", "ê", "iê", "yê", "ia", "ya","y"]: # allow y as nucleus for "ky"

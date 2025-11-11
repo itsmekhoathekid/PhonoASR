@@ -113,7 +113,7 @@ fi
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
 
-    python mutiple_construct.py \
+    python ./PhonoASR/dataset/mutiple_construct.py \
         --dataset "$2" \
         --type_tokenizer "phoneme" \
         --train_path "$train_path" \
@@ -122,10 +122,10 @@ if [[ "$1" == "phoneme" ]]; then
         --base_path "$base_path" \
         --valid_path "$valid_path"
 
-    python check_empty.py \
+    python ./PhonoASR/dataset/check_empty.py \
         --input "${train_path%.json}_phoneme.json" \
 
-    python check_empty.py \
+    python ./PhonoASR/dataset/check_empty.py \
         --input "${test_path%.json}_phoneme.json" \
 
     if [[ -n "$valid_path" ]]; then
