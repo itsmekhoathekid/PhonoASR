@@ -19,7 +19,12 @@ class Engine:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.checkpoint_path = config['training']['save_path']
         self.warmup = self.config["scheduler"]["n_warmup_steps"]
-        self.d_model = self.config["model"]["d_model"]
+        self.d_model = self.config["model"].get("d_model", self.warmup)
+        if self.d_model == self.warmup:
+            self.normalize = self.warmup ** 0.5
+        else:
+            self.normalize = self.d_model ** -0.5
+
         self.model, self.optimizer = self.inits(vocab_size=len(vocab))
         self.scheduler = LambdaLR(self.optimizer, self.lambda_lr)
         self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [0.2 for _ in range(self.config['model']['dec']['k'])]
@@ -29,13 +34,14 @@ class Engine:
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
         self.ce_loss = CELoss(ignore_index=vocab.get_pad_token(), reduction='mean').to(self.device)
         self.transducer_loss = RNNTLoss(blank=vocab.get_blank_token(), reduction='mean').to(self.device)
-        self.vocab = vocab
+        self.vocab = vocab  
         self.predictor = self.get_predictor()
+        self.no_improve_epochs = 0
 
     def lambda_lr(self, step):
         warm_up = self.warmup
         step += 1
-        return (self.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
+        return self.normalize * min(step ** -.5, step * warm_up ** -1.5)
         
     def inits(self, vocab_size):
         if self.config['training']['type_training'] == 'transducer':
@@ -134,7 +140,7 @@ class Engine:
             progress_bar.set_postfix(batch_loss=loss.item())
 
         avg_loss = total_loss / len(dataloader)
-        logging.info(f"Average training loss: {avg_loss:.4f}")
+        logging.info(f"Average training loss: {avg_loss:.4f}, Learning Rate: {self.scheduler.get_last_lr()[0]:.6f}")
 
     def inference(self, dataloader, save = False):
         self.model.eval()
@@ -282,7 +288,8 @@ class Engine:
             "cer": cer,
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
-            "scheduler_state_dict": self.scheduler.state_dict()
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "no_improve_epochs" : self.no_improve_epochs
         }, os.path.join(
             self.config['training']['save_path'],
             model_name
@@ -298,16 +305,16 @@ class Engine:
             checkpoint = self.load_checkpoint()
             epoch = checkpoint["epoch"]
             scores = checkpoint["scores"]
-            best_wer = scores["wer"]
+            best_score = scores["wer"]
         else:
             epoch = 1
-            best_wer = 1.
+            best_score = 1.
 
         log_val_loss = self.config['training'].get('log_val_loss', False)
         num_epochs = self.config['training'].get('num_epochs', 0) # if 0 then train til early stop
         
         patience = self.config['training'].get('patience', 10)
-        no_improve_epochs = 0
+        patience_objective = self.config['training'].get('patience_objective', 'WER')
         daily_save = self.config['training'].get('daily_save', True)
 
         while True:
@@ -321,20 +328,21 @@ class Engine:
             current_wer = results["wer"]
             current_cer = results["cer"]
 
-            if current_wer < best_wer:
-                best_wer = current_wer
-                self.save_checkpoint(epoch, best_wer, current_cer,  mode="best")
-                no_improve_epochs = 0
+            objective_metric = current_wer if patience_objective == 'WER' else current_cer
+            if objective_metric < best_score:
+                best_score = objective_metric
+                self.save_checkpoint(epoch, best_score, current_cer,  mode="best")
+                self.no_improve_epochs = 0
                 
             else:
-                no_improve_epochs += 1
-                if no_improve_epochs >= patience:
+                self.no_improve_epochs += 1
+                if self.no_improve_epochs >= patience:
                     logging.info(f"No improvement for {patience} epochs. Stopping training.")
                     break
             if daily_save:
                 self.save_checkpoint(epoch, current_wer, current_cer, mode="latest")
             epoch += 1
-            logging.info(f"CER: {current_cer:.4f}, WER: {current_wer:.4f}, Best WER: {best_wer:.4f}")
+            logging.info(f"CER: {current_cer:.4f}, WER: {current_wer:.4f}, Best {patience_objective}: {best_score:.4f}")
             if num_epochs > 0 and epoch > num_epochs:
                 logging.info("Reached maximum number of epochs. Stopping training.")
                 break
