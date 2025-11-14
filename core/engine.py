@@ -68,7 +68,7 @@ class Engine:
         if type_decode == "mtp_stack":
             predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
         elif type_decode == "mtp":
-            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device, tau=self.config["infer"]["tau"])
+            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device)
         else:
             predictor = GreedyPredictor(self.model, self.vocab, self.device)
         
@@ -97,7 +97,10 @@ class Engine:
             loss = loss_ctc * ctc_weight + loss_kldiv * (1 - ctc_weight)
             return loss 
         elif self.type_training == 'ce':
-            B = tokens_eos.size(0)
+            if self.config['model']['dec']['k'] == 1:
+                loss_ep = self.ce_loss(dec_out[0], tokens_eos)
+                return loss_ep
+            B = tokens_eos.size(0)  
             loss_ep = sum(self.alpha_k[i] * self.ce_loss(dec_out[i], tokens_eos[...,i].view(B,-1)) for i in range(len(dec_out)))
             return loss_ep
         elif self.type_training == 'transducer':

@@ -37,29 +37,30 @@ class Vocab:
         return len(self.vocab)
 
 class Speech2Text(Dataset):
-    def __init__(self, training_config, type, type_training = "ctc-kldiv"):
+    def __init__(self, config, type, type_training = "ctc-kldiv"):
         super().__init__()
+        self.config = config
         if type == 'train':
-            json_path = training_config['train_path']
+            json_path = config['training']['train_path']
         elif type == 'dev':
-            json_path = training_config['dev_path']
+            json_path = config['training']['dev_path']
         elif type == 'test':
-            json_path = training_config['test_path']
+            json_path = config['training']['test_path']
             
-        self.wave_path = training_config["wave_path"]
-        vocab_path = training_config['vocab_path']
+        self.wave_path = config['training']["wave_path"]
+        vocab_path = config['training']['vocab_path']
         self.data = load_json(json_path)
         self.vocab = Vocab(vocab_path)
         self.sos_token = self.vocab.get_sos_token()
         self.eos_token = self.vocab.get_eos_token()
         self.pad_token = self.vocab.get_pad_token()
         self.unk_token = self.vocab.get_unk_token()
-        self.apply_spec_augment = training_config.get('apply_spec_augment', False)
+        self.apply_spec_augment = config['training'].get('apply_spec_augment', False)
         self.fbank = Fbank(
-            sample_rate=training_config.get('sample_rate', 16000),
-            n_mels=training_config.get('n_mels', 80),
-            n_fft=training_config.get('n_fft', 512),
-            win_length=training_config.get('win_length', 25)
+            sample_rate=config['training'].get('sample_rate', 16000),
+            n_mels=config['training'].get('n_mels', 80),
+            n_fft=config['training'].get('n_fft', 512),
+            win_length=config['training'].get('win_length', 25)
         )
         self.type_training = type_training
 
@@ -81,7 +82,7 @@ class Speech2Text(Dataset):
     def __getitem__(self, idx):
         current_item = self.data[idx]
         wav_path = os.path.join(self.wave_path, current_item["wav_path"])
-        if self.type_training == "ce":
+        if self.type_training == "ce" and self.config['model']['dec']['k'] == 3:
             encoded_text = torch.tensor(current_item["encoded_text"] + [[self.eos_token, self.eos_token, self.eos_token]], dtype=torch.long)
             decoder_input = torch.tensor([[self.sos_token, self.sos_token, self.sos_token]] + current_item["encoded_text"], dtype=torch.long)
         elif self.type_training == 'transducer':
