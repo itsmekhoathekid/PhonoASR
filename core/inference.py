@@ -144,7 +144,7 @@ import torch
 # Self-Speculative Decoding 
 
 class GreedyMutiplePredictor:
-    def __init__(self, model, vocab, device, max_len=50, n_heads=3, tau=0.85):
+    def __init__(self, model, vocab, device, max_len=50, n_heads=3):
         self.model = model
         self.sos = vocab.get_sos_token()
         self.eos = vocab.get_eos_token()
@@ -153,7 +153,7 @@ class GreedyMutiplePredictor:
         self.device = device
         self.max_len = max_len
         self.n_heads = n_heads
-        self.tau = tau  # threshold for verification
+
 
     @torch.no_grad()
     def greedy_decode(self, src, src_mask):
