@@ -17,6 +17,7 @@ from core.modules import (
 )
 import torch
 from torch import nn
+import random
 
 class TransformerDecoderLayer(nn.Module):
     def __init__(self, d_model: int, h: int, ff_size: int, dropout: float) -> None:
@@ -332,4 +333,5 @@ class SaaDecoder(nn.Module):
                     current_input = predicted_id
 
         logits = torch.stack(outputs, dim=1)  # [batch, max_len, vocab_size]
+        logits = [logits]
         return logits  # [B, max_len, vocab]

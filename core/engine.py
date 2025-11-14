@@ -226,6 +226,9 @@ class Engine:
                     wer_score = wer(gold_text_str, predicted_text_str)
                     cer_score = cer(gold_text_str, predicted_text_str)
 
+                    gold_text_str = gold_text_str.strip()
+                    predicted_text_str = predicted_text_str.strip()
+
                     if save:
                         results.append({
                             "gold": gold_text_str,
