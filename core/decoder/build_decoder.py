@@ -13,7 +13,7 @@ def build_decoder(config, vocab_size):
             k = config['dec']['k']
 
             return TransformerDecoder(vocab_size, n_layer, d_model, d_hidden, n_head, dropout, k)
-        elif decoder_type == config['dec']['type'] == 'base_saa':
+        elif decoder_type == 'saa_dec':
             return SaaDecoder(
                 vocab_size=vocab_size,
                 embedding_dim=config["dec"]["embed_dim"],

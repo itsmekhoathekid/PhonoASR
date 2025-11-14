@@ -126,7 +126,8 @@ class Engine:
                 speech, 
                 decoder_input,
                 speech_mask,
-                text_mask
+                text_mask,
+                0.8
             )  # [B, T_text, vocab_size]
 
             loss = self.get_loss(enc_out, dec_out, enc_lens, text_len, tokens_eos)

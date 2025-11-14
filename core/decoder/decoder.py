@@ -244,14 +244,14 @@ class BaseDecoder(nn.Module):
         return outputs, hidden
 
 class SaaDecoder(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_size, num_layers, embed_dropout=0.1, var_dropout=0.2, sos_id=1, eos_id=2, pad_id=0):
+    def __init__(self, vocab_size, embedding_dim, hidden_size, num_layers, embed_dropout=0.1, var_dropout=0.2):
         super(SaaDecoder, self).__init__()
         self.vocab_size = vocab_size
         self.embedding_dim = embedding_dim
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         
-        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=pad_id)
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
         self.rnn = nn.ModuleList([
             nn.LSTMCell(embedding_dim + hidden_size, hidden_size)
             if i == 0 else 
@@ -268,7 +268,7 @@ class SaaDecoder(nn.Module):
         self.embed_dropout = nn.Dropout(embed_dropout)
         self.var_dropout = nn.Dropout(var_dropout)
 
-    def forward(self, decoder_input, encoder_outputs, encoder_mask=None, tfr=0.0):
+    def forward(self, decoder_input, encoder_outputs, encoder_mask=None, decoder_mask=None, tfr=0.0):
         """
         Args:
             decoder_input: [batch, max_len] (bắt đầu bằng SOS)
