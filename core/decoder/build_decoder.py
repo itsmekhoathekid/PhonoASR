@@ -1,4 +1,4 @@
-from . import TransformerDecoder, ConformerDecoder, BaseDecoder
+from . import TransformerDecoder, ConformerDecoder, BaseDecoder, SaaDecoder
 
 def build_decoder(config, vocab_size):
     try:
@@ -13,6 +13,15 @@ def build_decoder(config, vocab_size):
             k = config['dec']['k']
 
             return TransformerDecoder(vocab_size, n_layer, d_model, d_hidden, n_head, dropout, k)
+        elif decoder_type == config['dec']['type'] == 'base_saa':
+            return SaaDecoder(
+                vocab_size=vocab_size,
+                embedding_dim=config["dec"]["embed_dim"],
+                hidden_size=config["dec"]["d_hidden"],
+                num_layers=config["dec"]["num_layers"],
+                embed_dropout=config["dec"].get("embed_dropout", 0.1),
+                var_dropout=config["dec"].get("var_dropout", 0.2),
+            )
         else:
             return BaseDecoder(
                 embedding_size=config["dec"]["embedding_size"],
