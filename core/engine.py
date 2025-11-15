@@ -180,9 +180,9 @@ class Engine:
                         predicted_text = [self.predictor.tokenizer[token] for token in predicted_tokens_clean]
 
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        gold_text = [self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank]
+                        gold_text = [self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos]
                         gold_text_str = ' '.join(gold_text)
-                        predicted_text_str = ' '.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
+                        predicted_text_str = ' '.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
                     
                     else:
                         sample_tokens = predicted_tokens[batch_idx]
