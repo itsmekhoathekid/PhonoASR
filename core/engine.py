@@ -81,9 +81,6 @@ class Engine:
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         self.no_improve_epochs = checkpoint.get("no_improve_epochs", 0)
-        # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
-        epoch = checkpoint["epoch"]
-        wer = checkpoint["wer"]
 
         return checkpoint
     
@@ -212,16 +209,16 @@ class Engine:
 
                     if self.config['training']['type'] == "phoneme":
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
+                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
                         space_token = self.vocab.get("<space>")
                         predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[space_token], ' ')
 
-                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
+                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos])
                         gold_text_str = gold_text_str.replace(self.predictor.tokenizer[space_token], ' ')
                     elif self.config['training']['type'] == "char":
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
-                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
+                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
+                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos])
                     
                     all_gold_texts.append(gold_text_str)
                     all_predicted_texts.append(predicted_text_str)
@@ -292,8 +289,10 @@ class Engine:
         # scheduler_name = f"{self.config['model']['model_name']}_scheduler.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}_scheduler.ckpt"
         torch.save({
             'epoch': epoch,
-            "wer": wer,
-            "cer": cer,
+            'scores': {
+                'wer': wer, 
+                'cer': cer
+            },
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             "scheduler_state_dict": self.scheduler.state_dict(),
@@ -311,9 +310,10 @@ class Engine:
         
         if self.config['training']['reload']:
             checkpoint = self.load_checkpoint()
-            epoch = checkpoint["epoch"]
+            epoch = checkpoint["epoch"] + 1
             scores = checkpoint["scores"]
             best_score = scores["wer"]
+            logging.info(f"Reloaded model from checkpoint at epoch {epoch-1} with best WER: {best_score:.4f}")
         else:
             epoch = 1
             best_score = 1.
