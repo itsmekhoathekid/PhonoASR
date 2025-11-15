@@ -25,27 +25,26 @@ def main():
 
     # ==== Load Dataset ====
     train_dataset = Speech2Text(
-        training_cfg,
+        config,
         type='train',
-        type_training= config['training'].get('type_training', 'ctc-kldiv')
+        type_training= training_cfg.get('type_training', 'ctc-kldiv')
     )
 
     test_dataset = Speech2Text(
-        training_config=config['training'],
+        config,
         type='test',
-        type_training= config['training'].get('type_training', 'ctc-kldiv')
+        type_training= training_cfg.get('type_training', 'ctc-kldiv')
     )
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
         batch_size= training_cfg['batch_size'],
         shuffle=False,
         collate_fn = speech_collate_fn,
-        num_workers=config['training'].get('num_workers', 4)
+        num_workers=training_cfg.get('num_workers', 4)
     )
 
     trainer = Engine(config, vocab = train_dataset.vocab)
     
-    print(args.epoch)
     trainer.load_checkpoint()
     
     trainer.run_eval(test_loader)
