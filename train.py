@@ -22,40 +22,39 @@ def main():
     args = parser.parse_args()
 
     config = load_config(args.config)
-    training_cfg = config['training']
-    logg(training_cfg['logg'])
+    logg(config['training']['logg'])
 
     # ==== Load Dataset ====
     train_dataset = Speech2Text(
-        training_cfg,
+        config,
         type='train',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size= training_cfg['batch_size'],
+        batch_size= config['training']['batch_size'],
         shuffle=True,
         collate_fn = speech_collate_fn,
         num_workers=config['training'].get('num_workers', 4)
     )
 
     dev_dataset = Speech2Text(
-        training_cfg,
+        config,
         type='dev',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )
 
     dev_loader = torch.utils.data.DataLoader(
         dev_dataset,
-        batch_size= training_cfg['batch_size'],
+        batch_size= config['training']['batch_size'],
         shuffle=True,
         collate_fn = speech_collate_fn,
         num_workers=config['training'].get('num_workers', 4)
     )
 
     test_dataset = Speech2Text(
-        training_config=config['training'],
+        config=config,
         type='test',
         type_training= config['training'].get('type_training', 'ctc-kldiv')
     )

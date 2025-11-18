@@ -1,19 +1,23 @@
 training:
   batch_size: 32
   num_workers: 4
-  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
-  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
-  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
-  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
-  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  patience: 5
+  save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
+  train_path : "/datastore/npl/Speech2Text/dataset/train_char.json"
+  dev_path : "/datastore/npl/Speech2Text/dataset/test_char.json"
+  test_path : "/datastore/npl/Speech2Text/dataset/test_char.json"
+  vocab_path : "/datastore/npl/Speech2Text/dataset/char_vocab_vivos.json"
+  wave_path: "/datastore/npl/Speech2Text/dataset/voices"
   wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   reload: False
-  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/speech-transformer.log"
+  logg : "/datastore/npl/Speech2Text/PhonoASR/logs/char_speech-transformer.log"
   ctc_weight: 0.3
   result: "/home/inomar01/nlp@uit/PhonoASR/result-speech-transformer.json"
   type: "word"
   type_training : "ce"
-  
+
+infer: 
+  type_decode: 'normal' # mtp_stack/mtp
 
 optim:
   type: adam
@@ -22,7 +26,7 @@ optim:
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 0.001
+  lr: 0.001
   n_warmup_steps: 15000
 
 model:
@@ -43,12 +47,13 @@ model:
     p_dropout: 0.1
     name: 'SpeechTransformer'
   dec:
-    n_layer: 1
-    d_model: 320
+    type: 'base'
+    n_layer: 3
+    d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 3
+    k: 1
   model_name: "SpeechTransformer"
 
 infer:

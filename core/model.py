@@ -13,9 +13,12 @@ class AcousticModel(nn.Module):
         if self.config['training']['type_training'] == 'ctc-kldiv':
             self.ctc_lin = nn.Linear(config['model']['enc']['d_model'], vocab_size)
         
-    def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None):
+    def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None, tfr=0.0):
         encoder_outputs, encoder_mask, encoder_lengths = self.encoder(inputs, encoder_mask)
-        decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
+        if self.config['model']['dec']['type'] == 'saa_dec':
+            decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask, tfr)
+        else:
+            decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask)
         if self.config['training']['type_training'] == 'ctc-kldiv':
             encoder_outputs = self.ctc_lin(encoder_outputs)  # [B, T, vocab_size]
             encoder_outputs = encoder_outputs.log_softmax(dim=-1)

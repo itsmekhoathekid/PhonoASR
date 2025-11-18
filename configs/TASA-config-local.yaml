@@ -40,15 +40,16 @@ model:
     ff_size: 1024
     h: 4
     p_dropout: 0.1
-    name: 'TASA'
+    name: 'SpeechTransformer'
   dec:
     n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 3
-  model_name: "tasa"
+    k: 1
+    type: 'base'
+  model_name: "SpeechTransformer"
   d_model: 256
 
 
@@ -58,4 +59,4 @@ rnnt_loss:
 
 
 infer:
-  type_decode: "mtp_stack"
+  type_decode: "mtp"
