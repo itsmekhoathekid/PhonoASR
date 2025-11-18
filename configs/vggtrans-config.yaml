@@ -11,20 +11,22 @@ training:
   reload: False
   logg : "/home/inomar01/nlp@uit/PhonoASR/logs/vgg-transformer.log"
   ctc_weight: 0.3
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-vgg-transformer.txt"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-vgg-transformer.json"
   type: "word"
   type_training : "ce"
   
-
 optim:
   type: adam
-  lr: 0.001
+  lr: 1
   weight_decay: 0.0001
   decay_rate: 0.5
 
 scheduler:
   lr_initial: 0.001
   n_warmup_steps: 15000
+
+infer:
+  type_decode: mtp_stack
 
 model:
   enc:
@@ -38,30 +40,21 @@ model:
       dropout: 0.1
     input_dim : 80
     in_features: 1280
-    n_layers: 6
+    n_layers: 8
     d_model: 256
     ff_size: 1024
     h: 4
     p_dropout: 0.1
     name: 'VGGTransformer'
   dec:
-    n_layer: 3
+    n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 3
   model_name: "VGGTransformer"
-
-
-# optim:
-#   type: sgd
-#   lr: 0.0001
-#   momentum: 0.9
-#   weight_decay: 0
-#   begin_to_adjust_lr: 60
-#   nesterov: None
-#   decay_rate: 0.5
+  d_model: 256
 
 rnnt_loss:
   blank: 4

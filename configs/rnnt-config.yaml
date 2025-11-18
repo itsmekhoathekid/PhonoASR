@@ -1,27 +1,28 @@
 training:
-  epochs: 100
-  batch_size: 16
+  # epochs: 100
+  batch_size: 32
   num_workers: 4
-  save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
-  reload: False
-  logg : "/home/anhkhoa/PhonoASR/logs/RNNT.log"
+  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
+  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
+  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  reload: True
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/rnnt.log"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-rnnt.json"
   ctc_weight: 0.3
-  result: "/home/anhkhoa/PhonoASR/result.txt"
   type: "word"
   type_training : "ce"
   
 optim:
   type: adam
-  lr: 0.001
+  lr: 1
   weight_decay: 0.0001
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 0.001
+  lr_initial: 1
   n_warmup_steps: 15000
 
 model:
@@ -29,18 +30,23 @@ model:
     input_size: 80
     hidden_size: 320
     output_size: 256
-    n_layers: 1
+    d_model: 256
+    n_layers: 8
     dropout: 0.2
     bidirectional: True
     name: 'RNNT'
   dec:
-    n_layer: 3
+    n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 3
   model_name: "RNNT"
+  d_model: 256
+
+infer:
+  type_decode: mtp_stack
 
 rnnt_loss:
   blank: 4

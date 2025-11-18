@@ -4,23 +4,23 @@ model:
       num_blocks: 3
       num_layers_per_block: 2
       out_channels: [8,  16, 32]
-      kernel_sizes: [3, 3, 3]
+      kernel_sizes: [32, 32, 32]
       strides: [1, 2, 2]
       residuals: [ True, True, True]
       dropout: 0.1 
     type: "conv-conformer"
     input_dim: 80
-    encoder_dim: 256
+    encoder_dim: 320
     num_attention_heads: 8
     feed_forward_expansion_factor: 4
     dropout_rate: 0.1
     conv_kernel_size: 31
-    num_encoder_layers: 6
-    output_dim: 256
+    num_encoder_layers: 16
+    output_dim: 320
     in_channels: 1
     out_channels: 32
     conv_config:
-      size: 256
+      size: 320
       linear_units: 576
       fuse_type: "concat_fusion"
       kernel_sizes: "7, 15, 23, 31"
@@ -32,8 +32,8 @@ model:
     name: "ConvConformer"
     projection_dim: 640
   dec: 
-    n_layer: 3
-    d_model: 256
+    n_layer: 1
+    d_model: 320
     ff_size: 1024
     n_head: 4
     dropout: 0.1
@@ -43,8 +43,7 @@ model:
 
 
 training:
-  epochs: 100
-  batch_size: 8
+  batch_size: 32
   num_workers: 4
   save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
   train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
@@ -53,13 +52,15 @@ training:
   vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
   wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   logg : "/home/inomar01/nlp@uit/PhonoASR/logs/conv-conformer.log"
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-convconformer-phoneme.txt"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-convconformer-phoneme.json"
   reload: false
   max_grad_norm: 200
-  result: "workspace/Conformer/result.txt"
   type: "normal"
   ctc_weight: 0.4
   type_training: "ce"
+
+infer:
+  type_decode: mtp_stack
 
 
 optim:
