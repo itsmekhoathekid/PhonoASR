@@ -1,6 +1,5 @@
 training:
-  epochs: 100
-  batch_size: 16
+  batch_size: 32
   num_workers: 4
   save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
   train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
@@ -11,7 +10,7 @@ training:
   reload: False
   logg : "/home/inomar01/nlp@uit/PhonoASR/logs/speech-transformer.log"
   ctc_weight: 0.3
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-speech-transformer.txt"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-speech-transformer.json"
   type: "word"
   type_training : "ce"
   
@@ -37,21 +36,23 @@ model:
       residuals: [ True, True, True]
       dropout: 0.1 
     in_features: 640
-    n_layers: 6
-    d_model: 256
+    n_layers: 16
+    d_model: 320
     ff_size: 1024
     h: 4
     p_dropout: 0.1
     name: 'SpeechTransformer'
   dec:
-    n_layer: 3
-    d_model: 256
+    n_layer: 1
+    d_model: 320
     ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 3
   model_name: "SpeechTransformer"
 
+infer:
+  type_decode: mtp_stack
 
 # optim:
 #   type: sgd

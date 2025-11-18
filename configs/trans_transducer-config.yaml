@@ -1,47 +1,50 @@
 training:
-  epochs: 100
-  batch_size: 4
+  batch_size: 32
   num_workers: 4
-  save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
+  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
+  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   reload: False
-  logg : "/home/anhkhoa/PhonoASR/logs/TransformerTransducer.log"
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/transformer-transducer.log"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-transformer-transducer.json"
   ctc_weight: 0.3
-  result: "/home/anhkhoa/PhonoASR/result_2.txt"
   type: "word"
   type_training : "ce"
+  patience: 20
+
+infer:
+  type_decode: mtp_stack
 
 optim:
-  type: sgd 
-  lr: 0.0008
+  type: adam
+  lr: 1
   weight_decay: 0.0001
-  momentum: 0.9
   decay_rate: 0.5
-  nesterov: None
 
 scheduler:
-  lr_initial: 0.0003
+  lr_initial: 0.001
   n_warmup_steps: 25000
 
 model:
   enc:
     in_features: 80
-    n_layer: 3
+    n_layer: 8
     d_model: 256
     ff_size: 1024
     h: 8
     p_dropout: 0.3
     name: "TransformerTransducer"
   dec:
-    n_layer: 3
+    n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 3
   model_name: "TransformerTransducer"
+  d_model: 256
 
 rnnt_loss:
