@@ -1,19 +1,19 @@
 training:
   epochs: 100
-  batch_size: 16
+  batch_size: 32
   num_workers: 4
-  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
-  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
-  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
-  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
-  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
-  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  save_path: "/home/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
   reload: False
-  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/vgg-transformer.log"
+  logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
   ctc_weight: 0.3
   result: "/home/inomar01/nlp@uit/PhonoASR/result-vgg-transformer.json"
   type: "word"
   type_training : "ce"
+  wave_path: "/mnt/d/voices/voices"
   
 optim:
   type: adam
@@ -61,3 +61,5 @@ rnnt_loss:
   reduction: "mean"  
 
 
+infer:
+  type_decode: "mtp_stack"

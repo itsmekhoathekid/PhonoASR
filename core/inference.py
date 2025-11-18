@@ -49,8 +49,8 @@ class GreedyPredictor:
 
         for _ in range(self.max_len):
             tgt_mask = causal_mask(src.size(0), decoder_input.size(1)).to(self.device)
-            dec_out = self.model.decode(decoder_input, enc_out, src_mask, tgt_mask)
-
+            dec_outs = self.model.decode(decoder_input, enc_out, src_mask, tgt_mask)
+            dec_out = dec_outs[0]  # [B, T, vocab]
             # logits for next token: [B, vocab]
             logits = dec_out[:, -1, :]
             next_tokens = torch.argmax(logits, dim=-1)  # [B]
@@ -77,7 +77,7 @@ class GreedyMPStackPredictor:
         self.model = model
         self.sos = vocab.get_sos_token()
         self.eos = vocab.get_eos_token()
-        self.pad = 0
+        self.pad = vocab.get_pad_token()
         self.blank = vocab.get_blank_token()
         self.space = vocab.get_space_token()
         self.tokenizer = vocab.itos
@@ -144,16 +144,17 @@ import torch
 # Self-Speculative Decoding 
 
 class GreedyMutiplePredictor:
-    def __init__(self, model, vocab, device, max_len=50, n_heads=3, tau=0.85):
+    def __init__(self, model, vocab, device, max_len=50, n_heads=3):
         self.model = model
         self.sos = vocab.get_sos_token()
         self.eos = vocab.get_eos_token()
         self.blank = vocab.get_blank_token()
+        self.pad = vocab.get_pad_token()
         self.tokenizer = vocab.itos
         self.device = device
         self.max_len = max_len
         self.n_heads = n_heads
-        self.tau = tau  # threshold for verification
+
 
     @torch.no_grad()
     def greedy_decode(self, src, src_mask):
