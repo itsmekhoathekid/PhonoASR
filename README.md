@@ -1,71 +1,59 @@
-# 🎙️ PhonoASR — Phoneme-Aware End-to-End Speech Recognition
+# 📖 Configuration Documentation
 
-PhonoASR is an end-to-end Automatic Speech Recognition (ASR) framework designed for Vietnamese speech, with **phoneme-level modeling**, **multi-mode decoding**, and support for **CTC-KL**, **RNNT**, and **Cross-Entropy** training strategies.
+This section describes the key configuration parameters used for training, inference, and model setup. We use YAML file to control config of models.
 
-This project enables flexible experimentation with phonetic supervision to improve speech recognition quality on Vietnamese datasets.
+## Training Settings
 
----
+### **Epoch Control**
+- `epoch`: Determines how training is terminated:
+  - `epoch = 0`: Training continues until **early stopping** is triggered.
+  - `epoch > 0`: Training will run for the specified number of epochs, if early stopping is triggered, it'll stop.
+- `patience`: Param controls early stopping (If not specified, the default value is applied).
+- `patience_objective` : setting patience based on **WER** or **CER** 
+- `log_val_loss` : log val loss or not / Boolen (True/False)
 
-## 🚀 Features
+### **Training Objective**
+- `type_training`: Specifies the loss function. Supported values:
+  - `ce`: Cross-Entropy Loss  
+  - `ctc-kldiv`: Combined CTC Loss + KL-Divergence  
+  - `transducer`: Transducer Loss, use this to train transducer base models (eg: RNNT, Conv-RNNT, Conformer, ...). When using this, you have to change `type` in `dec` to transducer. 
+- If `type_training = ctc-kldiv`, you must include:
+  - `ctc-weight`: weighting factor for the CTC component.
 
-- ✅ Phoneme-aware encoder–decoder architecture
-- ✅ Multi-mode training:
-  - CTC + KL-divergence
-  - RNNT (Transducer)
-  - Cross-Entropy phoneme decoder
-- ✅ Configurable decoding:
-  - Word-based
-  - Character-based
-  - Pure-phoneme mode
-- ✅ Supports dynamic batch & variable-length input
-- ✅ Plug-and-play architecture modules
+### **Training Level**
+- `type`: Defines the linguistic unit used by the model:
+  - `word`: Word-level training, It's also applied to our method in phoneme-level cause we use a stack of 3 phonemes units to illustrating a word   
+  - `character`: Character-level training  
+  - `phoneme`: Phoneme-level training, this phoneme is kinda like character, we break down the word into phoneme unit and separate each word with \<space> token
 
----
+### **Reload Level**
+- `reload`: Boolean values (True/False)
+- `reload_mode`: You can reload and continue training with `latest`/`best`. If `latest`, you loaded model from the latest epoch. If `best`, you loaded model from your best epoch.
 
-## 📁 Configuration Guide
+### **Save**
 
-### 🎛 Training Settings
+- `daily_save` : Boolen values (True/False), normally set to True
 
-```yaml
-training:
-    ctc_weight:         # Weight for CTC loss (only in "ctc-kldiv" mode)
+## Inference Settings
 
-    type_training:      # Training objective
-        # "ctc-kldiv"   → CTC + KL-divergence loss (decoder k = 1)
-        # "transducer"  → RNN-Transducer (RNNT) loss
-        # "ce"          → Cross-entropy phoneme decoder (decoder k = 3)
+### **Inference Flow**
+- `infer`: Specifies the inference mechanism:
+  - `normal`: Standard greedy inference  
+  - `mtp_stack`: Multi token prediction inference, this can only be used when traning by our method  
 
-    epochs:
-        # 0  → Train until early stopping
-        # >0 → Train for a fixed number of epochs
+## Model Settings
 
-    type:               # Inference mode / tokenizer
-        # "word"     → Phoneme decoder → word output
-        # "char"     → Character-level output
-        # "phoneme"  → Pure phoneme mode (no phoneme decoder)
-```
+### **Model Name**
+- `model_name`: Defines the name displayed when saving checkpoints.
 
----
+### **Encoder Configuration**
+- Under `enc`:
+  - `type`: Specifies the encoder architecture to use.
 
-### 🎯 RNNT Loss Configuration
+### **Decoder Configuration**
+- Under `dec`:
+  - `type`: Specifies the decoder architecture to use. Currently, we have: `base`, `saa_dec`, `vgg_dec`, `transducer`
+  - `k`: This param is exclusively used for our method, default is 1, for truly mean phoneme-level as our theory, set it to 3 
 
-```yaml
-rnnt_loss:
-    blank:   # Blank token index (must match pad_id)
-```
-
-> ⚠️ Ensure `blank == pad_id` when using RNNT.
-
----
-
-### 📌 Summary Table
-
-| Mode | Description | Decoder Setting |
-|------|------------|----------------|
-`ctc-kldiv` | CTC + KL divergence | `k = 1` |
-`transducer` | RNNT loss | — |
-`ce` | Cross-entropy phoneme decoder | `k = 3` |
-
----
-
-
+### **Note**
+When changing the model architecture, make sure to check the configuration template for that architecture. Each architecture has its own specific config requirements, and you must follow them.
