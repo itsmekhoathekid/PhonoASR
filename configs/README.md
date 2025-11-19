@@ -7,7 +7,7 @@ This section describes the key configuration parameters used for training, infer
 ### **Epoch Control**
 - `epoch` determines how training is terminated:
   - `epoch = 0`: Training continues until **early stopping** is triggered.
-  - `epoch > 0`: Training will run for the specified number of epochs.
+  - `epoch > 0`: Training will run for the specified number of epochs, if early stopping is triggered, it'll stop.
 - `patience`: Param controls early stopping (If not specified, the default value is applied).
 
 ### **Training Objective**
