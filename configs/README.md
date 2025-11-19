@@ -5,29 +5,33 @@ This section describes the key configuration parameters used for training, infer
 ## Training Settings
 
 ### **Epoch Control**
-- `epoch` determines how training is terminated:
+- `epoch`: Determines how training is terminated:
   - `epoch = 0`: Training continues until **early stopping** is triggered.
   - `epoch > 0`: Training will run for the specified number of epochs, if early stopping is triggered, it'll stop.
 - `patience`: Param controls early stopping (If not specified, the default value is applied).
 
 ### **Training Objective**
-- `type_training` Specifies the loss function. Supported values:
+- `type_training`: Specifies the loss function. Supported values:
   - `ce`: Cross-Entropy Loss  
   - `ctc-kldiv`: Combined CTC Loss + KL-Divergence  
-  - `transducer`: Transducer Loss, you can also use this to train transducer base models (eg: RNNT, Conv-RNNT, Conformer, ...). When using this, you have to change `type` in `dec` to transducer. 
+  - `transducer`: Transducer Loss, use this to train transducer base models (eg: RNNT, Conv-RNNT, Conformer, ...). When using this, you have to change `type` in `dec` to transducer. 
 - If `type_training = ctc-kldiv`, you must include:
   - `ctc-weight`: weighting factor for the CTC component.
 
 ### **Training Level**
-- `type` defines the linguistic unit used by the model:
+- `type`: Defines the linguistic unit used by the model:
   - `word`: Word-level training, It's also applied to our method in phoneme-level cause we use a stack of 3 phonemes units to illustrating a word   
   - `character`: Character-level training  
   - `phoneme`: Phoneme-level training, this phoneme is kinda like character, we break down the word into phoneme unit and separate each word with \<space> token
 
+### **Reload Level**
+- `reload`: Boolean values (True/False)
+- `reload_mode`: You can reload and continue training with `latest`/`best`. If `latest`, you loaded model from the latest epoch. If `best`, you loaded model from your best epoch.
+
 ## Inference Settings
 
 ### **Inference Flow**
-- `infer` specifies the inference mechanism:
+- `infer`: Specifies the inference mechanism:
   - `normal`: Standard greedy inference  
   - `mtp_stack`: Multi token prediction inference, this can only be used when traning by our method  
 
