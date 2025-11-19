@@ -80,13 +80,9 @@ class Engine:
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-<<<<<<< HEAD
         # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
         epoch = checkpoint["epoch"]
         wer = checkpoint["wer"]
-=======
-        self.no_improve_epochs = checkpoint.get("no_improve_epochs", 0)
->>>>>>> d1dbd88079b90fc6e23654af68d130519971e0c9
 
         return checkpoint
     
