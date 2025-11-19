@@ -48,3 +48,6 @@ This section describes the key configuration parameters used for training, infer
 - Under `dec`:
   - `type`: Specifies the decoder architecture to use. Currently, we have: `base`, `saa_dec`, `vgg_dec`, `transducer`
   - `k`: This param is exclusively used for our method, default is 1, for truly mean phoneme-level as our theory, set it to 3 
+
+### **Note**
+When changing the model architecture, make sure to check the configuration template for that architecture. Each architecture has its own specific config requirements, and you must follow them.
