@@ -9,6 +9,8 @@ This section describes the key configuration parameters used for training, infer
   - `epoch = 0`: Training continues until **early stopping** is triggered.
   - `epoch > 0`: Training will run for the specified number of epochs, if early stopping is triggered, it'll stop.
 - `patience`: Param controls early stopping (If not specified, the default value is applied).
+- `patience_objective` : setting patience based on **WER** or **CER** 
+- `log_val_loss` : log val loss or not / Boolen (True/False)
 
 ### **Training Objective**
 - `type_training`: Specifies the loss function. Supported values:
@@ -27,6 +29,10 @@ This section describes the key configuration parameters used for training, infer
 ### **Reload Level**
 - `reload`: Boolean values (True/False)
 - `reload_mode`: You can reload and continue training with `latest`/`best`. If `latest`, you loaded model from the latest epoch. If `best`, you loaded model from your best epoch.
+
+### **Save**
+
+- `daily_save` : Boolen values (True/False), normally set to True
 
 ## Inference Settings
 
