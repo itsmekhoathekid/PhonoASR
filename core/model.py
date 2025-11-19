@@ -109,7 +109,7 @@ class TransducerAcousticModle(nn.Module):
         self.sos = config['training'].get('sos_id', 1)
         self.eos = config['training'].get('eos_id', 2)
 
-    def forward(self, inputs, targets, inputs_length,  decoder_mask):
+    def forward(self, inputs, targets, inputs_length,  decoder_mask, tfr=0.0):
         enc_state, _, fbank_len = self.encoder(inputs, inputs_length)
         enc_state = self.lin_enc(enc_state)
 

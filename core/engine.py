@@ -65,17 +65,19 @@ class Engine:
 
     def get_predictor(self):
         type_decode = self.config["infer"]['type_decode']
-        if type_decode == "mtp_stack":
+        if type_decode == "mtp_stack" and self.config['training']['type_training'] == 'ce' and self.config['model']['dec']['k'] == 3:
             predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
-        elif type_decode == "mtp":
-            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device)
-        else:
+        elif type_decode == "mtp_stack" and self.config['model']['dec']['k'] == 1:
             predictor = GreedyPredictor(self.model, self.vocab, self.device)
+        else:
+            predictor =  GreedyMutiplePredictor(self.model, self.vocab, self.device)
         
         return predictor
 
     def load_checkpoint(self):
-        load_path = os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}.ckpt")
+        mode = self.config['training'].get('reload_mode', 'latest')
+        model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
+        load_path = os.path.join(self.checkpoint_path, model_name)
         checkpoint = torch.load(load_path)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

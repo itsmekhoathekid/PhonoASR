@@ -19,7 +19,7 @@ model:
     output_dim: 256
     in_channels: 1
     out_channels: 32
-    name : 'Conformer'
+    type : 'Conformer'
     projection_dim : 640
     output_dim : 320
   dec: 
@@ -36,29 +36,21 @@ model:
   k: 1
 
 training:
-    epochs: 0
+    epochs: 100
     batch_size: 2
-    num_workers: 
-    save_path: "/home/llogn/workspace/phonoasr/saves"
-    wave_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/voices"
-    train_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/train_w2i.json"
-    dev_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_w2i.json"
-    test_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/test_w2i.json"
-    vocab_path: "/mnt/c/paper/raw_data/Vietnamese-Speech-to-Text-datasets/ViVOS/vocab_w2i.json"
+    num_workers: 4
+    save_path: "/home/anhkhoa/TASA/saves"
+    train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_w2i.json"
+    dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
+    test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_w2i.json"
+    vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_w2i.json"
     reload: False
-    logg: "/home/llogn/workspace/phonoasr/logs/Conformer.log"
+    logg: "/home/anhkhoa/PhonoASR/logs/Conformer.log"
     # ctc_weight: 0.3
-    result: "/home/llogn/workspace/phonoasr/result.txt"
+    result: "/home/anhkhoa/PhonoASR/result.txt"
     type: "word"
     type_training: "transducer"
-    sample_rate : 16000
-    n_mels : 80
-    n_fft : 512
-    win_length : 25
-    pad_id: 0
-    blank_id: 0
-    sos_id: 1
-    eos_id: 2
+    wave_path: "/mnt/d/voices/voices"
 
 infer: 
     type_decode: "mtp_stack"
@@ -74,7 +66,7 @@ scheduler:
   n_warmup_steps: 15000
 
 loss:
-    blank: 0
+    blank: 4
 
 
   
