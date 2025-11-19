@@ -1,4 +1,4 @@
-from . import TransformerDecoder, ConformerDecoder, BaseDecoder, SaaDecoder
+from . import TransformerDecoder, ConformerDecoder, BaseDecoder, SaaDecoder, VGGTransformerDecoder
 
 def build_decoder(config, vocab_size):
     try:
@@ -21,6 +21,15 @@ def build_decoder(config, vocab_size):
                 num_layers=config["dec"]["num_layers"],
                 embed_dropout=config["dec"].get("embed_dropout", 0.1),
                 var_dropout=config["dec"].get("var_dropout", 0.2),
+            )
+        elif decoder_type == 'vgg_dec':
+            return VGGTransformerDecoder(
+                vocab_size=vocab_size,
+                n_layer=config["dec"]["n_layer"],
+                d_model=config["dec"]["d_model"],
+                d_hidden=config["dec"]["d_hidden"],
+                n_head=config["dec"]["n_head"],
+                dropout=config["dec"]["dropout"],
             )
         else:
             return BaseDecoder(
