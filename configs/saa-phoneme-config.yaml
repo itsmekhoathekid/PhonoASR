@@ -5,7 +5,7 @@ model:
     d_model: 256       
     dropout: 0.2
     n_layer: 3
-    name : 'SAA'
+    type : 'SAA'
   dec: 
     type: 'base'
     n_layer: 3

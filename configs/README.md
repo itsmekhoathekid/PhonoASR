@@ -1,6 +1,6 @@
 # 📖 Configuration Documentation
 
-This section describes the key configuration parameters used for training, inference, and model setup. These explanations help users correctly adjust the YAML config file.
+This section describes the key configuration parameters used for training, inference, and model setup. We use YAML file to control config of models.
 
 ## Training Settings
 
@@ -14,7 +14,7 @@ This section describes the key configuration parameters used for training, infer
 - `type_training` Specifies the loss function. Supported values:
   - `ce`: Cross-Entropy Loss  
   - `ctc-kldiv`: Combined CTC Loss + KL-Divergence  
-  - `transducer`: Transducer Loss  
+  - `transducer`: Transducer Loss, you can also use this to train transducer base models (eg: RNNT, Conv-RNNT, Conformer, ...). When using this, you have to change `type` in `dec` to transducer. 
 - If `type_training = ctc-kldiv`, you must include:
   - `ctc-weight`: weighting factor for the CTC component.
 
@@ -38,9 +38,9 @@ This section describes the key configuration parameters used for training, infer
 
 ### **Encoder Configuration**
 - Under `enc`:
-  - `name`: Specifies the encoder architecture to use.
+  - `type`: Specifies the encoder architecture to use.
 
 ### **Decoder Configuration**
 - Under `dec`:
-  - `type`: Specifies the decoder architecture to use.
+  - `type`: Specifies the decoder architecture to use. Currently, we have: `base`, `saa_dec`, `vgg_dec`, `transducer`
   - `k`: This param is exclusively used for our method, default is 1, for truly mean phoneme-level as our theory, set it to 3 
