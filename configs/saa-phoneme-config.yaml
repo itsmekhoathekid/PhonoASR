@@ -18,6 +18,7 @@ model:
 
 training:
   epochs: 100
+  patience: 15
   batch_size: 16
   save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
   train_path : "/datastore/npl/Speech2Text/dataset/LSVSC_train_phoneme.json"
@@ -28,8 +29,10 @@ training:
   logg : "/datastore/npl/Speech2Text/PhonoASR/logs/ssa.log"
   result: "/datastore/npl/Speech2Text/PhonoASR/result-ssa-phoneme.txt"
   reload: False
+  reload_mode: 'latest' # best/ latest
   ctc_weight: 0.4
   type_training: 'ce'
+  type: 'word' # word/char/phoneme
 
 infer: 
   type_decode: 'mtp_stack' # mtp_stack/mtp
