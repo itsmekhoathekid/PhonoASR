@@ -14,7 +14,7 @@ model:
     feed_forward_expansion_factor : 4
     dropout_rate: 0.1
     conv_kernel_size: 31
-    num_encoder_layers: 1
+    num_encoder_layers: 8
     output_dim: 256
     in_channels: 1
     out_channels: 32
@@ -32,16 +32,15 @@ model:
   d_model: 256
 
 training:
-  epochs: 100
-  batch_size: 4
+  batch_size: 32
   num_workers: 4  
-  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
-  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
-  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
-  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
-  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
-  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
-  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/conformer.log"
+  save_path: "saves"
+  train_path : "data/LSVSC_train_phoneme.json"
+  dev_path : "data/LSVSC_valid_phoneme.json"
+  test_path : "data/LSVSC_test_phoneme.json"
+  vocab_path : "data/phoneme_vocab_lsvsc.json"
+  wave_path: "data/LSVSC_100/data"
+  logg : "logs/conformer.log"
   reload: False
   type: "word"
   ctc_weight: 0.4
@@ -50,16 +49,16 @@ training:
   n_mels : 80
   n_fft : 512
   win_length : 25
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-conformer.txt"
+  result: "logs/result-conformer.json"
 
 optim:
   type: adam
-  lr: 0.001
+  lr: 1
   weight_decay: 0.0001
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 0.001
+  lr_initial: 1
   n_warmup_steps: 15000
 
 loss:

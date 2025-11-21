@@ -9,8 +9,7 @@ import yaml
 
 import warnings
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
+warnings.filterwarnings("ignore")
 
 def load_config(config_path):
     with open(config_path, 'r') as f:

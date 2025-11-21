@@ -1,46 +1,56 @@
 training:
-  epochs: 100
-  batch_size: 16
+  # epochs: 100
+  batch_size: 4
   num_workers: 4
-  save_path: "/home/anhkhoa/PhonoASR/saves"
-  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
-  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
-  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  save_path: "saves"
+  train_path : "data/LSVSC_train_word.json"
+  dev_path : "data/LSVSC_valid_word.json"
+  test_path : "data/LSVSC_test_word.json"
+  vocab_path : "data/word_vocab_lsvsc.json"
+  wave_path: "data/wav"
   reload: False
-  logg : "/home/anhkhoa/PhonoASR/logs/RNNT.log"
+  logg: "logs/rnnt-word.log"
+  result: "result-conformer-word.json"
   ctc_weight: 0.3
-  result: "/home/anhkhoa/PhonoASR/result.txt"
   type: "word"
-  type_training : "ce"
+  type_training : "transducer"
   
 optim:
   type: adam
-  lr: 0.001
+  lr: 1
   weight_decay: 0.0001
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 0.001
+  lr_initial: 1
   n_warmup_steps: 15000
 
 model:
   enc:
     input_size: 80
     hidden_size: 320
-    output_size: 256
-    n_layers: 1
+    d_model: 256
+    n_layers: 8
     dropout: 0.2
     bidirectional: True
-    name: 'RNNT'
+    type: 'RNNT'
+    output_size: 256  
+    output_dim : 320
   dec:
-    n_layer: 3
-    d_model: 256
-    ff_size: 1024
-    n_head: 4
-    dropout: 0.1
-    k: 3
+    embedding_size: 256
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
+    k: 1
+  joint:
+    input_size: 640
+    inner_size: 512
   model_name: "RNNT"
+  d_model: 256
+
+infer:
+  type_decode: mtp_stack
 
 rnnt_loss:
   blank: 4
