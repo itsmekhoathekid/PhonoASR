@@ -4,16 +4,17 @@ model:
     d_model: 80               
     d_hidden: 256       
     dropout: 0.2
-    n_layer: 3
+    n_layer: 8
     name : 'SAA'
   dec: 
-    n_layer: 3
+    n_layer: 1
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 3
   model_name: 'SAA'
+  d_model: 256
 
 training:
   epochs: 100
@@ -25,10 +26,11 @@ training:
   vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
   wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   logg : "/home/inomar01/nlp@uit/PhonoASR/logs/ssa.log"
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-ssa-phoneme.txt"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-ssa.json"
   reload: False
   ctc_weight: 0.4
   type_training: 'ce'
+  type: "word"
 
 optim:
   # type: sgd
@@ -40,15 +42,16 @@ optim:
   # decay_rate: 0.5
 
   type: adam
-  lr: 0.0003
+  lr: 1
   weight_decay: 0.0
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 0.0003
+  lr_initial: 1
   n_warmup_steps: 15000
 
-loss:
+infer:
+  type_decode: "mtp_stack"
 
 
   

@@ -10,6 +10,7 @@ model:
       dropout: 0.1 
     input_dim: 80
     encoder_dim: 256
+    d_model: 256
     num_attention_heads: 8
     feed_forward_expansion_factor : 4
     dropout_rate: 0.1
@@ -26,9 +27,9 @@ model:
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 3
+    k: 1
   model_name : 'Conformer'
-  k: 3
+  k: 1
   d_model: 256
 
 training:
@@ -44,7 +45,7 @@ training:
   reload: False
   type: "word"
   ctc_weight: 0.4
-  type_training: 'ce'
+  type_training: 'ctc-kldiv'
   sample_rate : 16000
   n_mels : 80
   n_fft : 512

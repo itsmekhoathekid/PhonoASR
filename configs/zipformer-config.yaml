@@ -1,17 +1,18 @@
 training:
-  epochs: 100
-  batch_size: 6
+  batch_size: 32
+  epochs: 32
   num_workers: 4
-  save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
-  train_path : "/datastore/npl/Speech2Text/dataset/LSVSC_train_phoneme.json"
-  dev_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
-  test_path : "/datastore/npl/Speech2Text/dataset/LSVSC_test_phoneme.json"
-  vocab_path : "/datastore/npl/Speech2Text/dataset/phoneme_vocab_lsvsc.json"
-  logg: "/datastore/npl/Speech2Text/PhonoASR/logs/Zipformer.log"
-  result: "/datastore/npl/Speech2Text/PhonoASR/result.txt"
+  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
+  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
+  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   reload: False
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/zipformer.log"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-zipformer.json"
   ctc_weight: 0.4
-  type_training: 'ce'
+  type_training: 'ctc-kldiv'
   type: 'word'
 
 model:
@@ -44,20 +45,24 @@ model:
     left_context_frames: [-1]  
     name: 'Zipformer'
   dec: 
-    n_layer: 3
+    n_layer: 1
     d_model: 512
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 3
+    k: 1
   model_name: 'Zipformer'
+  d_model: 512
+
+infer:
+  type_decode: mtp_stack
 
 optim:
   type: adam
-  lr: 0.001
+  lr: 1
   weight_decay: 0.0001
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 0.001
+  lr_initial: 1
   n_warmup_steps: 15000

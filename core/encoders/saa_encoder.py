@@ -27,8 +27,8 @@ class InterleaveHybridAcousticEncoder(nn.Module):
     def __init__(self, config, vocab_size):
         super(InterleaveHybridAcousticEncoder, self).__init__()
         self.n_head = config['n_head']
-        self.d_model = config['d_model']
-        self.d_hidden = config['d_hidden']
+        self.d_model = config['input_dim']
+        self.d_hidden = config['d_model']
         self.dropout = config.get('dropout', 0.1)
         self.n_layer = config['n_layer']
         
