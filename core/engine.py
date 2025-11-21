@@ -65,12 +65,12 @@ class Engine:
 
     def get_predictor(self):
         type_decode = self.config["infer"]['type_decode']
-        if type_decode == "mtp_stack":
+        if type_decode == "mtp_stack" and self.config['training']['type_training'] == 'ce' and self.config['model']['dec']['k'] == 3:
             predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
-        elif type_decode == "mtp":
-            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device)
-        else:
+        elif type_decode == "mtp_stack" and self.config['model']['dec']['k'] == 1:
             predictor = GreedyPredictor(self.model, self.vocab, self.device)
+        else:
+            predictor =  GreedyMutiplePredictor(self.model, self.vocab, self.device)
         
         return predictor
 
