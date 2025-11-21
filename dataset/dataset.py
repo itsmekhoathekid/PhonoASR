@@ -32,7 +32,7 @@ class Vocab:
     def get_blank_token(self):
         return self.stoi["<blank>"]
     def get_space_token(self):
-        return self.stoi["<space>"] # <blank>
+        return self.stoi["<blank>"] # <blank>
     def __len__(self):
         return len(self.vocab)
 
