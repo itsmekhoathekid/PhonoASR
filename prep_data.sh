@@ -32,13 +32,13 @@ DATA_DIR="$(pwd)"
 set -e
 
 echo "Creating virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
+# python3 -m venv venv
+# source venv/bin/activate
 
-pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
-pip install gdown librosa speechbrain jiwer
-pip install git+https://github.com/lhotse-speech/lhotse
-pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+# pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+# pip install gdown librosa speechbrain jiwer
+# pip install git+https://github.com/lhotse-speech/lhotse
+# pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
 if [[ -d "dataset" ]]; then
     echo "Folder 'dataset' already exists. Moving into it..."
@@ -113,7 +113,7 @@ fi
 if [[ "$1" == "phoneme" ]]; then
     echo "Preprocessing for phoneme-based model"
 
-    python mutiple_construct.py \
+    python ./PhonoASR/dataset/mutiple_construct.py \
         --dataset "$2" \
         --type_tokenizer "phoneme" \
         --train_path "$train_path" \
@@ -122,10 +122,10 @@ if [[ "$1" == "phoneme" ]]; then
         --base_path "$base_path" \
         --valid_path "$valid_path"
 
-    python check_empty.py \
+    python ./PhonoASR/dataset/check_empty.py \
         --input "${train_path%.json}_phoneme.json" \
 
-    python check_empty.py \
+    python ./PhonoASR/dataset/check_empty.py \
         --input "${test_path%.json}_phoneme.json" \
 
     if [[ -n "$valid_path" ]]; then

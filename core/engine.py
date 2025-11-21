@@ -19,7 +19,12 @@ class Engine:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.checkpoint_path = config['training']['save_path']
         self.warmup = self.config["scheduler"]["n_warmup_steps"]
-        self.d_model = self.config["model"]["d_model"]
+        self.d_model = self.config["model"].get("d_model", self.warmup)
+        if self.d_model == self.warmup:
+            self.normalize = self.warmup ** 0.5
+        else:
+            self.normalize = self.d_model ** -0.5
+
         self.model, self.optimizer = self.inits(vocab_size=len(vocab))
         self.scheduler = LambdaLR(self.optimizer, self.lambda_lr)
         self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [0.2 for _ in range(self.config['model']['dec']['k'])]
@@ -29,13 +34,14 @@ class Engine:
         self.kldiv_loss = Kldiv_Loss(pad_idx=vocab.get_pad_token(), reduction='batchmean')
         self.ce_loss = CELoss(ignore_index=vocab.get_pad_token(), reduction='mean').to(self.device)
         self.transducer_loss = RNNTLoss(blank=vocab.get_blank_token(), reduction='mean').to(self.device)
-        self.vocab = vocab
+        self.vocab = vocab  
         self.predictor = self.get_predictor()
+        self.no_improve_epochs = 0
 
     def lambda_lr(self, step):
         warm_up = self.warmup
         step += 1
-        return (self.d_model ** -.5) * min(step ** -.5, step * warm_up ** -1.5)
+        return self.normalize * min(step ** -.5, step * warm_up ** -1.5)
         
     def inits(self, vocab_size):
         if self.config['training']['type_training'] == 'transducer':
@@ -59,44 +65,28 @@ class Engine:
 
     def get_predictor(self):
         type_decode = self.config["infer"]['type_decode']
-        if type_decode == "mtp_stack":
+        if type_decode == "mtp_stack" and self.config['training']['type_training'] == 'ce' and self.config['model']['dec']['k'] == 3:
             predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
-        elif type_decode == "mtp":
-            predictor = GreedyMutiplePredictor(self.model, self.vocab, self.device, tau=self.config["infer"]["tau"])
-        else:
+        elif type_decode == "mtp_stack" and self.config['model']['dec']['k'] == 1:
             predictor = GreedyPredictor(self.model, self.vocab, self.device)
+        else:
+            predictor =  GreedyMutiplePredictor(self.model, self.vocab, self.device)
         
         return predictor
-    
-    def load_checkpoint_old(self, epoch):
-        checkpoint_path = os.path.join(
-        self.config['training']['save_path'],
-            f"{self.config['model']['model_name']}_epoch_{epoch}"
-        )
-        print(f"Loading checkpoint from: {checkpoint_path}")
-        checkpoint = torch.load(checkpoint_path, map_location= self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.eval()
-    def load_checkpoint(self):
-        if os.path.isfile():
-            load_path = os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}.ckpt")
-            
-            checkpoint = torch.load(load_path)
-            self.model.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-            epoch = checkpoint["epoch"]
-            scores = checkpoint["score"]
-            
-            # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
-            logging.info(f"Reloaded model from {load_path} at epoch {epoch}")
-        else:
-            logging.info("No checkpoint found. Starting from scratch.")
 
-        return {
-            "epoch": epoch,
-            **scores
-        }
+    def load_checkpoint(self):
+        mode = self.config['training'].get('reload_mode', 'latest')
+        model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
+        load_path = os.path.join(self.checkpoint_path, model_name)
+        checkpoint = torch.load(load_path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
+        epoch = checkpoint["epoch"]
+        wer = checkpoint["wer"]
+
+        return checkpoint
     
     def get_loss(self, enc_out, dec_out, enc_lens, text_len, tokens_eos):
         
@@ -108,7 +98,10 @@ class Engine:
             loss = loss_ctc * ctc_weight + loss_kldiv * (1 - ctc_weight)
             return loss 
         elif self.type_training == 'ce':
-            B = tokens_eos.size(0)
+            if self.config['model']['dec']['k'] == 1:
+                loss_ep = self.ce_loss(dec_out[0], tokens_eos)
+                return loss_ep
+            B = tokens_eos.size(0)  
             loss_ep = sum(self.alpha_k[i] * self.ce_loss(dec_out[i], tokens_eos[...,i].view(B,-1)) for i in range(len(dec_out)))
             return loss_ep
         elif self.type_training == 'transducer':
@@ -137,7 +130,8 @@ class Engine:
                 speech, 
                 decoder_input,
                 speech_mask,
-                text_mask
+                text_mask,
+                0.8
             )  # [B, T_text, vocab_size]
 
             loss = self.get_loss(enc_out, dec_out, enc_lens, text_len, tokens_eos)
@@ -152,7 +146,7 @@ class Engine:
             progress_bar.set_postfix(batch_loss=loss.item())
 
         avg_loss = total_loss / len(dataloader)
-        logging.info(f"Average training loss: {avg_loss:.4f}")
+        logging.info(f"Average training loss: {avg_loss:.4f}, Learning Rate: {self.scheduler.get_last_lr()[0]:.6f}")
 
     def inference(self, dataloader, save = False):
         self.model.eval()
@@ -187,9 +181,9 @@ class Engine:
                         predicted_text = [self.predictor.tokenizer[token] for token in predicted_tokens_clean]
 
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        gold_text = [self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank]
+                        gold_text = [self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos]
                         gold_text_str = ' '.join(gold_text)
-                        predicted_text_str = ' '.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
+                        predicted_text_str = ' '.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
                     
                     else:
                         sample_tokens = predicted_tokens[batch_idx]
@@ -219,22 +213,25 @@ class Engine:
 
                     if self.config['training']['type'] == "phoneme":
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
+                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
                         space_token = self.vocab.get("<space>")
                         predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[space_token], ' ')
 
-                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
+                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos])
                         gold_text_str = gold_text_str.replace(self.predictor.tokenizer[space_token], ' ')
                     elif self.config['training']['type'] == "char":
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
-                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos])
-                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank])
+                        predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
+                        gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos])
                     
                     all_gold_texts.append(gold_text_str)
                     all_predicted_texts.append(predicted_text_str)
 
                     wer_score = wer(gold_text_str, predicted_text_str)
                     cer_score = cer(gold_text_str, predicted_text_str)
+
+                    gold_text_str = gold_text_str.strip()
+                    predicted_text_str = predicted_text_str.strip()
 
                     if save:
                         results.append({
@@ -296,11 +293,14 @@ class Engine:
         # scheduler_name = f"{self.config['model']['model_name']}_scheduler.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}_scheduler.ckpt"
         torch.save({
             'epoch': epoch,
-            "wer": wer,
-            "cer": cer,
+            'scores': {
+                'wer': wer, 
+                'cer': cer
+            },
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
-            "scheduler_state_dict": self.scheduler.state_dict()
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "no_improve_epochs" : self.no_improve_epochs
         }, os.path.join(
             self.config['training']['save_path'],
             model_name
@@ -314,18 +314,19 @@ class Engine:
         
         if self.config['training']['reload']:
             checkpoint = self.load_checkpoint()
-            epoch = checkpoint["epoch"]
+            epoch = checkpoint["epoch"] + 1
             scores = checkpoint["scores"]
-            best_wer = scores["wer"]
+            best_score = scores["wer"]
+            logging.info(f"Reloaded model from checkpoint at epoch {epoch-1} with best WER: {best_score:.4f}")
         else:
             epoch = 1
-            best_wer = 1.
+            best_score = 1.
 
         log_val_loss = self.config['training'].get('log_val_loss', False)
         num_epochs = self.config['training'].get('num_epochs', 0) # if 0 then train til early stop
         
         patience = self.config['training'].get('patience', 10)
-        no_improve_epochs = 0
+        patience_objective = self.config['training'].get('patience_objective', 'WER')
         daily_save = self.config['training'].get('daily_save', True)
 
         while True:
@@ -339,26 +340,40 @@ class Engine:
             current_wer = results["wer"]
             current_cer = results["cer"]
 
-            if current_wer < best_wer:
-                best_wer = current_wer
-                self.save_checkpoint(epoch, best_wer, current_cer,  mode="best")
-                no_improve_epochs = 0
+            objective_metric = current_wer if patience_objective == 'WER' else current_cer
+            if objective_metric < best_score:
+                best_score = objective_metric
+                self.save_checkpoint(epoch, best_score, current_cer,  mode="best")
+                self.no_improve_epochs = 0
                 
             else:
-                no_improve_epochs += 1
-                if no_improve_epochs >= patience:
+                self.no_improve_epochs += 1
+                if self.no_improve_epochs >= patience:
                     logging.info(f"No improvement for {patience} epochs. Stopping training.")
                     break
             if daily_save:
                 self.save_checkpoint(epoch, current_wer, current_cer, mode="latest")
             epoch += 1
-            logging.info(f"CER: {current_cer:.4f}, WER: {current_wer:.4f}, Best WER: {best_wer:.4f}")
+            logging.info(f"CER: {current_cer:.4f}, WER: {current_wer:.4f}, Best {patience_objective}: {best_score:.4f}")
             if num_epochs > 0 and epoch > num_epochs:
                 logging.info("Reached maximum number of epochs. Stopping training.")
                 break
             
     def run_eval(self, test_loader):
-        self.inference(test_loader, save=True)
+        load_path = os.path.join(self.checkpoint_path, f"best_{self.config['model']['model_name']}.ckpt")
+        if os.path.isfile(load_path):
+            checkpoint = torch.load(load_path)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+            epoch = checkpoint["epoch"]
+            
+            # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
+            logging.info(f"Reloaded model from {load_path} at epoch {epoch}")
+            
+            self.inference(test_loader, save=True)
+        else:
+            logging.info("No checkpoint found.")
     
     def make_block_targets(self, target, k, pad_id=-100, device='cpu'):
         """
