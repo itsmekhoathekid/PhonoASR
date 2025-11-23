@@ -157,7 +157,7 @@ class TransducerAcousticModle(nn.Module):
     def greedy_batch(self, inputs, input_lengths, max_output_len=200):
         # 1) Encode once for whole batch
         enc_out, _, input_lengths = self.encoder(inputs, input_lengths)   # [B, T, D]
-            
+        enc_states = self.lin_enc(enc_states)
         B, T, D = enc_out.size()
         hidden = None
 
