@@ -123,6 +123,7 @@ class TransducerAcousticModle(nn.Module):
         batch_size = inputs.size(0)
 
         enc_states,_, inputs_length = self.encoder(inputs, inputs_length)
+        enc_states = self.lin_enc(enc_states)
         zero_token = torch.LongTensor([[self.sos]]) 
         
         if inputs.is_cuda:
