@@ -1,0 +1,61 @@
+training:
+  epochs: 100
+  batch_size: 32
+  num_workers: 4
+  save_path: "/home/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/transformer_transducer_speeQ/data/train_phoneme.json"
+  dev_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  test_path : "/home/anhkhoa/transformer_transducer_speeQ/data/test_phoneme.json"
+  vocab_path : "/home/anhkhoa/transformer_transducer_speeQ/data/vocab_phoneme.json"
+  reload: False
+  logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
+  ctc_weight: 0.3
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-vgg-transformer.json"
+  type: "word"
+  type_training : "ce"
+  wave_path: "/mnt/d/voices/voices"
+  
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 15000
+
+infer:
+  type_decode: mtp_stack
+
+model:
+  enc:
+    subsampling:
+      num_blocks: 2
+      out_channels: [32, 64]
+      kernel_sizes: [3, 3]
+      pooling_kernel_sizes: [2, 2]
+      num_conv_layers : [2, 2]
+      layer_norms: [True, True]
+      dropout: 0.1
+    input_dim : 80
+    in_features: 1280
+    n_layers: 8
+    d_model: 256
+    ff_size: 1024
+    h: 4
+    p_dropout: 0.1
+    name: 'VGGTransformer'
+  dec:
+    n_layer: 1
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 3
+  model_name: "VGGTransformer"
+  d_model: 256
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
