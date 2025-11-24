@@ -55,7 +55,7 @@ model:
     n_head: 4
     dropout: 0.1
     k: 3
-  model_name: "VGGTransformer"
+  model_name: "VGGTransformer-W2I"
 
 rnnt_loss:
   blank: 4

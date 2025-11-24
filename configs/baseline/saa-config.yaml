@@ -19,6 +19,8 @@ model:
 training:
   epochs: 100
   batch_size: 16
+  patience: 10
+  num_workers: 4
   save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
   train_path : "/datastore/npl/Speech2Text/dataset/train_word.json"
   dev_path : "/datastore/npl/Speech2Text/dataset/test_word.json"
@@ -31,6 +33,7 @@ training:
   reload_mode: 'best'
   ctc_weight: 0
   type_training: 'ce'
+  type: 'word'
 
 infer: 
   type_decode: 'normal' # mtp_stack/mtp

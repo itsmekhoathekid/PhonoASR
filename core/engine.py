@@ -70,7 +70,7 @@ class Engine:
         elif type_decode == "mtp_stack" and self.config['model']['dec']['k'] == 1:
             predictor = GreedyPredictor(self.model, self.vocab, self.device)
         else:
-            predictor =  GreedyMutiplePredictor(self.model, self.vocab, self.device)
+            predictor =  GreedyPredictor(self.model, self.vocab, self.device)
         
         return predictor
 
