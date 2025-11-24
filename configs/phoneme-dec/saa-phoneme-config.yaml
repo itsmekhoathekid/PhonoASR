@@ -14,7 +14,7 @@ model:
     n_head: 4
     dropout: 0.1
     k: 3
-  model_name: 'SAA'
+  model_name: 'SAA-PHONEME'
 
 training:
   epochs: 100
