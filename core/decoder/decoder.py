@@ -154,20 +154,30 @@ class EmbeddingModule(nn.Module):
         if hasattr(self, 'pos_enc'):
             x = self.pos_enc(x)
         return self.dropout(x)
+    
+class Head(nn.Module):
+    def __init__(self, d_model: int, ff_size: int, dropout: float, h : int) -> None:
+        super().__init__()
+
+
+        self.ffn = FeedForwardBlock(d_model=d_model, d_ff=ff_size, dropout=dropout)
+        self.norm = LayerNormalization(d_model)
+    
+    def forward(self, dec_out) -> torch.Tensor:
+        dec_out = dec_out + self.ffn(self.norm(dec_out))      
+        return dec_out
+
 
 
 class TransformerDecoder(nn.Module):
     def __init__(self, vocab_size: int, n_layers: int, d_model: int, ff_size: int, h: int, p_dropout: float, k : int) -> None:
         super().__init__()
-        self.emb = EmbeddingModule(vocab_size=vocab_size, d_model=d_model, dropout=p_dropout, k = k)
+        self.emb = EmbeddingModule(vocab_size=vocab_size, d_model=d_model, dropout=p_dropout, k = k, conv_dec=False)
         self.layers = nn.ModuleList(
             [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(n_layers)]
         )
-        self.enc_linears = nn.ModuleList(
-            [nn.Linear(in_features=d_model, out_features=d_model) for _ in range(k)]
-        )
         self.heads = nn.ModuleList(
-            [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(k)]
+            [Head(d_model=d_model, ff_size=ff_size, dropout=p_dropout, h= h) for _ in range(k)]
         )
         self.projection = ProjectionLayer(d_model=d_model, vocab_size=vocab_size)
         self.k = k
@@ -188,8 +198,7 @@ class TransformerDecoder(nn.Module):
         for layer in self.layers:
             out = layer(out, encoder_out, enc_mask, dec_mask)
         if self.k != 1:
-            enc_outs = [linear(encoder_out) for linear in self.enc_linears]
-            latent = [head(out, enc_out, enc_mask, dec_mask) for head, enc_out in zip(self.heads, enc_outs)]
+            latent = [head(out, dec_mask) for head in self.heads]
         else:
             latent = [out]
         out = [self.projection(l) for l in latent]  

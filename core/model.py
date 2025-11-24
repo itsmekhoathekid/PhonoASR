@@ -157,7 +157,7 @@ class TransducerAcousticModle(nn.Module):
     def greedy_batch(self, inputs, input_lengths, max_output_len=200):
         # 1) Encode once for whole batch
         enc_out, _, input_lengths = self.encoder(inputs, input_lengths)   # [B, T, D]
-        enc_states = self.lin_enc(enc_states)
+        enc_out = self.lin_enc(enc_out)
         B, T, D = enc_out.size()
         hidden = None
 
@@ -169,6 +169,7 @@ class TransducerAcousticModle(nn.Module):
         finished = torch.zeros(B, dtype=torch.bool, device=inputs.device)
         results = [[] for _ in range(B)]
 
+        T = min(T, max_output_len)
         t = 0
         while t < T and not finished.all():
             # 2) joint: enc_out[:,t,:] + last dec step 
