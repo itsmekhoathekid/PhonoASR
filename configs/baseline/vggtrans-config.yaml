@@ -49,12 +49,12 @@ model:
     type: 'VGGTransformer'
   dec:
     type: 'vgg_dec'
-    n_layer: 3
+    n_layers: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 3
+    k: 1
   model_name: "VGGTransformer-W2I"
 
 rnnt_loss:

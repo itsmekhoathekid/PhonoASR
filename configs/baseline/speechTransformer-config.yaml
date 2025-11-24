@@ -42,7 +42,7 @@ model:
       dropout: 0.1 
     in_features: 640
     n_layers: 6
-    d_model: 320
+    d_model: 256
     ff_size: 1024
     h: 4
     p_dropout: 0.1
