@@ -1,0 +1,73 @@
+training:
+  batch_size: 16
+  num_workers: 4
+  patience: 10
+  save_path: "saves"
+  train_path : "data/LSVSC_train_phoneme.json"
+  dev_path : "data/LSVSC_valid_phoneme.json"
+  test_path : "data/LSVSC_test_phoneme.json"
+  vocab_path : "data/phoneme_vocab_lsvsc.json"
+  wave_path: "data/wav"
+  reload: False
+  reload_mode: "best"
+  logg : "logs/ConvRNNT.log"
+  ctc_weight: 0.3
+  result: "result-conv-rnnt.json"
+  type: "word"
+  type_training : "transducer"
+
+infer:
+  type_decode: 'normal'
+  
+optim:
+  type: adam
+  lr: 1
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 1
+  n_warmup_steps: 15000
+
+model:
+  enc:
+    local_cnn_encoder: 
+        kernel_size: 5
+        stride: 1
+        feature_dim: 80
+        dim_out: 160
+    global_cnn_encoder:
+        n_layers: 1
+        kernel_size_pw: 1
+        kernel_size_dw: 3
+        stride: 1
+        input_dim: 160  
+        hidden_dim: 256
+        n_dropout: 0.3
+    cnn_enc_out: 160
+    hidden_size: 256
+    output_size: 256
+    output_dim: 320
+    n_layers: 8
+    dropout: 0.2
+    d_model: 256
+    bidirectional: True
+    type: 'ConvRNNT'
+  dec: 
+    embedding_size: 256
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
+    k: 1
+  joint:
+    input_size: 640
+    inner_size: 512
+  model_name: "ConvRNNT"
+  d_model: 256
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
+
+

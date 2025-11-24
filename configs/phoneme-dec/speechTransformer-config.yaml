@@ -1,0 +1,75 @@
+training:
+  batch_size: 32
+  num_workers: 4
+  patience: 5
+  save_path: "/datastore/npl/Speech2Text/PhonoASR/saves"
+  train_path : "/datastore/npl/Speech2Text/dataset/train_char.json"
+  dev_path : "/datastore/npl/Speech2Text/dataset/test_char.json"
+  test_path : "/datastore/npl/Speech2Text/dataset/test_char.json"
+  vocab_path : "/datastore/npl/Speech2Text/dataset/char_vocab_vivos.json"
+  wave_path: "/datastore/npl/Speech2Text/dataset/voices"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  reload: False
+  logg : "/datastore/npl/Speech2Text/PhonoASR/logs/char_speech-transformer.log"
+  ctc_weight: 0.3
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-speech-transformer.json"
+  type: "word"
+  type_training : "ce"
+
+infer: 
+  type_decode: 'normal' # mtp_stack/mtp
+
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr: 0.001
+  n_warmup_steps: 15000
+
+model:
+  enc:
+    subsampling:
+      num_blocks: 3
+      num_layers_per_block: 2
+      out_channels: [8,  16, 32]
+      kernel_sizes: [3, 3, 3]
+      strides: [1, 2, 2]
+      residuals: [ True, True, True]
+      dropout: 0.1 
+    in_features: 640
+    n_layers: 6
+    d_model: 256
+    ff_size: 1024
+    h: 4
+    p_dropout: 0.1
+    type: 'SpeechTransformer'
+  dec:
+    type: 'base'
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 1
+  model_name: "SpeechTransformer-PHONEME"
+
+infer:
+  type_decode: mtp_stack
+
+# optim:
+#   type: sgd
+#   lr: 0.0001
+#   momentum: 0.9
+#   weight_decay: 0
+#   begin_to_adjust_lr: 60
+#   nesterov: None
+#   decay_rate: 0.5
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
+
+

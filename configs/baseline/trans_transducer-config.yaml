@@ -8,11 +8,15 @@ training:
   vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
   wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   reload: False
-  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/tasa.log"
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/transformer-transducer.log"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-transformer-transducer.json"
   ctc_weight: 0.3
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-tasa.json"
   type: "word"
   type_training : "ce"
+  patience: 20
+
+infer:
+  type_decode: mtp_stack
 
 optim:
   type: adam
@@ -21,42 +25,29 @@ optim:
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 1
+  lr_initial: 0.001
   n_warmup_steps: 25000
 
 model:
   enc:
-    subsampling:
-      num_blocks: 3
-      num_layers_per_block: 2
-      out_channels: [8, 16, 32]
-      kernel_sizes: [3, 3, 3]
-      strides: [1, 2, 2]
-      residuals: [ True, True, True]
-      dropout: 0.1 
-    in_features: 640
-    n_layers: 8
+    in_features: 80
+    n_layer: 8
     d_model: 256
     ff_size: 1024
-    h: 4
-    p_dropout: 0.1
-    name: 'SpeechTransformer'
-  dec:
-    n_layer: 1
-    d_model: 256
-    ff_size: 1024
-    n_head: 4
-    dropout: 0.1
+    h: 8
+    p_dropout: 0.3
+    type: "TransformerTransducer"
+    output_dim: 320
+  dec: 
+    embedding_size: 256
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
     k: 1
-    type: 'base'
-  model_name: "SpeechTransformer"
-  d_model: 256
-
+  joint:
+    input_size: 640
+    inner_size: 512
+  model_name: "TransformerTransducer"
 
 rnnt_loss:
-  blank: 4
-  reduction: "mean"  
-
-
-infer:
-  type_decode: "mtp"

@@ -15,26 +15,27 @@ model:
     feed_forward_expansion_factor : 4
     dropout_rate: 0.1
     conv_kernel_size: 31
-    num_encoder_layers: 8
+    num_encoder_layers: 6
     output_dim: 256
     in_channels: 1
     out_channels: 32
-    name : 'Conformer'
+    type : 'Conformer'
     projection_dim : 640
   dec: 
-    n_layer: 1
+    type: 'base'
+    n_layer: 3
     d_model: 256
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 1
+    k: 3
   model_name : 'Conformer'
-  k: 1
-  d_model: 256
 
 training:
   batch_size: 32
   num_workers: 4  
+  patience: 10
+  epochs: 0
   save_path: "saves"
   train_path : "data/LSVSC_train_phoneme.json"
   dev_path : "data/LSVSC_valid_phoneme.json"
@@ -44,22 +45,18 @@ training:
   logg : "logs/conformer.log"
   reload: False
   type: "word"
-  ctc_weight: 0.4
-  type_training: 'ctc-kldiv'
-  sample_rate : 16000
-  n_mels : 80
-  n_fft : 512
-  win_length : 25
+  ctc_weight: 0
+  type_training: 'ce'
   result: "logs/result-conformer.json"
 
 optim:
   type: adam
-  lr: 1
+  lr: 0.001
   weight_decay: 0.0001
   decay_rate: 0.5
 
 scheduler:
-  lr_initial: 1
+  lr_initial: 0.001
   n_warmup_steps: 15000
 
 loss:

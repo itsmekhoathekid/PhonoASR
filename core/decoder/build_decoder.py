@@ -27,9 +27,9 @@ def build_decoder(config, vocab_size):
         elif decoder_type == 'vgg_dec':
             return VGGTransformerDecoder(
                 vocab_size=vocab_size,
-                n_layers=config["dec"]["n_layer"],
+                n_layers=config["dec"]["n_layers"],
                 d_model=config["dec"]["d_model"],
-                ff_size=config["dec"]["d_hidden"],
+                ff_size=config["dec"]["ff_size"],
                 h=config["dec"]["n_head"],
                 p_dropout=config["dec"]["dropout"],
             )
