@@ -10,12 +10,11 @@ training:
   reload: False
   logg : "/home/anhkhoa/PhonoASR/logs/SpeechTransformer.log"
   ctc_weight: 0.3
-  result: "/home/anhkhoa/PhonoASR/result_2.txt"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-vgg-transformer.json"
   type: "word"
   type_training : "ce"
-
+  wave_path: "/mnt/d/voices/voices"
   
-
 optim:
   type: adam
   lr: 0.001
@@ -24,37 +23,39 @@ optim:
 
 scheduler:
   lr_initial: 0.001
-  n_warmup_steps: 25000
+  n_warmup_steps: 15000
+
+infer:
+  type_decode: mtp_stack
 
 model:
   enc:
     subsampling:
-      num_blocks: 3
-      num_layers_per_block: 1
-      out_channels: [64, 64, 64]
-      kernel_sizes: [5, 5, 1]
-      strides: [2, 2, 1]
-      residuals: [ False, False , True]
-      dropout: 0.1 
+      num_blocks: 2
+      out_channels: [32, 64]
+      kernel_sizes: [3, 3]
+      pooling_kernel_sizes: [2, 2]
+      num_conv_layers : [2, 2]
+      layer_norms: [True, True]
+      dropout: 0.1
+    input_dim : 80
     in_features: 1280
-    n_layers: 12
-    d_model: 512
-    ff_size: 2048
+    n_layers: 6
+    d_model: 256
+    ff_size: 1024
     h: 4
     p_dropout: 0.1
-    name: 'TASA'
+    name: 'VGGTransformer'
   dec:
-    n_layer: 6
-    d_model: 512
-    ff_size: 2048
+    type: 'base'
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 3
-  model_name: "TASA"
-
+  model_name: "VGGTransformer-PHONEME"
 
 rnnt_loss:
   blank: 4
   reduction: "mean"  
-
-

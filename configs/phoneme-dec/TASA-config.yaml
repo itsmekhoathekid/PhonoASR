@@ -1,0 +1,62 @@
+training:
+  batch_size: 32
+  num_workers: 4
+  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
+  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
+  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  reload: False
+  reload_mode: 'best'
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/tasa.log"
+  ctc_weight: 0
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-tasa.json"
+  type: "word"
+  type_training : "ce"
+
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 25000
+
+model:
+  enc:
+    subsampling:
+      num_blocks: 3
+      num_layers_per_block: 2
+      out_channels: [8, 16, 32]
+      kernel_sizes: [3, 3, 3]
+      strides: [1, 2, 2]
+      residuals: [ True, True, True]
+      dropout: 0.1 
+    in_features: 640
+    n_layers: 6
+    d_model: 256
+    ff_size: 1024
+    h: 4
+    p_dropout: 0.1
+    type: 'SpeechTransformer'
+  dec:
+    n_layer: 1
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 1
+    type: 'base'
+  model_name: "TASA-PHONEME"
+
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
+
+
+infer:
+  type_decode: "mtp_stack"

@@ -1,0 +1,58 @@
+training:
+  # epochs: 100
+  batch_size: 4
+  num_workers: 4
+  save_path: "saves"
+  train_path : "data/LSVSC_train_word.json"
+  dev_path : "data/LSVSC_valid_word.json"
+  test_path : "data/LSVSC_test_word.json"
+  vocab_path : "data/word_vocab_lsvsc.json"
+  wave_path: "data/wav"
+  reload: False
+  logg: "logs/rnnt-word.log"
+  result: "result-conformer-word.json"
+  ctc_weight: 0.3
+  type: "word"
+  type_training : "transducer"
+  
+optim:
+  type: adam
+  lr: 1
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 1
+  n_warmup_steps: 15000
+
+model:
+  enc:
+    input_size: 80
+    hidden_size: 320
+    d_model: 256
+    n_layers: 8
+    dropout: 0.2
+    bidirectional: True
+    type: 'RNNT'
+    output_size: 256  
+    output_dim : 320
+  dec:
+    embedding_size: 256
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
+    k: 1
+  joint:
+    input_size: 640
+    inner_size: 512
+  model_name: "RNNT"
+
+infer:
+  type_decode: mtp_stack
+
+rnnt_loss:
+  blank: 4
+  reduction: "mean"  
+
+

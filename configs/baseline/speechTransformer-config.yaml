@@ -10,8 +10,9 @@ training:
   wave_path: "/datastore/npl/Speech2Text/dataset/voices"
   wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
   reload: False
+  reload_mode: 'best'
   logg : "/datastore/npl/Speech2Text/PhonoASR/logs/char_speech-transformer.log"
-  ctc_weight: 0.3
+  ctc_weight: 0
   result: "/home/inomar01/nlp@uit/PhonoASR/result-speech-transformer.json"
   type: "word"
   type_training : "ce"
@@ -40,12 +41,12 @@ model:
       residuals: [ True, True, True]
       dropout: 0.1 
     in_features: 640
-    n_layers: 16
-    d_model: 320
+    n_layers: 6
+    d_model: 256
     ff_size: 1024
     h: 4
     p_dropout: 0.1
-    name: 'SpeechTransformer'
+    type: 'SpeechTransformer'
   dec:
     type: 'base'
     n_layer: 3
@@ -57,7 +58,7 @@ model:
   model_name: "SpeechTransformer"
 
 infer:
-  type_decode: mtp_stack
+  type_decode: 'normal'
 
 # optim:
 #   type: sgd
