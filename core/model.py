@@ -132,7 +132,7 @@ class TransducerAcousticModle(nn.Module):
             token_list = []
             dec_state, hidden = self.decoder(zero_token)
             for t in range(lengths):
-                enc_step = enc_states[:, t, :]
+                enc_step = enc_state[:, t, :]
                 dec_proj = dec_state[:, -1, :]
                 logits = self.joint(enc_step, dec_proj)
                 logits = F.softmax(logits.squeeze(1).squeeze(1), dim=-1) 
@@ -170,8 +170,7 @@ class TransducerAcousticModle(nn.Module):
         results = [[] for _ in range(B)]
 
         T = min(T, max_output_len)
-        t = 0
-        while t < T and not finished.all():
+        for t in range(T):
             # 2) joint: enc_out[:,t,:] + last dec step 
             enc_step = enc_out[:, t, :].unsqueeze(1)       # [B,1,D]
             dec_step = dec_state[:, -1, :].unsqueeze(1)    # [B,1,D]
@@ -217,5 +216,7 @@ class TransducerAcousticModle(nn.Module):
             advance_mask = (preds == self.blank) | (preds == self.eos)
             if advance_mask.any():
                 t += 1
+            if finished.all(): 
+                break
 
         return results

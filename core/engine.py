@@ -83,8 +83,8 @@ class Engine:
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
-        epoch = checkpoint["epoch"]
-        wer = checkpoint["wer"]
+        # epoch = checkpoint["epoch"]
+        # wer = checkpoint["wer"]
 
         return checkpoint
     
@@ -171,7 +171,7 @@ class Engine:
                 
                 # Process each sample in the batch
                 for batch_idx in range(batch_size):
-                    if type_decode != "mtp_stack":
+                    if self.config['model']['dec']['k'] == 1:
                         sample_tokens = predicted_tokens[batch_idx]  # [seq_len]
                         
                         predicted_tokens_clean = [
