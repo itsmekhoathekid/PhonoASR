@@ -12,7 +12,7 @@ training:
   logg : "/home/inomar01/nlp@uit/PhonoASR/logs/zipformer.log"
   result: "/home/inomar01/nlp@uit/PhonoASR/result-zipformer.json"
   ctc_weight: 0.4
-  type_training: 'ctc-kldiv'
+  type_training: 'transducer'
   type: 'word'
 
 model:
@@ -43,19 +43,23 @@ model:
     causal: False
     chunk_size: [-1]
     left_context_frames: [-1]  
-    name: 'Zipformer'
-  dec: 
-    n_layer: 1
+    type: 'Zipformer'
     d_model: 512
-    ff_size: 1024
-    n_head: 4
-    dropout: 0.1
+    output_dim: 320
+  dec: 
+    embedding_size: 256
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
     k: 1
+  joint:
+    input_size: 640
+    inner_size: 512
   model_name: 'Zipformer'
-  d_model: 512
 
 infer:
-  type_decode: mtp_stack
+  type_decode: 'normal'
 
 optim:
   type: adam

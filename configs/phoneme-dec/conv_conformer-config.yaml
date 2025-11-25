@@ -29,9 +29,10 @@ model:
       use_linear_after_conv: true
       activation: "swish"
       gate_activation: "swish"
-    name: "ConvConformer"
+    type: "ConvConformer"
     projection_dim: 640
   dec: 
+    type: 'base'
     n_layer: 1
     d_model: 320
     ff_size: 1024

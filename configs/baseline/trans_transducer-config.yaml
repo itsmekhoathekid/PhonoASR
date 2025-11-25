@@ -1,0 +1,53 @@
+training:
+  batch_size: 32
+  num_workers: 4
+  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
+  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
+  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
+  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
+  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  reload: False
+  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/transformer-transducer.log"
+  result: "/home/inomar01/nlp@uit/PhonoASR/result-transformer-transducer.json"
+  ctc_weight: 0.3
+  type: "word"
+  type_training : "ce"
+  patience: 20
+
+infer:
+  type_decode: mtp_stack
+
+optim:
+  type: adam
+  lr: 1
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 25000
+
+model:
+  enc:
+    in_features: 80
+    n_layer: 8
+    d_model: 256
+    ff_size: 1024
+    h: 8
+    p_dropout: 0.3
+    type: "TransformerTransducer"
+    output_dim: 320
+  dec: 
+    embedding_size: 256
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
+    k: 1
+  joint:
+    input_size: 640
+    inner_size: 512
+  model_name: "TransformerTransducer"
+
+rnnt_loss:
