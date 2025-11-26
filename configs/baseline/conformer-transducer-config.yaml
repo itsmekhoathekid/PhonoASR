@@ -29,6 +29,7 @@ model:
     n_layers : 1
     type: "transducer"
     k: 1
+    dropout: 0.2
   joint:
     input_size: 640
     inner_size: 512
@@ -39,18 +40,18 @@ training:
     epochs: 100
     batch_size: 2
     num_workers: 4
-    save_path: "workspace/PhonoASR/saves"
-    train_path : "workspace/dataset/train_word.json"
-    dev_path : "workspace/dataset/test_word.json"
-    test_path : "workspace/dataset/test_word.json"
-    vocab_path : "workspace/dataset/word_vocab_vivos.json"
+    save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+    train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+    dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+    test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+    vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
     reload: False
-    logg: "workspace/PhonoASR/logs/Conformer.log"
+    logg: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer.log"
     # ctc_weight: 0.3
-    result: "workspace/PhonoASR/result.txt"
+    result: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer_word_result.txt"
     type: "word"
     type_training: "transducer"
-    wave_path: "workspace/dataset/voices"
+    wave_path: "/home/anhkhoa/dataset/voices"
 
 infer: 
     type_decode: "normal"
