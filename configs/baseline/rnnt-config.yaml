@@ -1,19 +1,20 @@
 training:
-  # epochs: 100
-  batch_size: 4
+  epochs: 100
+  batch_size: 1
   num_workers: 4
-  save_path: "saves"
-  train_path : "data/LSVSC_train_word.json"
-  dev_path : "data/LSVSC_valid_word.json"
-  test_path : "data/LSVSC_test_word.json"
-  vocab_path : "data/word_vocab_lsvsc.json"
-  wave_path: "data/wav"
+  save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+  dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
   reload: False
-  logg: "logs/rnnt-word.log"
-  result: "result-conformer-word.json"
-  ctc_weight: 0.3
+  logg: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer.log"
+  # ctc_weight: 0.3
+  result: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer_word_result.txt"
   type: "word"
-  type_training : "transducer"
+  type_training: "transducer"
+  wave_path: "/home/anhkhoa/dataset/voices"
+  n_mels : 160
   
 optim:
   type: adam
@@ -27,7 +28,7 @@ scheduler:
 
 model:
   enc:
-    input_size: 80
+    input_size: 160
     hidden_size: 320
     d_model: 256
     n_layers: 8

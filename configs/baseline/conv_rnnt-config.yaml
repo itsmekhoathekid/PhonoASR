@@ -1,20 +1,19 @@
 training:
-  batch_size: 16
+  epochs: 100
+  batch_size: 1
   num_workers: 4
-  patience: 10
-  save_path: "saves"
-  train_path : "data/LSVSC_train_phoneme.json"
-  dev_path : "data/LSVSC_valid_phoneme.json"
-  test_path : "data/LSVSC_test_phoneme.json"
-  vocab_path : "data/phoneme_vocab_lsvsc.json"
-  wave_path: "data/wav"
+  save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+  dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
   reload: False
-  reload_mode: "best"
-  logg : "logs/ConvRNNT.log"
-  ctc_weight: 0.3
-  result: "result-conv-rnnt.json"
+  logg: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer.log"
+  # ctc_weight: 0.3
+  result: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer_word_result.txt"
   type: "word"
-  type_training : "transducer"
+  type_training: "transducer"
+  wave_path: "/home/anhkhoa/dataset/voices"
 
 infer:
   type_decode: 'normal'
@@ -34,7 +33,7 @@ model:
     local_cnn_encoder: 
         kernel_size: 5
         stride: 1
-        feature_dim: 80
+        feature_dim: 192
         dim_out: 160
     global_cnn_encoder:
         n_layers: 1

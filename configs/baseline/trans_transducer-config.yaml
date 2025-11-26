@@ -1,19 +1,19 @@
 training:
-  batch_size: 32
+  epochs: 100
+  batch_size: 2
   num_workers: 4
-  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
-  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
-  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
-  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
-  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
-  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+  dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
   reload: False
-  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/transformer-transducer.log"
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-transformer-transducer.json"
-  ctc_weight: 0.3
+  logg: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer.log"
+  # ctc_weight: 0.3
+  result: "/home/anhkhoa/anhkhoa/PhonoASR/Conformer_word_result.txt"
   type: "word"
-  type_training : "ce"
-  patience: 20
+  type_training: "transducer"
+  wave_path: "/home/anhkhoa/dataset/voices"
 
 infer:
   type_decode: mtp_stack
@@ -30,7 +30,7 @@ scheduler:
 
 model:
   enc:
-    in_features: 80
+    in_features: 200
     n_layer: 8
     d_model: 256
     ff_size: 1024
@@ -45,6 +45,7 @@ model:
     n_layers : 1
     type: "transducer"
     k: 1
+    dropout : 0.2
   joint:
     input_size: 640
     inner_size: 512
