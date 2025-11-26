@@ -40,6 +40,7 @@ def build_decoder(config, vocab_size):
                 vocab_size=vocab_size,
                 output_size=config["dec"]["output_size"],
                 n_layers=config["dec"]["n_layers"],
+                dropout=config["dec"]["dropout"]
             )
         else: 
             raise ValueError(f"Decoder type '{decoder_type}' is not supported. "

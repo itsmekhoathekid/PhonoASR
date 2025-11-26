@@ -60,6 +60,7 @@ model:
     n_layers : 1
     type: "transducer"
     k: 1
+    dropout : 0.2
   joint:
     input_size: 640
     inner_size: 512
