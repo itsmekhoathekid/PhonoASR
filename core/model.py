@@ -105,7 +105,7 @@ class TransducerAcousticModle(nn.Module):
             vocab_size=vocab_size,
         )
         self.pad_id = config['training'].get('pad_id', 0)
-        self.blank = config['training'].get('blank_id', 0)
+        self.blank = config['training'].get('blank_id', 5)
         self.sos = config['training'].get('sos_id', 1)
         self.eos = config['training'].get('eos_id', 2)
 
@@ -119,7 +119,7 @@ class TransducerAcousticModle(nn.Module):
         joint_outputs = self.joint(enc_state, dec_state)
         return joint_outputs, dec_state, fbank_len
     
-    def recognize(self, inputs, inputs_length):
+    def recognize(self, inputs, inputs_length, max_output_len = 150):
         batch_size = inputs.size(0)
 
         enc_states,_, inputs_length = self.encoder(inputs, inputs_length)
@@ -131,13 +131,12 @@ class TransducerAcousticModle(nn.Module):
         def decode(enc_state, lengths):
             token_list = []
             dec_state, hidden = self.decoder(zero_token)
+            lengths = min(max_output_len, lengths)
             for t in range(lengths):
-                enc_step = enc_state[:, t, :]
-                dec_proj = dec_state[:, -1, :]
-                logits = self.joint(enc_step, dec_proj)
-                logits = F.softmax(logits.squeeze(1).squeeze(1), dim=-1) 
+                logits = self.joint(enc_state[t].view(-1), dec_state.view(-1))
+                logits = F.softmax(logits, dim=-1) 
                 pred = torch.argmax(logits, dim=-1).item()
-
+                
                 if pred == self.eos: # eos
                     break
 

@@ -4,6 +4,8 @@ import torch
 from speechbrain.lobes.features import Fbank
 import speechbrain as sb
 import os
+import librosa
+import numpy as np
 
 def load_json(path):
     """
@@ -36,6 +38,120 @@ class Vocab:
     def __len__(self):
         return len(self.vocab)
 
+
+class AudioProcessor:
+    def __init__(self, config):
+        self.model_name = config['model']['enc'].get('type','None')
+        if self.model_name == 'None':
+            raise "Havent specified the model type, cant do shit"
+        
+        self.win_length = config['training'].get('win_length', 25)
+        self.hop_length = config['training'].get('win_length', 10)
+        self.n_fft = config['training'].get('n_fft', 512)
+        self.n_mels = config['training'].get('n_mels', 80)
+        self.sr = config['training'].get('sample_rate', 16000)
+        self.fbank = Fbank(
+            sample_rate=self.sr,
+            n_mels=self.n_mels,
+            n_fft=self.n_fft,
+            win_length=self.win_length
+        )
+        self.gmvn_mean = None
+        self.gmvn_std = None
+        
+
+    def stack_context(self, x, left=3, right=1):
+        """x: (T, D) -> (T, (left+1+right)*D) | pad biên bằng replicate."""
+        T, D = x.shape
+        pads = []
+        for off in range(-left, right + 1):
+            idx = np.clip(np.arange(T) + off, 0, T - 1)
+            pads.append(x[idx])
+        return np.concatenate(pads, axis=1)
+
+    def subsample(self, x, base_hop_ms=10, target_hop_ms=30):
+        stride = target_hop_ms // base_hop_ms
+        return x[::stride]
+    
+    def tr_tr_audio_process(self, wav_file):
+        y, sr = librosa.load(wav_file, sr=self.sr)
+        win_length = int(self.win_length / 1000 * sr)   # 25 ms
+        hop_length = int(self.hop_length / 1000 * sr)   # 10 ms
+        # n_fft = next power of 2 >= win_length
+        n_fft = 1
+        while n_fft < win_length:
+            n_fft *= 2
+
+        S = librosa.feature.melspectrogram(
+            y=y, sr=sr, n_mels=40, n_fft=n_fft,
+            win_length=win_length, hop_length=hop_length,
+            window='hann', power=2.0, center=True
+        )
+        # log-mel (dB)
+        x = librosa.power_to_db(S, ref=np.max).T   # (T, 40)
+        
+        mu = x.mean(axis=0, keepdims=True)
+        sg = x.std(axis=0, keepdims=True) + 1e-8
+        x = (x - mu) / sg
+        x = self.stack_context(x, left=3, right=1) 
+        return torch.tensor(self.subsample(x, 10, 30))
+
+    def conv_rnnt_audio_process(self, wav_file, sr = 16000):
+        # Load waveform
+        y, sr = librosa.load(wav_file, sr= self.sr)
+
+        # Window và hop size
+        win_length = int(self.win_length / 1000 * sr)   # 25 ms
+        hop_length = int(self.hop_length / 1000 * sr)   # 10 ms
+
+        # STFT magnitude
+        stft = librosa.stft(y, n_fft=self.n_fft, win_length=win_length, hop_length=hop_length, window='hamming')
+        mag = np.abs(stft[:64, :])  # Lấy 64 bins đầu tiên (low frequencies)
+
+        # Log magnitude
+        log_mag = np.log1p(mag)  # log(1 + x)
+
+        # Transpose: (64, T) -> (T, 64)
+        log_mag = log_mag.T
+
+        # Frame stacking: 3 frames, skip = 3
+        stacked_feats = []
+        for i in range(0, len(log_mag) - 6, 3):  # skip rate = 3
+            stacked = np.concatenate([log_mag[i], log_mag[i+3], log_mag[i+6]])
+            stacked_feats.append(stacked)
+
+        stacked_feats = torch.tensor(np.array(stacked_feats), dtype=torch.float)
+        mean_feats = stacked_feats.mean(dim=0, keepdim=True)
+        std_feats = stacked_feats.std(dim=0, keepdim=True)
+
+        # stacked_feats = (stacked_feats - self.gmvn_mean) / (self.gmvn_std + 1e-5)
+        if self.gmvn_mean is not None and self.gmvn_std is not None:
+            stacked_feats = (stacked_feats - self.gmvn_mean) / (self.gmvn_std + 1e-5)
+        else:
+            stacked_feats = (stacked_feats - mean_feats) / (std_feats + 1e-5)
+        return stacked_feats 
+    
+    
+
+    def normal_audio_process(self, wav_path):
+        sig  = sb.dataio.dataio.read_audio(wav_path)
+        
+        features = self.fbank(sig.unsqueeze(0))
+        features = features.squeeze(0)
+        return features
+
+    def extract_audio_feats(self, wav_path):
+        if self.model_name == "TransformerTransducer":
+            return self.tr_tr_audio_process(wav_file=wav_path)
+        elif self.model_name == "ConvRNNT":
+            return self.conv_rnnt_audio_process(wav_file=wav_path)
+        else:
+            return self.normal_audio_process(wav_path=wav_path)
+
+
+
+
+
 class Speech2Text(Dataset):
     def __init__(self, config, type, type_training = "ctc-kldiv"):
         super().__init__()
@@ -56,28 +172,12 @@ class Speech2Text(Dataset):
         self.pad_token = self.vocab.get_pad_token()
         self.unk_token = self.vocab.get_unk_token()
         self.apply_spec_augment = config['training'].get('apply_spec_augment', False)
-        self.fbank = Fbank(
-            sample_rate=config['training'].get('sample_rate', 16000),
-            n_mels=config['training'].get('n_mels', 80),
-            n_fft=config['training'].get('n_fft', 512),
-            win_length=config['training'].get('win_length', 25)
-        )
+        self.audio_processor = AudioProcessor(config)
         self.type_training = type_training
 
 
     def __len__(self):
         return len(self.data)
-
-    def get_fbank(self, waveform, sample_rate=16000):
-        fbank = self.fbank(waveform)
-        return fbank.squeeze(0)  # [T, 80]
-
-    def extract_from_path(self, wave_path):
-        sig  = sb.dataio.dataio.read_audio(wave_path)
-
-        features = self.get_fbank(sig.unsqueeze(0))
-        
-        return features
 
     def __getitem__(self, idx):
         current_item = self.data[idx]
@@ -92,7 +192,7 @@ class Speech2Text(Dataset):
             encoded_text = torch.tensor(current_item["encoded_text"] + [self.eos_token], dtype=torch.long)
             decoder_input = torch.tensor([self.sos_token] + current_item["encoded_text"], dtype=torch.long)
         tokens = torch.tensor(current_item["encoded_text"], dtype=torch.long)
-        fbank = self.extract_from_path(wav_path).float()  # [T, 512]
+        fbank = self.audio_processor.extract_audio_feats(wav_path).float()  # [T, 512]
 
         return {
             "text": encoded_text,
