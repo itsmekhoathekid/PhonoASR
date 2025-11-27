@@ -1,0 +1,68 @@
+training:
+  batch_size: 16
+  num_workers: 4
+  patience: 5
+  save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+  dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
+  wave_path: "/home/anhkhoa/anhkhoa/dataset/voices"
+  reload: False
+  reload_mode: 'best'
+  logg : "/home/anhkhoa/anhkhoa/PhonoASR/logs/word_speech-transformer.log"
+  ctc_weight: 0
+  result: "/home/anhkhoa/anhkhoa/PhonoASR/result-speech-transformer.json"
+  type: "word"
+  type_training : "ce"
+  is_specAugment: True
+  specAugment:
+    mF : 2
+    F: 27
+    mT : 10
+    pS : 0.05
+
+infer: 
+  type_decode: 'normal' # mtp_stack/mtp
+  max_output_len : 1024
+
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr: 0.001
+  n_warmup_steps: 15000
+
+model:
+  enc:
+    subsampling:
+      num_blocks: 3
+      num_layers_per_block: 2
+      out_channels: [8,  16, 32]
+      kernel_sizes: [3, 3, 3]
+      strides: [1, 2, 2]
+      residuals: [ True, True, True]
+      dropout: 0.1 
+    in_features: 640
+    n_layers: 6
+    d_model: 256
+    ff_size: 1024
+    h: 4
+    p_dropout: 0.1
+    type: 'SpeechTransformer'
+  dec:
+    type: 'base'
+    n_layer: 3
+    d_model: 256
+    ff_size: 1024
+    n_head: 4
+    dropout: 0.1
+    k: 1
+  model_name: "SpeechTransformer"
+
+
+
+
