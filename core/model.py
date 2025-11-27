@@ -120,8 +120,20 @@ class TransducerAcousticModle(nn.Module):
         self.blank = config['training'].get('blank_id', 5)
         self.sos = config['training'].get('sos_id', 1)
         self.eos = config['training'].get('eos_id', 2)
+        self.is_spec_augment = config['training'].get('is_specAugment',False)
+        if self.is_spec_augment:
+            self.spec_augment = SpecAugment(
+                spec_augment=self.is_spec_augment,
+                mF = config['training']['specAugment']['mF'],
+                F = config['training']['specAugment']['F'],
+                mT = config['training']['specAugment']['mT'],
+                pS=config['training']['specAugment']['pS']
+            )
 
     def forward(self, inputs, targets, inputs_length,  decoder_mask, tfr=0.0):
+        if self.spec_augment:
+            inputs_len = inputs_length.sum(-1)
+            inputs = self.spec_augment(inputs, inputs_len)
         enc_state, _, fbank_len = self.encoder(inputs, inputs_length)
         enc_state = self.lin_enc(enc_state)
 
