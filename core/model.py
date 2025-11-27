@@ -1,5 +1,6 @@
 from core.encoders import build_encoder
 from core.decoder import build_decoder
+from core.modules import SpecAugment
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,8 +13,19 @@ class AcousticModel(nn.Module):
         self.config = config
         if self.config['training']['type_training'] == 'ctc-kldiv':
             self.ctc_lin = nn.Linear(config['model']['enc']['d_model'], vocab_size)
-        
+        self.is_spec_augment = config['training'].get('is_specAugment',False)
+        if self.is_spec_augment:
+            self.spec_augment = SpecAugment(
+                spec_augment=self.is_spec_augment,
+                mF = config['training']['specAugment']['mF'],
+                F = config['training']['specAugment']['F'],
+                mT = config['training']['specAugment']['mT'],
+                pS=config['training']['specAugment']['pS']
+            )
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None, tfr=0.0):
+        if self.spec_augment:
+            inputs_len = encoder_mask.sum(-1)
+            inputs = self.spec_augment(inputs, inputs_len)
         encoder_outputs, encoder_mask, encoder_lengths = self.encoder(inputs, encoder_mask)
         if self.config['model']['dec']['type'] == 'saa_dec':
             decoder_outputs = self.decoder(decoder_input, encoder_outputs, encoder_mask, decoder_mask, tfr)
