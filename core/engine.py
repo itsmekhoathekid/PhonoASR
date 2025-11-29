@@ -27,7 +27,7 @@ class Engine:
 
         self.model, self.optimizer = self.inits(vocab_size=len(vocab))
         self.scheduler = LambdaLR(self.optimizer, self.lambda_lr)
-        self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [0.2 for _ in range(self.config['model']['dec']['k'])]
+        self.alpha_k = [1.0] if self.config['model']['dec']['k'] == 1 else [1.0 for _ in range(self.config['model']['dec']['k'])]
         self.type_training = self.config['training']['type_training']
         
         self.ctc_loss = CTCLoss(blank=vocab.get_blank_token(), reduction='batchmean').to(self.device)
@@ -64,13 +64,14 @@ class Engine:
         return model, optimizer
 
     def get_predictor(self):
+        max_len = self.config['infer']['max_output_len']
         type_decode = self.config["infer"]['type_decode']
         if type_decode == "mtp_stack" and self.config['training']['type_training'] == 'ce' and self.config['model']['dec']['k'] == 3:
-            predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device)
+            predictor = GreedyMPStackPredictor(self.model, self.vocab, self.device, max_len = max_len)
         elif type_decode == "mtp_stack" and self.config['model']['dec']['k'] == 1:
-            predictor = GreedyPredictor(self.model, self.vocab, self.device)
+            predictor = GreedyPredictor(self.model, self.vocab, self.device, max_len = max_len)
         else:
-            predictor =  GreedyPredictor(self.model, self.vocab, self.device)
+            predictor =  GreedyPredictor(self.model, self.vocab, self.device, max_len = max_len)
         
         return predictor
 
