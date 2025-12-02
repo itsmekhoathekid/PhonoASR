@@ -23,7 +23,7 @@ class AcousticModel(nn.Module):
                 pS=config['training']['specAugment']['pS']
             )
     def forward(self, inputs, decoder_input, encoder_mask=None, decoder_mask=None, tfr=0.0):
-        if self.spec_augment:
+        if self.is_spec_augment:
             inputs_len = encoder_mask.sum(-1)
             inputs = self.spec_augment(inputs, inputs_len)
         encoder_outputs, encoder_mask, encoder_lengths = self.encoder(inputs, encoder_mask)
@@ -131,7 +131,7 @@ class TransducerAcousticModle(nn.Module):
             )
 
     def forward(self, inputs, targets, inputs_length,  decoder_mask, tfr=0.0):
-        if self.spec_augment:
+        if self.is_spec_augment:
             inputs_len = inputs_length.sum(-1)
             inputs = self.spec_augment(inputs, inputs_len)
         enc_state, _, fbank_len = self.encoder(inputs, inputs_length)

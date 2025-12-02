@@ -1,7 +1,7 @@
 training:
-  batch_size: 4
+  batch_size: 32
   num_workers: 4
-  patience: 5
+  patience: 10
   save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
   train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
   dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
@@ -18,7 +18,8 @@ training:
 
 
 infer: 
-  type_decode: 'normal' # mtp_stack/mtp
+  type_decode: 'mtp_stack' # mtp_stack/mtp
+  max_output_len: 1024
 
 optim:
   type: adam
@@ -28,7 +29,7 @@ optim:
 
 scheduler:
   lr: 0.001
-  n_warmup_steps: 15000
+  n_warmup_steps: 25000
 
 model:
   enc:
@@ -41,37 +42,22 @@ model:
       residuals: [ False, False, True]
       dropout: 0.1 
     in_features: 1280
-    n_layers: 1
-    d_model: 256
+    n_layers: 12
+    d_model: 144
     ff_size: 1024
     h: 4
     p_dropout: 0.1
     type: 'SpeechTransformer'
   dec:
     type: 'base'
-    n_layer: 1
-    d_model: 256
+    n_layer: 4
+    d_model: 144
     ff_size: 1024
     n_head: 4
     dropout: 0.1
     k: 1
   model_name: "SpeechTransformer"
 
-infer:
-  type_decode: 'normal'
-  max_output_len : 150
 
-# optim:
-#   type: sgd
-#   lr: 0.0001
-#   momentum: 0.9
-#   weight_decay: 0
-#   begin_to_adjust_lr: 60
-#   nesterov: None
-#   decay_rate: 0.5
-
-rnnt_loss:
-  blank: 4
-  reduction: "mean"  
 
 
