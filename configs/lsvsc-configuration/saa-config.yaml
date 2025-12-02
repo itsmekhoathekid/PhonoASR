@@ -1,0 +1,51 @@
+model:
+  enc: 
+    type : 'SAA'
+    n_head: 8
+    input_dim: 80               
+    d_model: 256       
+    dropout: 0.2
+    n_layer: 8
+  dec: 
+    type: 'saa_dec'
+    embed_dim: 128
+    d_hidden: 256
+    num_layers: 1
+    embed_dropout: 0.2
+    var_dropout: 0.1
+    k: 1
+  model_name: 'SAA_W2I_VIVOS'
+
+training:
+  batch_size: 4
+  num_workers: 4
+  patience: 10
+  save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+  dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
+  wave_path: "/home/anhkhoa/dataset/voices"
+  reload: False
+  reload_mode: 'best'
+  logg : "/home/anhkhoa/anhkhoa/PhonoASR/logs/TASA.log"
+  ctc_weight: 0
+  result: "/home/anhkhoa/anhkhoa/PhonoASR/result-TASA.json"
+  type: "word"
+  type_training : "ce"
+
+infer: 
+  type_decode: 'mtp_stack' # mtp_stack/mtp
+  max_output_len: 1024
+
+optim:
+  type: adam
+  lr: 0.001
+
+scheduler:
+  lr: 0.001
+  n_warmup_steps: 25000
+
+
+
+  
