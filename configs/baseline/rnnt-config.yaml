@@ -44,7 +44,10 @@ model:
     n_layers : 1
     type: "transducer"
     k: 1
+<<<<<<< HEAD
+=======
     dropout : 0.2
+>>>>>>> 0435abc8ddc7ebf7cb1ac0c2081776fb7261db57
   joint:
     input_size: 640
     inner_size: 512
