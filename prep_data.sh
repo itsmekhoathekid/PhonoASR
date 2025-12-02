@@ -95,7 +95,7 @@ elif [[ "$2" == "lsvsc" ]]; then
     python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
 
 elif [[ "$2" == "vimdd" ]]; then
-    echo "Downloading VIMDD dataset..."
+    echo "Downloading UIT-ViMDD dataset..."
     gdown 18-wEUoOxmXlkQwBgB34aJfZ2LktAEDiR
     gdown 10NeAH0o1JzvwZVGCq4BUniqJTWvFPdpI
     gdown 1NtqEpouCYvH0zZnfVZAuNHRs8G5wce2W
