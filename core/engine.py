@@ -344,6 +344,8 @@ class Engine:
                 objective_metric = current_wer if patience_objective == 'WER' else current_cer 
             else:
                 objective_metric = val_loss
+                current_wer = 0
+                current_cer = 0
 
             if objective_metric < best_score:
                 best_score = objective_metric

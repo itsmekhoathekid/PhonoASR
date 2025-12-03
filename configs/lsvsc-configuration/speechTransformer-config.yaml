@@ -1,7 +1,10 @@
 training:
+  num_epochs: 100
   batch_size: 2
   num_workers: 4
   patience: 10
+  log_val_loss: True
+  patience_objective: "WER"
   save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
   train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
   dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
@@ -18,7 +21,7 @@ training:
 
 
 infer: 
-  type_decode: 'mtp_stack' # mtp_stack/mtp
+  type_decode: 'normal' # mtp_stack/mtp
   max_output_len: 1024
 
 optim:
