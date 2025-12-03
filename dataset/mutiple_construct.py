@@ -47,6 +47,8 @@ class DatasetPreparing:
                 text = self.normalize_transcript(item['transcript'])
             elif dataset == "lsvsc":
                 text = self.normalize_transcript(item['text'])
+            elif dataset == "vimdd":
+                text = self.normalize_transcript(item['text'])
             
 
             if self.type_tokenizer == "word":
@@ -94,10 +96,16 @@ class DatasetPreparing:
             data_res = {}
             if dataset == "vivos" or dataset == "vietmed":
                 text = self.normalize_transcript(item['script'])
+                voice = item['voice']
             elif dataset == "commonvoice":
                 text = self.normalize_transcript(item['transcript'])
+                voice = item['voice']
             elif dataset == "lsvsc":
                 text = self.normalize_transcript(item['text'])
+                voice = item['wav']
+            elif dataset == "vimdd":
+                text = self.normalize_transcript(item['text'])
+                voice = item['filename']
             
 
             if self.type_tokenizer == "word":
@@ -136,7 +144,7 @@ class DatasetPreparing:
 
                 data_res['encoded_text'] = tokens[:-1] if type != "stack" else tokens
                 data_res['text'] = text
-            data_res['wav_path'] = os.path.join(default_data_path, item['voice']) if dataset != "lsvsc" else os.path.join(default_data_path, item['wav'])
+            data_res['wav_path'] = voice
             res.append(data_res)
         self.save_data(res, save_path)
         print(f"Data saved to {save_path}")

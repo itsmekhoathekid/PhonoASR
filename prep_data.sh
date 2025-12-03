@@ -22,7 +22,7 @@ if [[ "$2" == "--help" ]]; then
 elif [[ -z "$2" ]]; then
     echo "No dataset specified."
     exit 1
-elif [[ "$2" != "vivos" && "$2" != "commonvoice" && "$2" != "vietmed" && "$2" != "lsvsc" ]]; then
+elif [[ "$2" != "vivos" && "$2" != "commonvoice" && "$2" != "vietmed" && "$2" != "lsvsc" && "$2" != "vimdd" ]]; then
     echo "Invalid second argument. Use --help for instructions."
     exit 1
 fi
@@ -35,7 +35,7 @@ echo "Creating virtual environment..."
 # python3 -m venv venv
 # source venv/bin/activate
 
-pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+# pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
 pip install gdown librosa speechbrain jiwer
 pip install git+https://github.com/lhotse-speech/lhotse
 pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
@@ -93,6 +93,17 @@ elif [[ "$2" == "lsvsc" ]]; then
     base_path=$(pwd)
     cd ..
     python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
+
+elif [[ "$2" == "vimdd" ]]; then
+    echo "Downloading UIT-ViMDD dataset..."
+    gdown 18-wEUoOxmXlkQwBgB34aJfZ2LktAEDiR
+    gdown 10NeAH0o1JzvwZVGCq4BUniqJTWvFPdpI
+    gdown 1NtqEpouCYvH0zZnfVZAuNHRs8G5wce2W
+    gdown 1GTDZrC753klmZtKkwe4NWx5y3babjT18
+    base_wav_path=$(pwd)/audio
+    base_path=$(pwd)
+    cd ..
+    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/audio_files.zip" --output "./dataset"
     
 fi
 
@@ -105,6 +116,10 @@ elif [[ "$2" == "lsvsc" ]]; then
     train_path="$DATA_DIR/dataset/LSVSC_train.json"
     test_path="$DATA_DIR/dataset/LSVSC_test.json"
     valid_path="$DATA_DIR/dataset/LSVSC_valid.json"
+elif [[ "$2" == "vimdd" ]]; then
+    train_path="$DATA_DIR/dataset/train.json"
+    test_path="$DATA_DIR/dataset/test.json"
+    valid_path="$DATA_DIR/dataset/valid.json"
 else
     train_path="$DATA_DIR/dataset/train.json"
     test_path="$DATA_DIR/dataset/test.json"
@@ -118,9 +133,9 @@ if [[ "$1" == "phoneme" ]]; then
         --type_tokenizer "phoneme" \
         --train_path "$train_path" \
         --test_path "$test_path" \
+        --valid_path "$valid_path" \
         --base_wav_path "$base_wav_path" \
-        --base_path "$base_path" \
-        --valid_path "$valid_path"
+        --base_path "$base_path" 
 
     python ./PhonoASR/dataset/check_empty.py \
         --input "${train_path%.json}_phoneme.json" \
@@ -140,6 +155,7 @@ elif [[ "$1" == "char" ]]; then
         --type_tokenizer "char" \
         --train_path "$train_path" \
         --test_path "$test_path" \
+        --valid_path "$valid_path" \
         --base_wav_path "$base_wav_path" \
         --base_path "$base_path"
 
@@ -161,6 +177,7 @@ else
         --type_tokenizer "word" \
         --train_path "$train_path" \
         --test_path "$test_path" \
+        --valid_path "$valid_path" \
         --base_wav_path "$base_wav_path" \
         --base_path "$base_path"
 
