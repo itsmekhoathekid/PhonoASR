@@ -41,27 +41,40 @@ class ConformerBlock(nn.Module):
 class ConformerEncoder(nn.Module):
     def __init__(self, config):
         super(ConformerEncoder, self).__init__()
-        # self.subsampling = Conv2dSubampling(
-        #     in_channels = config["in_channels"],
-        #     out_channels = config["encoder_dim"],
-        # )
 
-        self.subsampling = ConvolutionFrontEnd(
-            in_channels=1,
-            num_blocks=config['subsampling']['num_blocks'],
-            num_layers_per_block=config['subsampling']['num_layers_per_block'],
-            out_channels=config['subsampling']['out_channels'],
-            kernel_sizes=config['subsampling']['kernel_sizes'],
-            strides=config['subsampling']['strides'],
-            residuals=config['subsampling']['residuals'],
-            activation=nn.ReLU,        
-            norm=nn.BatchNorm2d,            
-            dropout=0.1,
-        )
-        self.input_projection = nn.Sequential(
-            Linear(config['projection_dim'], config["encoder_dim"]),
-            nn.Dropout(p=config["dropout_rate"]),
-        )
+        self.conv_type = config['subsampling_type']
+        if config['subsampling_type'] == 'conv2d':
+            self.subsampling = Conv2dSubampling(
+                in_channels = 1,
+                out_channels = config["encoder_dim"],
+            )
+
+            self.input_projection = nn.Sequential(
+                Linear(config["encoder_dim"] * (((config["input_dim"] - 1) // 2 - 1) // 2), config["encoder_dim"]),
+                nn.Dropout(p=config["dropout_rate"]),
+            )
+
+        elif config['subsampling_type'] == 'conv_frontend':
+            self.subsampling = ConvolutionFrontEnd(
+                in_channels=1,
+                num_blocks=config['subsampling']['num_blocks'],
+                num_layers_per_block=config['subsampling']['num_layers_per_block'],
+                out_channels=config['subsampling']['out_channels'],
+                kernel_sizes=config['subsampling']['kernel_sizes'],
+                strides=config['subsampling']['strides'],
+                residuals=config['subsampling']['residuals'],
+                activation=nn.ReLU,        
+                norm=nn.BatchNorm2d,            
+                dropout=0.1,
+            )
+
+
+            self.input_projection = nn.Sequential(
+                Linear(config['projection_dim'], config["encoder_dim"]),
+                nn.Dropout(p=config["dropout_rate"]),
+            )
+        
+        
 
         self.layers = nn.ModuleList([
             ConformerBlock(
@@ -77,13 +90,22 @@ class ConformerEncoder(nn.Module):
         
 
     def forward(self, x, x_mask, training=True):
-        x = x.unsqueeze(1)  # [batch, channels, time, features]
-        x, mask = self.subsampling(x, x_mask)  # [batch, channels, time, features]
-        x = x.transpose(1, 2).contiguous()   # batch, time, channels, features
-        x = x.reshape(x.shape[0], x.shape[1], -1) # [batch, time, C * features]
-        x_length = mask.sum(-1)
-        x = self.input_projection(x)  # [batch, time, d_model]
-        mask = mask.unsqueeze(1)  
+        
+        if self.conv_type == 'conv_frontend':
+
+            x = x.unsqueeze(1)  # [batch, channels, time, features]
+            x, mask = self.subsampling(x, x_mask)  # [batch, channels, time, features]
+            x = x.transpose(1, 2).contiguous()   # batch, time, channels, features
+            x = x.reshape(x.shape[0], x.shape[1], -1) # [batch, time, C * features]
+            x_length = mask.sum(-1)
+            x = self.input_projection(x)  # [batch, time, d_model]
+            mask = mask.unsqueeze(1)  
+        elif self.conv_type == 'conv2d':
+            x_length = x_mask.sum(-1)
+            x, x_length = self.subsampling(x, x_length)  # (batch, time', dim)
+            x = self.input_projection(x)  # (batch, time', dim)
+            mask = self._generate_mask(x_length, x.size(1))
+
         for layer in self.layers:
             x = layer(x, mask)
         
