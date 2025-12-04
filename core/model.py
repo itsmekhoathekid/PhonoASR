@@ -138,7 +138,7 @@ class TransducerAcousticModle(nn.Module):
         enc_state = self.lin_enc(enc_state)
 
         true_lengths = (targets != self.pad_id).sum(dim=1).cpu()  # shape [B]
-
+        
         dec_state, _ = self.decoder(targets, true_lengths)
         joint_outputs = self.joint(enc_state, dec_state)
         return joint_outputs, dec_state, fbank_len
