@@ -1,0 +1,73 @@
+model:
+  enc:
+    subsampling_type: 'conv2d'
+    input_dim: 80
+    encoder_dim: 256
+    d_model : 256
+    num_attention_heads: 8
+    feed_forward_expansion_factor : 4
+    dropout_rate: 0.1
+    conv_kernel_size: 31
+    num_encoder_layers: 1
+    output_dim: 256
+    in_channels: 1
+    out_channels: 32
+    type : 'Conformer'
+    projection_dim : 640
+    output_dim : 320
+  dec: 
+    embedding_size: 512
+    hidden_size: 512
+    output_size: 320
+    n_layers : 1
+    type: "transducer"
+    k: 1
+    dropout: 0.2
+  joint:
+    input_size: 640
+    inner_size: 512
+  model_name : 'Conformer'
+  k: 1
+
+training:
+  epochs: 100
+  batch_size: 2
+  num_workers: 4
+  save_path: "/home/anhkhoa/anhkhoa/PhonoASR/saves"
+  train_path : "/home/anhkhoa/anhkhoa/dataset/train_word.json"
+  dev_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  test_path : "/home/anhkhoa/anhkhoa/dataset/test_word.json"
+  vocab_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_vivos.json"
+  reload: False
+  logg: "workspace/PhonoASR/Conformer.log"
+  # ctc_weight: 0.3
+  result: "workspace/PhonoASR/Conformer_word_result.txt"
+  type: "word"
+  type_training: "transducer"
+  wave_path: "workspace/dataset/LSVSC_100/data"
+  # is_specAugment: True
+  # specAugment:
+  #   mF : 2
+  #   F: 27
+  #   mT : 10
+  #   pS : 0.05
+    
+infer: 
+    type_decode: "normal"
+    max_output_len: 1024
+    
+optim:
+  type: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  decay_rate: 0.5
+
+scheduler:
+  lr_initial: 0.001
+  n_warmup_steps: 15000
+
+loss:
+    blank: 5
+
+
+    

@@ -362,7 +362,7 @@ class ResidualConnectionCM(nn.Module):
         self.norm = LayerNormalization(features)
 
     def forward(self, x, sublayer, mutiplier):
-        return x + mutiplier * self.norm(x + self.dropout(sublayer(x)))
+        return x + mutiplier * sublayer(x)
     
 class FeedForwardModule(nn.Module):
     def __init__(self, d_model, d_ff, dropout, activation):
@@ -371,6 +371,7 @@ class FeedForwardModule(nn.Module):
         self.linear1 = Linear(d_model, d_ff)
         self.linear2 = Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
         if activation == "relu":
             self.activation = nn.ReLU()
         elif activation == "swish":
@@ -379,7 +380,7 @@ class FeedForwardModule(nn.Module):
             raise ValueError("Only relu and swish are supported.")
 
     def forward(self, x):
-        return self.linear2(self.dropout(self.activation(self.linear1(self.ln(x)))))
+        return self.dropout2(self.linear2(self.dropout(self.activation(self.linear1(self.ln(x))))))
 
 
 

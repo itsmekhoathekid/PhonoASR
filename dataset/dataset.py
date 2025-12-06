@@ -6,7 +6,8 @@ import speechbrain as sb
 import os
 import librosa
 import numpy as np
-
+import torchaudio
+import torch.nn as nn
 
 
 def load_json(path):
@@ -41,6 +42,60 @@ class Vocab:
         return len(self.vocab)
 
 
+class AudioPreprocessing(nn.Module):
+
+    """Audio Preprocessing
+
+    Computes mel-scale log filter banks spectrogram
+
+    Args:
+        sample_rate: Audio sample rate
+        n_fft: FFT frame size, creates n_fft // 2 + 1 frequency bins.
+        win_length_ms: FFT window length in ms, must be <= n_fft
+        hop_length_ms: length of hop between FFT windows in ms
+        n_mels: number of mel filter banks
+        normalize: whether to normalize mel spectrograms outputs
+        mean: training mean
+        std: training std
+
+    Shape:
+        Input: (batch_size, audio_len)
+        Output: (batch_size, n_mels, audio_len // hop_length + 1)
+    
+    """
+
+    def __init__(self, sample_rate, n_fft, win_length_ms, hop_length_ms, n_mels, normalize, mean, std):
+        super(AudioPreprocessing, self).__init__()
+        self.win_length = int(sample_rate * win_length_ms) // 1000
+        self.hop_length = int(sample_rate * hop_length_ms) // 1000
+        self.Spectrogram = torchaudio.transforms.Spectrogram(n_fft, self.win_length, self.hop_length)
+        self.MelScale = torchaudio.transforms.MelScale(n_mels, sample_rate, f_min=0, f_max=8000, n_stft=n_fft // 2 + 1)
+        self.normalize = normalize
+        self.mean = mean
+        self.std = std
+
+    def forward(self, x, x_len):
+
+        # Short Time Fourier Transform (B, T) -> (B, n_fft // 2 + 1, T // hop_length + 1)
+        x = self.Spectrogram(x)
+
+        # Mel Scale (B, n_fft // 2 + 1, T // hop_length + 1) -> (B, n_mels, T // hop_length + 1)
+        x = self.MelScale(x)
+        
+        # Energy log, autocast disabled to prevent float16 overflow
+        x = (x.float() + 1e-9).log().type(x.dtype)
+
+        # Compute Sequence lengths 
+        if x_len is not None:
+            x_len = torch.div(x_len, self.hop_length, rounding_mode='floor') + 1
+
+        # Normalize
+        if self.normalize:
+            x = (x - self.mean) / self.std
+
+        return x
+
+
 class AudioProcessor:
     def __init__(self, config):
         self.model_name = config['model']['enc'].get('type','None')
@@ -60,6 +115,16 @@ class AudioProcessor:
         )
         self.gmvn_mean = None
         self.gmvn_std = None
+        self.audio_preprocessing = AudioPreprocessing(
+            sample_rate=self.sr,
+            n_fft=self.n_fft,
+            win_length_ms=self.win_length,
+            hop_length_ms=self.hop_length,
+            n_mels=self.n_mels,
+            normalize=config['training'].get('normalize', False),
+            mean=config['training'].get('mean', 0.0),
+            std=config['training'].get('std', 1.0)
+        )
         
 
     def stack_context(self, x, left=3, right=1):
@@ -141,12 +206,21 @@ class AudioProcessor:
         features = self.fbank(sig.unsqueeze(0))
         features = features.squeeze(0)
         return features
+    
+
+    def comformer_audio_process(self, wav_file):
+        y, sr = torchaudio.load(wav_file)
+        audio = self.audio_preprocessing(y, None)
+        # print(audio.squeeze(0).shape)  # [T, 80]
+        return audio.squeeze(0).transpose(0,1)  # [T, 80]
 
     def extract_audio_feats(self, wav_path):
         if self.model_name == "TransformerTransducer":
             return self.tr_tr_audio_process(wav_file=wav_path)
         elif self.model_name == "ConvRNNT":
             return self.conv_rnnt_audio_process(wav_file=wav_path)
+        elif self.model_name == "Conformer" or self.model_name == "ConvConformer":
+            return self.comformer_audio_process(wav_file=wav_path)
         else:
             return self.normal_audio_process(wav_path=wav_path)
 

@@ -83,6 +83,7 @@ class Engine:
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        self.no_improve_epochs = checkpoint.get("no_improve_epochs", 0)
         # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
         # epoch = checkpoint["epoch"]
         # wer = checkpoint["wer"]
@@ -288,20 +289,20 @@ class Engine:
         logging.info(f"Average validation loss: {avg_loss:.4f}")
         return avg_loss
 
-    def save_checkpoint(self, epoch, wer, cer, mode):
+    def save_checkpoint(self, epoch, mode, best_score):
         
         model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
         # scheduler_name = f"{self.config['model']['model_name']}_scheduler.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}_scheduler.ckpt"
         torch.save({
             'epoch': epoch,
-            'scores': {
-                'wer': wer, 
-                'cer': cer
-            },
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             "scheduler_state_dict": self.scheduler.state_dict(),
-            "no_improve_epochs" : self.no_improve_epochs
+            "no_improve_epochs" : self.no_improve_epochs, 
+            "score": {
+                "patience_objective": self.config['training'].get('patience_objective', 'WER'),
+                "best_score": best_score
+            } 
         }, os.path.join(
             self.config['training']['save_path'],
             model_name
@@ -316,12 +317,13 @@ class Engine:
         if self.config['training']['reload']:
             checkpoint = self.load_checkpoint()
             epoch = checkpoint["epoch"] + 1
-            scores = checkpoint["scores"]
-            best_score = scores["wer"]
-            logging.info(f"Reloaded model from checkpoint at epoch {epoch-1} with best WER: {best_score:.4f}")
+            scores = checkpoint["score"]
+            best_score = scores['best_score']
+            objective = scores['patience_objective']
+            logging.info(f"Reloaded model from checkpoint at epoch {epoch-1} with best {objective}: {best_score:.4f}")
         else:
             epoch = 1
-            best_score = 1.
+            best_score = 1000.0  # could be WER or CER or val_loss depending on patience_objective
 
         log_val_loss = self.config['training'].get('log_val_loss', False)
         num_epochs = self.config['training'].get('num_epochs', 0) # if 0 then train til early stop
@@ -334,17 +336,25 @@ class Engine:
             logging.info(f"Epoch {epoch}")
 
             self.train(train_loader)
-            results = self.inference(valid_loader)
+            
             if log_val_loss:
                 val_loss = self.evaluate(valid_loader)
                 logging.info(f"Validation Loss: {val_loss:.4f}")
-            current_wer = results["wer"]
-            current_cer = results["cer"]
+            
+            if patience_objective in ['WER', 'CER']:
+                results = self.inference(valid_loader)
+                current_wer = results["wer"]
+                current_cer = results["cer"]
 
-            objective_metric = current_wer if patience_objective == 'WER' else current_cer
+                objective_metric = current_wer if patience_objective == 'WER' else current_cer 
+            else:
+                objective_metric = val_loss
+                current_wer = 0
+                current_cer = 0
+
             if objective_metric < best_score:
                 best_score = objective_metric
-                self.save_checkpoint(epoch, best_score, current_cer,  mode="best")
+                self.save_checkpoint(epoch,  mode="best", best_score= best_score)
                 self.no_improve_epochs = 0
                 
             else:
@@ -353,7 +363,7 @@ class Engine:
                     logging.info(f"No improvement for {patience} epochs. Stopping training.")
                     break
             if daily_save:
-                self.save_checkpoint(epoch, current_wer, current_cer, mode="latest")
+                self.save_checkpoint(epoch, mode="latest", best_score=objective_metric)
             epoch += 1
             logging.info(f"CER: {current_cer:.4f}, WER: {current_wer:.4f}, Best {patience_objective}: {best_score:.4f}")
             if num_epochs > 0 and epoch > num_epochs:
