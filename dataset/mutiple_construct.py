@@ -10,10 +10,10 @@ class DatasetPreparing:
         self.type_tokenizer = type_tokenizer
 
     def normalize_transcript(self, text):
-        text = text.lower()
-        text = re.sub(r"[\'\"(),.!?]:", " ", text)
-        text = re.sub(r"\s+", " ", text)  # loại bỏ khoảng trắng dư
-        return text.strip()
+        t = re.sub(r"[^\w\s]", ' ', text.lower()).strip()
+        t = re.sub(r"[\t\n\r\d]", ' ', t).replace(" ", " ")
+        t = re.sub(r"\s+", ' ', t)
+        return t
     
     def load_json(self, json_path):
         """
