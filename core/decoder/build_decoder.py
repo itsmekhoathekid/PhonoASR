@@ -1,4 +1,4 @@
-from . import TransformerDecoder, ConformerDecoder, BaseDecoder, SaaDecoder, VGGTransformerDecoder
+from . import TransformerDecoder, ConformerDecoder, BaseDecoder, SaaDecoder, VGGTransformerDecoder, TransformerDecoderOlderVer
 
 def build_decoder(config, vocab_size):
     try:
@@ -42,6 +42,16 @@ def build_decoder(config, vocab_size):
                 n_layers=config["dec"]["n_layers"],
                 dropout=config["dec"]["dropout"]
             )
+        elif decoder_type == "old":
+            vocab_size = vocab_size
+            n_layer = config['dec']['n_layer']
+            d_model = config['dec']['d_model']
+            d_hidden = config['dec']['ff_size']
+            n_head = config['dec']['n_head']
+            dropout = config['dec']['dropout']
+            k = config['dec']['k']
+
+            return TransformerDecoderOlderVer(vocab_size, n_layer, d_model, d_hidden, n_head, dropout, k)
         else: 
             raise ValueError(f"Decoder type '{decoder_type}' is not supported. "
                      f"Supported types: {valid_types}")

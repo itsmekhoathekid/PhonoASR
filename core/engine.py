@@ -216,7 +216,7 @@ class Engine:
                     if self.config['training']['type'] == "phoneme":
                         sample_gold_tokens = tokens[batch_idx].cpu().tolist() 
                         predicted_text_str = ''.join([t for t in predicted_text if t != self.predictor.blank and t != self.predictor.eos and t != self.predictor.pad])
-                        space_token = self.vocab.get("<space>")
+                        space_token = self.vocab.vocab.get("<space>")
                         predicted_text_str = predicted_text_str.replace(self.predictor.tokenizer[space_token], ' ')
 
                         gold_text_str = ''.join([self.predictor.tokenizer[token] for token in sample_gold_tokens if token != self.predictor.blank and token != self.predictor.pad and token != self.predictor.eos])

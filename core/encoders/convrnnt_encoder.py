@@ -157,7 +157,7 @@ class CNNEncoder(nn.Module):
         local_out = self.local_cnn(x) 
 
         global_out = self.global_cnn(local_out)  
-        global_out +=  local_out
+        # global_out +=  local_out
 
         concat = torch.cat([local_out, global_out], dim=2) 
         
