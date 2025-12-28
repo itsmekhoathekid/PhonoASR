@@ -237,7 +237,7 @@ class TransformerDecoder(nn.Module):
         for layer in self.layers:
             out = layer(out, encoder_out, enc_mask, dec_mask)
         if self.k != 1:
-            latent = [head(out, dec_mask) for head in self.heads]
+            latent = [head(out) for head in self.heads]
         else:
             latent = [out]
         out = [self.projection(l) for l in latent]  
