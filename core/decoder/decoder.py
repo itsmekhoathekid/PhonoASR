@@ -167,6 +167,37 @@ class Head(nn.Module):
         dec_out = dec_out + self.ffn(self.norm(dec_out))      
         return dec_out
 
+class CrossAttentionBlock(nn.Module):
+    def __init__(self, d_model: int, h: int, ff_size: int, dropout: float) -> None:
+        super().__init__()
+        self.ffn = FeedForwardBlock(d_model=d_model, d_ff=ff_size, dropout=dropout)
+        # self.self_attention = MultiHeadAttentionBlock(d_model=d_model, h=h, dropout=dropout)
+        self.cross_attention = MultiHeadAttentionBlock(d_model=d_model, h=h, dropout=dropout)
+        self.residual_connections =  nn.ModuleList([
+            ResidualConnection(features=d_model, dropout=dropout),
+            ResidualConnection(features=d_model, dropout=dropout)
+        ])
+
+    def forward(self, x, encoder_out, enc_mask, dec_mask):
+        
+        
+        x = self.residual_connections[0](x, lambda x: self.cross_attention(x, encoder_out, encoder_out, enc_mask))
+        
+        x = self.residual_connections[1](x, lambda x: self.ffn(x))
+        
+        return x
+    
+class HeadOldVer(nn.Module):
+    def __init__(self, d_model: int, ff_size: int, dropout: float, h : int) -> None:
+        super().__init__()
+
+        self.cross_atten_block = CrossAttentionBlock(d_model=d_model, h=h, ff_size=ff_size, dropout=dropout)
+        self.linear = FeedForwardBlock(d_model=d_model, d_ff=ff_size, dropout=dropout)
+    
+    def forward(self, out, enc_out, enc_mask, dec_mask) -> torch.Tensor:
+        enc_out = self.linear(enc_out)
+        dec_out = self.cross_atten_block(out, enc_out, enc_mask, dec_mask)  
+        return dec_out
 
 class TransformerDecoderOlderVer(nn.Module):
     def __init__(self, vocab_size: int, n_layers: int, d_model: int, ff_size: int, h: int, p_dropout: float, k : int) -> None:
@@ -179,7 +210,7 @@ class TransformerDecoderOlderVer(nn.Module):
             [nn.Linear(in_features=d_model, out_features=d_model) for _ in range(k)]
         )
         self.heads = nn.ModuleList(
-            [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(k)]
+            [HeadOldVer(d_model=d_model, ff_size=ff_size, dropout=p_dropout, h= h) for _ in range(k)]
         )
         self.projection = ProjectionLayer(d_model=d_model, vocab_size=vocab_size)
         self.k = k
@@ -200,8 +231,7 @@ class TransformerDecoderOlderVer(nn.Module):
         for layer in self.layers:
             out = layer(out, encoder_out, enc_mask, dec_mask)
         if self.k != 1:
-            enc_outs = [linear(encoder_out) for linear in self.enc_linears]
-            latent = [head(out, enc_out, enc_mask, dec_mask) for head, enc_out in zip(self.heads, enc_outs)]
+            latent = [head(out, encoder_out, enc_mask, dec_mask) for head in self.heads]
         else:
             latent = [out]
         out = [self.projection(l) for l in latent]  

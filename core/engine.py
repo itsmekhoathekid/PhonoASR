@@ -330,6 +330,7 @@ class Engine:
         
         patience = self.config['training'].get('patience', 10)
         patience_objective = self.config['training'].get('patience_objective', 'WER')
+        log_wer_after_epoch = self.config['training'].get('log_wer_after_epoch', 30)
         daily_save = self.config['training'].get('daily_save', True)
 
         while True:
@@ -341,11 +342,11 @@ class Engine:
                 val_loss = self.evaluate(valid_loader)
                 logging.info(f"Validation Loss: {val_loss:.4f}")
             
-            if patience_objective in ['WER', 'CER']:
-                results = self.inference(valid_loader)
-                current_wer = results["wer"]
-                current_cer = results["cer"]
-
+            if epoch >= log_wer_after_epoch:
+                if patience_objective in ['WER', 'CER']:
+                    results = self.inference(valid_loader)
+                    current_wer = results["wer"]
+                    current_cer = results["cer"]
                 objective_metric = current_wer if patience_objective == 'WER' else current_cer 
             else:
                 objective_metric = val_loss
