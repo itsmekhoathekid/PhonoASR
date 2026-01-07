@@ -12,6 +12,7 @@ import logging
 from tqdm import tqdm
 from jiwer import wer, cer
 import json
+import time
 
 class Engine:
     def __init__(self, config, vocab):
@@ -158,8 +159,11 @@ class Engine:
         all_gold_texts = []
         all_predicted_texts = []
         results = []
+        start = time.time()
+        batch_cnt = 0
         with torch.no_grad():
             for batch in tqdm(dataloader, desc="Evaluating"):
+                batch_cnt += 1
                 src = batch['fbank'].to(self.device)
                 src_mask = batch['fbank_mask'].to(self.device)
                 tokens = batch["tokens"].to(self.device)
@@ -255,7 +259,11 @@ class Engine:
 
                 result_path = self.config['training']['result']
                 json.dump(results, open(result_path, "w+"), ensure_ascii=False, indent=4)
-
+        end = time.time()
+        logging.info(f"Inference Time: {end - start:.2f} seconds")
+        logging.info(f"Average inference time : {(end - start)/batch_cnt:.4f} seconds per batch")
+        logging.info(f"Total time inference: {end - start:.4f} seconds for {batch_cnt} batches")
+        logging.info(f"Total WER: {total_wer:.4f}, Total CER: {total_cer:.4f}")
         return {
             "wer": total_wer,
             "cer": total_cer
