@@ -81,13 +81,13 @@ class Engine:
         model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
         load_path = os.path.join(self.checkpoint_path, model_name)
         checkpoint = torch.load(load_path)
+        
+        if 'config' in checkpoint:
+            self.config = checkpoint['config']
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         self.no_improve_epochs = checkpoint.get("no_improve_epochs", 0)
-        # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
-        # epoch = checkpoint["epoch"]
-        # wer = checkpoint["wer"]
 
         return checkpoint
     
@@ -313,7 +313,8 @@ class Engine:
             "score": {
                 "patience_objective": self.config['training'].get('patience_objective', 'WER'),
                 "best_score": best_score
-            } 
+            }, 
+            'config': self.config
         }, os.path.join(
             self.config['training']['save_path'],
             model_name
@@ -386,6 +387,9 @@ class Engine:
         load_path = os.path.join(self.checkpoint_path, f"best_{self.config['model']['model_name']}.ckpt")
         if os.path.isfile(load_path):
             checkpoint = torch.load(load_path)
+            if 'config' in checkpoint:
+                self.config = checkpoint['config']
+                logging.info("Model configuration updated from checkpoint.")
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
