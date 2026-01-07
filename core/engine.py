@@ -159,6 +159,8 @@ class Engine:
         all_gold_texts = []
         all_predicted_texts = []
         results = []
+        total_infer_time = 0
+        total_samples = 0
         with torch.no_grad():
             for batch in tqdm(dataloader, desc="Evaluating"):
                 src = batch['fbank'].to(self.device)
@@ -178,6 +180,8 @@ class Engine:
                         torch.cuda.synchronize()
                     time_end = time.perf_counter()
                     infer_time = time_end - time_start
+                    total_infer_time += infer_time
+                    total_samples += src.size(0)
 
                 batch_size = src.size(0)
                 
@@ -251,6 +255,7 @@ class Engine:
                             "predicted": predicted_text_str,
                             "WER": wer_score,
                             "CER": cer_score,
+                            "Inference time": infer_time
                         })
                         print(f"WER: {wer_score:.4f}, CER: {cer_score:.4f}")
             
@@ -259,9 +264,11 @@ class Engine:
 
             if save:
                 results.append({
-                    "total_WER": total_wer,
-                    "total_CER": total_cer, 
-                    "inference_time": infer_time
+                    "Total WER": total_wer,
+                    "Total CER": total_cer, 
+                    "Total inference time": total_infer_time,
+                    "Average inference time per sample": total_infer_time / total_samples if total_samples > 0 else 0,
+                    "Average inference time per batch": total_infer_time / len(dataloader) if len(dataloader) > 0 else 0
                 })
 
                 result_path = self.config['training']['result']
