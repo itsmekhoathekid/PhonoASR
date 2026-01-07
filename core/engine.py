@@ -12,6 +12,7 @@ import logging
 from tqdm import tqdm
 from jiwer import wer, cer
 import json
+import time 
 
 class Engine:
     def __init__(self, config, vocab):
@@ -163,11 +164,20 @@ class Engine:
                 src = batch['fbank'].to(self.device)
                 src_mask = batch['fbank_mask'].to(self.device)
                 tokens = batch["tokens"].to(self.device)
-                
+
+                if save: 
+                    time_start = time.perf_counter()
+
                 if type_training != "transducer":
                     predicted_tokens = self.predictor.greedy_decode(src, src_mask)
                 else:
                     predicted_tokens = self.model.greedy_batch(src, src_mask, max_output_len=self.config['infer'].get('max_output_len', 150))
+
+                if save:
+                    if self.device.type == 'cuda':
+                        torch.cuda.synchronize()
+                    time_end = time.perf_counter()
+                    infer_time = time_end - time_start
 
                 batch_size = src.size(0)
                 
@@ -250,7 +260,8 @@ class Engine:
             if save:
                 results.append({
                     "total_WER": total_wer,
-                    "total_CER": total_cer
+                    "total_CER": total_cer, 
+                    "inference_time": infer_time
                 })
 
                 result_path = self.config['training']['result']
