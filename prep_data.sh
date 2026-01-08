@@ -36,9 +36,9 @@ echo "Creating virtual environment..."
 # source venv/bin/activate
 
 # pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
-pip install gdown librosa speechbrain jiwer
-pip install git+https://github.com/lhotse-speech/lhotse
-pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+# pip install gdown librosa speechbrain jiwer
+# pip install git+https://github.com/lhotse-speech/lhotse
+# pip install https://huggingface.co/csukuangfj/k2/resolve/main/ubuntu-cuda/k2-1.24.4.dev20250807+cuda12.8.torch2.8.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
 if [[ -d "dataset" ]]; then
     echo "Folder 'dataset' already exists. Moving into it..."
@@ -88,11 +88,11 @@ elif [[ "$2" == "lsvsc" ]]; then
     gdown 1ADHw6xJOOWi3HDTtaqr5HLlr6hAxdouQ
     gdown 1wOvsfHnX1TDJgLatba5WoqIQ99kd0r_g
     gdown 1XKJRIf32tD0f8hUk4sdSl_E1eYkALG8d
-    gdown 1kDBJv-aym-dnK6ztMikBXnZqyJPMsxS4
+    # gdown 1kDBJv-aym-dnK6ztMikBXnZqyJPMsxS4
     base_wav_path=$(pwd)/LSVSC_100/data
     base_path=$(pwd)
     cd ..
-    python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
+    # python ./PhonoASR/dataset/unzip_voice.py --input "./dataset/LSVSC_100.zip" --output "./dataset/LSVSC_100"
 
 elif [[ "$2" == "vimdd" ]]; then
     echo "Downloading UIT-ViMDD dataset..."

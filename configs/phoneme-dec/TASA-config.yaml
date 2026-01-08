@@ -1,18 +1,18 @@
 training:
   batch_size: 32
   num_workers: 4
-  save_path: "/home/inomar01/nlp@uit/PhonoASR/saves"
-  train_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_train_phoneme.json"
-  dev_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_valid_phoneme.json"
-  test_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_test_phoneme.json"
-  vocab_path : "/home/inomar01/nlp@uit/PhonoASR/dataset/phoneme_vocab_lsvsc.json"
-  wave_path: "/home/inomar01/nlp@uit/PhonoASR/dataset/LSVSC_100/data"
+  save_path: "PhonoASR/saves"
+  train_path : "../dataset/LSVSC_train_phoneme.json"
+  dev_path : "../dataset/LSVSC_valid_phoneme.json"
+  test_path : "../dataset/LSVSC_test_phoneme.json"
+  vocab_path : "../dataset/phoneme_vocab_lsvsc.json"
+  wave_path: "../dataset/LSVSC_100/data"
   reload: False
   reload_mode: 'best'
-  logg : "/home/inomar01/nlp@uit/PhonoASR/logs/tasa.log"
+  logg : "PhonoASR/logs/tasa.log"
   ctc_weight: 0
-  result: "/home/inomar01/nlp@uit/PhonoASR/result-tasa.json"
-  type: "word"
+  result: "PhonoASR/result-tasa.json"
+  type: "phoneme"
   type_training : "ce"
 
 optim:
@@ -36,20 +36,20 @@ model:
       residuals: [ True, True, True]
       dropout: 0.1 
     in_features: 640
-    n_layers: 6
-    d_model: 256
+    n_layers: 12
+    d_model: 144
     ff_size: 1024
     h: 4
     p_dropout: 0.1
     type: 'SpeechTransformer'
   dec:
-    n_layer: 1
-    d_model: 256
+    n_layer: 4
+    d_model: 144
     ff_size: 1024
     n_head: 4
     dropout: 0.1
-    k: 1
-    type: 'base'
+    k: 3
+    type: 'old'
   model_name: "TASA-PHONEME"
 
 
@@ -60,3 +60,4 @@ rnnt_loss:
 
 infer:
   type_decode: "mtp_stack"
+  max_output_len : 200 
