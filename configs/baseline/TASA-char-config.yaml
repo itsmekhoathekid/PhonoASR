@@ -3,9 +3,9 @@ training:
   num_workers: 4
   save_path: "PhonoASR/saves"
   train_path : "../dataset/LSVSC_train_word.json"
-  dev_path : "../dataset/LSVSC_valid_word.json"
-  test_path : "../dataset/LSVSC_test_word.json"
-  vocab_path : "../dataset/word_vocab_lsvsc.json"
+  dev_path : "../dataset/LSVSC_valid_char.json"
+  test_path : "../dataset/LSVSC_test_char.json"
+  vocab_path : "../dataset/char_vocab_lsvsc.json"
   wave_path: "../dataset/LSVSC_100/data"
   reload: False
   reload_mode: 'best'

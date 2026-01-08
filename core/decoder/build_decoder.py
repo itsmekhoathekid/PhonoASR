@@ -50,7 +50,7 @@ def build_decoder(config, vocab_size):
             n_head = config['dec']['n_head']
             dropout = config['dec']['dropout']
             k = config['dec']['k']
-
+            print("Using old transformer decoder version", flush = True)
             return TransformerDecoderOlderVer(vocab_size, n_layer, d_model, d_hidden, n_head, dropout, k)
         else: 
             raise ValueError(f"Decoder type '{decoder_type}' is not supported. "
