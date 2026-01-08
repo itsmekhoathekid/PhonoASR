@@ -12,7 +12,7 @@ import logging
 from tqdm import tqdm
 from jiwer import wer, cer
 import json
-import time
+import time 
 
 class Engine:
     def __init__(self, config, vocab):
@@ -81,13 +81,13 @@ class Engine:
         model_name = f"{self.config['model']['model_name']}.ckpt" if mode == "latest" else f"best_{self.config['model']['model_name']}.ckpt"
         load_path = os.path.join(self.checkpoint_path, model_name)
         checkpoint = torch.load(load_path)
+        
+        if 'config' in checkpoint:
+            self.config = checkpoint['config']
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         self.no_improve_epochs = checkpoint.get("no_improve_epochs", 0)
-        # self.scheduler.load(os.path.join(self.checkpoint_path, f"{self.config['model']['model_name']}_scheduler.ckpt"))
-        # epoch = checkpoint["epoch"]
-        # wer = checkpoint["wer"]
 
         return checkpoint
     
@@ -159,19 +159,30 @@ class Engine:
         all_gold_texts = []
         all_predicted_texts = []
         results = []
-        start = time.time()
-        batch_cnt = 0
+        total_infer_time = 0
+        total_samples = 0
         with torch.no_grad():
             for batch in tqdm(dataloader, desc="Evaluating"):
                 batch_cnt += 1
                 src = batch['fbank'].to(self.device)
                 src_mask = batch['fbank_mask'].to(self.device)
                 tokens = batch["tokens"].to(self.device)
-                
+
+                if save: 
+                    time_start = time.perf_counter()
+
                 if type_training != "transducer":
                     predicted_tokens = self.predictor.greedy_decode(src, src_mask)
                 else:
                     predicted_tokens = self.model.greedy_batch(src, src_mask, max_output_len=self.config['infer'].get('max_output_len', 150))
+
+                if save:
+                    if self.device.type == 'cuda':
+                        torch.cuda.synchronize()
+                    time_end = time.perf_counter()
+                    infer_time = time_end - time_start
+                    total_infer_time += infer_time
+                    total_samples += src.size(0)
 
                 batch_size = src.size(0)
                 
@@ -245,6 +256,7 @@ class Engine:
                             "predicted": predicted_text_str,
                             "WER": wer_score,
                             "CER": cer_score,
+                            "Inference time": infer_time
                         })
                         print(f"WER: {wer_score:.4f}, CER: {cer_score:.4f}")
             
@@ -253,17 +265,16 @@ class Engine:
 
             if save:
                 results.append({
-                    "total_WER": total_wer,
-                    "total_CER": total_cer
+                    "Total WER": total_wer,
+                    "Total CER": total_cer, 
+                    "Total inference time": total_infer_time,
+                    "Average inference time per sample": total_infer_time / total_samples if total_samples > 0 else 0,
+                    "Average inference time per batch": total_infer_time / len(dataloader) if len(dataloader) > 0 else 0
                 })
 
                 result_path = self.config['training']['result']
                 json.dump(results, open(result_path, "w+"), ensure_ascii=False, indent=4)
-        end = time.time()
-        logging.info(f"Inference Time: {end - start:.2f} seconds")
-        logging.info(f"Average inference time : {(end - start)/batch_cnt:.4f} seconds per batch")
-        logging.info(f"Total time inference: {end - start:.4f} seconds for {batch_cnt} batches")
-        logging.info(f"Total WER: {total_wer:.4f}, Total CER: {total_cer:.4f}")
+        
         return {
             "wer": total_wer,
             "cer": total_cer
@@ -310,7 +321,8 @@ class Engine:
             "score": {
                 "patience_objective": self.config['training'].get('patience_objective', 'WER'),
                 "best_score": best_score
-            } 
+            }, 
+            'config': self.config
         }, os.path.join(
             self.config['training']['save_path'],
             model_name
@@ -383,6 +395,9 @@ class Engine:
         load_path = os.path.join(self.checkpoint_path, f"best_{self.config['model']['model_name']}.ckpt")
         if os.path.isfile(load_path):
             checkpoint = torch.load(load_path)
+            if 'config' in checkpoint:
+                self.config = checkpoint['config']
+                logging.info("Model configuration updated from checkpoint.")
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
