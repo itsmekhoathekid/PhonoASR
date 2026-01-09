@@ -30,6 +30,7 @@ class DatasetPreparing:
         data = self.load_json(json_path)
 
         unprocessed = []
+        skip_indexes = []
         res = {}    
         for idx, item in data.items():
             if dataset == "vivos" or dataset == "vietmed":
@@ -50,6 +51,7 @@ class DatasetPreparing:
                     fact = False
                     break 
             if fact == False:
+                skip_indexes.append(idx)
                 continue
 
             res[idx] = {
@@ -59,9 +61,13 @@ class DatasetPreparing:
         
         self.save_data(res, save_path)
         print(f"Unprocessed words: {list(set(unprocessed))}")
-        self.save_data(list(set(unprocessed)), save_path.replace(".json", "_unprocessed_words.json"))
+        unprocessed_data = {
+            'unprocessed_words': list(set(unprocessed)),
+            'skip_indexes': skip_indexes
+        }
+        self.save_data(unprocessed_data, save_path.replace(".json", "_unprocessed.json"))
         print(f"Preprocessed data saved to {save_path}, removed {len(data) - len(res)} samples.")
-
+    
     def normalize_transcript(self, text):
         t = text.lower()
 

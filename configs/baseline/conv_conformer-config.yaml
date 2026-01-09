@@ -33,7 +33,7 @@ model:
     type: "ConvConformer"
     projection_dim: 640
   dec: 
-    embedding_size: 256
+    embedding_size: 144
     hidden_size: 512
     output_size: 320
     n_layers : 1

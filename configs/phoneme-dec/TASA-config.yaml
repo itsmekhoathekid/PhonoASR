@@ -49,7 +49,7 @@ model:
     n_head: 4
     dropout: 0.1
     k: 3
-    type: 'old'
+    type: 'base'
   model_name: "TASA-PHONEME"
 
 

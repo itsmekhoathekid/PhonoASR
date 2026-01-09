@@ -127,6 +127,19 @@ class LatentHead(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.residual(x, lambda x : self.tanh(self.linear(x)))
 
+class MLP(nn.Module):
+    def __init__(self, input_dim: int, hidden_dim: int, output_dim: int, dropout: float) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, output_dim)
+        )
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.net(x)
+
 class EmbeddingModule(nn.Module):
     def __init__(self, vocab_size, d_model, dropout, k, conv_dec : bool = False, pos_enc : bool = True  ):
         super(EmbeddingModule, self).__init__()
@@ -134,7 +147,10 @@ class EmbeddingModule(nn.Module):
         self.role_emb = nn.Embedding(k, d_model)
 
         if k != 1:
-            self.projection = nn.Linear(d_model * k, d_model)
+            self.projection = nn.Linear(
+                d_model * k,
+                d_model
+            )
         if pos_enc:
             self.pos_enc = PositionalEncoding(d_model)
         self.dropout = nn.Dropout(dropout)
@@ -150,9 +166,10 @@ class EmbeddingModule(nn.Module):
     def forward(self, x):
         x = self.embedding(x) # (B, M, 3) -> (B, M, 3, d_model)
         if self.k != 1:
-            
+            role_ids = torch.arange(self.k, device=x.device)  # [k]
+            role = self.role_emb(role_ids).view(1, 1, self.k, -1)  # [1,1,k,D]
+            x = x + role
             x = self.projection(x.view(x.size(0), x.size(1), -1))
-
         if hasattr(self, 'enc'):
             x = self.enc(x)
         if hasattr(self, 'pos_enc'):
@@ -551,25 +568,40 @@ class HeadOldVer(nn.Module):
         # self.self_attention = MultiHeadAttentionBlock(d_model=d_model, h=h, dropout=dropout)
         self.cross_atten_block = TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=dropout) 
         self.linear = FeedForwardBlock(d_model=d_model, d_ff=ff_size, dropout=dropout)
-        # self.residual = ResidualConnection(features=d_model, dropout=dropout)
-        # self.n_layer = n_layer
+        self.residual = ResidualConnection(features=d_model, dropout=dropout)
+        self.n_layer = n_layer
         # self.linear = Self_Attention_Block(d_model=d_model, ff_size=ff_size, h=h, p_dropout=dropout)
     def forward(self, out, enc_out, enc_mask, dec_mask) -> torch.Tensor:
-        enc_out = self.linear(enc_out) 
-        
+        enc_out = self.residual(enc_out , lambda enc_out : self.linear(enc_out))
+
         out =  self.cross_atten_block(out, enc_out, enc_mask, dec_mask)
         return out
+
+
+    
     
 class TransformerDecoderOlderVer(nn.Module):
     def __init__(self, vocab_size: int, n_layers: int, d_model: int, ff_size: int, h: int, p_dropout: float, k : int) -> None:
         super().__init__()
-        self.emb = PhonemeTripleEmbedding_V2_IntraAttn(vocab_size=vocab_size, d_model=d_model, dropout=p_dropout, k = k, n_heads= h, causal_slots=True, merge="concat", pos_enc=True, conv_dec=False, PositionalEncoding=PositionalEncoding, ConvDec=None   )
+        self.emb = PhonemeTripleEmbedding_V2_IntraAttn(
+            vocab_size=vocab_size,
+            d_model=d_model,
+            dropout=p_dropout,
+            k=k,
+            n_heads=1,          # vì slot=3, head=1-3 đều OK
+            causal_slots=False,  # ép slot0->slot1->slot2
+            merge="concat",     # hoặc "mean"
+            pos_enc=True,
+            conv_dec=False,
+            PositionalEncoding=PositionalEncoding,
+            ConvDec=ConvDec,
+        )
         self.layers = nn.ModuleList(
             [TransformerDecoderLayer(d_model=d_model, h=h, ff_size=ff_size, dropout=p_dropout) for _ in range(n_layers)]
         )
 
         self.heads = nn.ModuleList(
-            [HeadOldVer(d_model=d_model, ff_size=ff_size, dropout=p_dropout, h= h, n_layer=n_layers) for _ in range(k)] # ver 2
+            [Head(d_model=d_model, ff_size=ff_size, dropout=p_dropout, h= h) for _ in range(k)] # ver 2
         )
         self.projection = ProjectionLayer(d_model=d_model, vocab_size=vocab_size)
         self.k = k
@@ -590,9 +622,9 @@ class TransformerDecoderOlderVer(nn.Module):
         for layer in self.layers:
             out = layer(out, encoder_out, enc_mask, dec_mask)
         if self.k != 1:
-            latent = [head(out, encoder_out, enc_mask, dec_mask) for head in self.heads]
+            latent = [head(out) for head in self.heads]
 
-        out = [self.projection(l) for l in latent]  
+        out = [self.projection(l) for l in latent]
         return out
 
 class TransformerDecoder(nn.Module):

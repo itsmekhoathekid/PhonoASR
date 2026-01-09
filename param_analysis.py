@@ -412,9 +412,11 @@ def load_config(config_path):
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
         
-def param_analyzer(config_path):
-
-    config = load_config(config_path)
+def param_analyzer():
+    arg = argparse.ArgumentParser()
+    arg.add_argument('--config', type=str, default=config_path, help='Path to config file')
+    args = arg.parse_args()
+    config = load_config(args.config)
     logg(config['training']['logg'])
 
     # ==== Load Dataset ====
@@ -469,11 +471,48 @@ def param_analyzer(config_path):
     )
 
 if __name__ == "__main__":
-    config_path = './configs/baseline/TASA-char-config.yaml'
-    # transformer based
-    # phoneme n layers : 4,321,188
-    # baseline word : 3,530,561
-    # baseline char : 2,175,440
+    config_path = './configs/phoneme-dec/TASA-config.yaml'
+    ### transformer based
+    # batch_Size : 32, sequence_length : 1000, su dung cung 1 d_model, hidden_size, num layers
+    # phoneme  : 2.954.580 params
+        # Forward FLOPs:  1.097e+11
+        # Forward GFLOPs: 109.689
+        # Forward TFLOPs: 0.109689
+        # Avg latency:    91.428 ms/iter  (iters=30)
+        # Throughput:     1.199727 TFLOPs/s
+    # baseline word : 3,530,705 params
+        # Forward FLOPs:  1.287e+11
+        # Forward GFLOPs: 128.697
+        # Forward TFLOPs: 0.128697
+        # Avg latency:    157.652 ms/iter  (iters=30)
+        # Throughput:     0.816336 TFLOPs/s
 
-    # transducer based
-    param_analyzer(config_path=config_path)  
+    # baseline char : 2,175,440 params
+        # Forward FLOPs:  1.287e+11
+        # Forward GFLOPs: 128.697
+        # Forward TFLOPs: 0.128697
+        # Avg latency:    157.925 ms/iter  (iters=30)
+        # Throughput:     0.814927 TFLOPs/s
+    
+    ### transducer based
+    # baseline word lay hidden_size = 1/2 hidden_Size 3 loai tren
+        # param : 8,504,528
+        # Forward FLOPs:  5.126e+10
+        # Forward GFLOPs: 51.256
+        # Forward TFLOPs: 0.051256
+        # Avg latency:    55.070 ms/iter  (iters=30)
+        # Throughput:     0.930746 TFLOPs/s
+
+    # baseline char : 7,829,312 params
+        # Forward FLOPs:  5.126e+10
+        # Forward GFLOPs: 51.256
+        # Forward TFLOPs: 0.051256
+        # Avg latency:    55.157 ms/iter  (iters=30)
+        # Throughput:     0.929267 TFLOPs/s
+    
+    # Phan tich so luong param, Flops, Gflops, Tflops : nhu the nao do, noi la ko anh huong gi nhieu
+    # Ket luan : Decoder size anh huong chu yeu boi so luong vocab
+
+        # => Phoneme dec memory efficient hon word, Decoder Transducer su dung LSTM nen size lon vai cc
+    
+    param_analyzer()  
