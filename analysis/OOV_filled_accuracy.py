@@ -71,16 +71,17 @@ class oov_accuracy:
             except: 
                 continue
         
-
+        
         test_result_type = self.load_json(self.config[f'result_{type_fill}_path'])
         
         test_data = self.load_json(self.config['result_test_word_path'])
+        test_origin = self.load_json(self.config['test_word_path'])
         num_correct_fill = 0
 
         correct_filled = []
         cannot_be_filled = []
         tried_to_filled_but_wrong = []
-        test_data = self.load_json(self.config['test_word_path'])
+        # test_data = self.load_json(self.config['test_word_path'])
         sample_correct = []
         total_num = 0
         for idx, idx_word in idx_list_data:
@@ -96,8 +97,9 @@ class oov_accuracy:
                         print(f"Gold {type_fill}: {test_result_type[idx]['gold']} | pred {type_fill}: {test_result_type[idx]["predicted"]}")
 
                         sample_correct.append([
-                            test_result_type[idx]['gold'],
-                            test_data[idx]['text']
+                            test_data[idx]['gold'],
+                            test_origin[idx]['text']
+                            
                         ])
                 else:
                     cannot_be_filled.append(gold)

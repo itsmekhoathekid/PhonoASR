@@ -469,9 +469,9 @@ def param_analyzer():
         sequence_length=1000,
         flops_iters=30
     )
-
+import argparse
 if __name__ == "__main__":
-    config_path = './configs/phoneme-dec/TASA-config.yaml'
+
     ### transformer based
     # batch_Size : 32, sequence_length : 1000, su dung cung 1 d_model, hidden_size, num layers
     # phoneme  : 2.954.580 params
