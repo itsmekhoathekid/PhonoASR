@@ -32,7 +32,9 @@ class DatasetPreparing:
         unprocessed = []
         skip_indexes = []
         res = {}    
-        for idx, item in data.items():
+        id = 0 
+        items = list(data.items())
+        for orig_i, (idx, item) in enumerate(items):
             if dataset == "vivos" or dataset == "vietmed":
                 text = self.normalize_transcript(item['script'])
             elif dataset == "commonvoice":
@@ -51,14 +53,14 @@ class DatasetPreparing:
                     fact = False
                     break 
             if fact == False:
-                skip_indexes.append(idx)
+                skip_indexes.append(orig_i)
                 continue
 
             res[idx] = {
                 'text': text,
                 'voice': item['voice'] if 'voice' in item else item['wav'] if 'wav' in item else item['filename']
             }
-        
+            id += 1
         self.save_data(res, save_path)
         print(f"Unprocessed words: {list(set(unprocessed))}")
         unprocessed_data = {
@@ -161,7 +163,7 @@ class DatasetPreparing:
         print(f"Vocabulary saved to {vocab_path}")
         return vocab, list(set(unprocsssed))
     
-    def process_data(self, data_path, vocab, default_data_path, save_path, dataset = "vivos", type = "flat"):
+    def process_data(self, data_path, vocab, default_data_path, save_path, dataset = "vivos", type = "stack"):
         data = self.load_json(data_path)
 
 
@@ -193,6 +195,7 @@ class DatasetPreparing:
                 # tokens = [vocab.get(word, unk_id) for word in text.split()]
 
                 tokens = []
+                ipa_res = ''
                 for word in text.split():
                     try:
                         initial, rhyme, tone = analyse_Vietnamese(word)
@@ -207,12 +210,14 @@ class DatasetPreparing:
                                 print("WTF")
                             tokens += word_list
                             tokens += [vocab["<space>"]]
+                        ipa_res += initial + rhyme + tone + ' '
                     except:
                         continue
 
 
                 data_res['encoded_text'] = tokens[:-1] if type != "stack" else tokens
                 data_res['text'] = text
+                data_res['phoneme_presentation'] = ipa_res.strip()
             data_res['wav_path'] = voice
             res.append(data_res)
         self.save_data(res, save_path)
