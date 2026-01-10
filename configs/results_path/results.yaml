@@ -1,0 +1,12 @@
+TASA:
+  test_word_path : "/home/anhkhoa/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-w2i-lsvsc.json"
+  test_phoneme_path : "/home/anhkhoa/anhkhoa/dataset/test_TASA_phoneme.json"
+  vocab_word_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_lsvsc.json"
+  vocab_phoneme_path : "/home/anhkhoa/anhkhoa/dataset" 
+  result_c2i_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/reevaluated-result-tasa-c2i-lsvsc.json"
+  result_w2i_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-p2i_lsvsc.json" 
+  save_path : "/home/anhkhoa/anhkhoa/PhonoASR/saves/TASA"
+  log_path : "/home/anhkhoa/anhkhoa/PhonoASR/logs/TASA"
+  save: False
