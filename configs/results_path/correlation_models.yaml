@@ -1,0 +1,8 @@
+TASA:
+  result_word : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-w2i-lsvsc.json"
+  result_phoneme : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-p2i_lsvsc.json"
+  result_char: "/home/anhkhoa/anhkhoa/PhonoASR/result/reevaluated-result-tasa-c2i-lsvsc.json"
+  train_word : "/home/anhkhoa/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme : "/home/anhkhoa/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file : "/home/anhkhoa/anhkhoa/PhonoASR/logs/correlation_tasa.log"
