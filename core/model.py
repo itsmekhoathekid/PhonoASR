@@ -155,7 +155,7 @@ class TransducerAcousticModle(nn.Module):
         def decode(enc_state, lengths):
             token_list = []
             dec_state, hidden = self.decoder(zero_token)
-            lengths = min(max_output_len, lengths)
+            # lengths = min(max_output_len, lengths)
             for t in range(lengths):
                 logits = self.joint(enc_state[t].view(-1), dec_state.view(-1))
                 logits = F.softmax(logits, dim=-1) 
@@ -192,7 +192,7 @@ class TransducerAcousticModle(nn.Module):
         finished = torch.zeros(B, dtype=torch.bool, device=inputs.device)
         results = [[] for _ in range(B)]
 
-        T = min(T, max_output_len)
+        # T = min(T, max_output_len)
         for t in range(T):
             # 2) joint: enc_out[:,t,:] + last dec step 
             enc_step = enc_out[:, t, :].unsqueeze(1)       # [B,1,D]
