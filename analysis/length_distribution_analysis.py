@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 
 # ============== CONFIG ==============
 # File dùng để lấy max_len và tạo bins
-BIN_SOURCE_PATH = "result/result-tasa-w2i-lsvsc.json"
+BIN_SOURCE_PATH = "/home/anhkhoa/PhonoASR/result_new/result-tasa-w2i-lsvsc.json"
 
 # Các file cần tính avg WER/CER theo bins
 RESULT_PATHS = {
-    "tasa-c2i-lsvsc": "result/reevaluated-result-tasa-c2i-lsvsc.json",
-    "tasa-w2i-lsvsc": "result/result-tasa-w2i-lsvsc.json",
-    "tasa-p2i-lsvsc": "result/result-tasa-p2i_lsvsc.json",
+    "tasa-c2i-lsvsc": "/home/anhkhoa/PhonoASR/result_new/reevaluated-result-tasa-c2i-lsvsc.json",
+    "tasa-w2i-lsvsc": "/home/anhkhoa/PhonoASR/result_new/result-tasa-w2i-lsvsc.json",
+    "tasa-p2i-lsvsc": "/home/anhkhoa/PhonoASR/result_new/result-tasa-p2i-lsvsc.json",
 }
 
 # Output paths (tuỳ chỉnh)

@@ -1,12 +1,77 @@
 TASA:
-  test_word_path : "/home/anhkhoa/anhkhoa/dataset/LSVSC_test_word.json"
-  result_test_word_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-w2i-lsvsc.json"
-  test_phoneme_path : "/home/anhkhoa/anhkhoa/dataset/test_TASA_phoneme.json"
-  vocab_word_path : "/home/anhkhoa/anhkhoa/dataset/word_vocab_lsvsc.json"
-  vocab_phoneme_path : "/home/anhkhoa/anhkhoa/dataset" 
-  result_c2i_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/reevaluated-result-tasa-c2i-lsvsc.json"
-  result_w2i_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-w2i-lsvsc.json"
-  result_p2i_path : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-p2i_lsvsc.json" 
-  save_path : "/home/anhkhoa/anhkhoa/PhonoASR/saves/TASA"
-  log_path : "/home/anhkhoa/anhkhoa/PhonoASR/logs/TASA"
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result_new/reevaluated-result-tasa-c2i-lsvsc.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/word/result-tasa-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result_new/result-tasa-p2i-lsvsc.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/TASA"
+  log_path : "/home/anhkhoa/PhonoASR/logs/TASA"
+  save: True
+
+VGGTrans:
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result_new/result-vgg-transformer-char.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result_new/result-vgg-transformer_p2i-lsvsc.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/VGGTrans"
+  log_path : "/home/anhkhoa/PhonoASR/logs/VGGTrans"
+  save: False
+
+SpeechTrans:
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/SpeechTrans"
+  log_path : "/home/anhkhoa/PhonoASR/logs/SpeechTrans"
+  save: False
+
+multi-convformer:
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result_Conv-Conformer-c2i-lsvsc.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/word/reevaluarted_result_convconformer-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result_new/result-convconformer-phoneme.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/multi-convformer"
+  log_path : "/home/anhkhoa/PhonoASR/logs/multi-convformer"
+  save: False
+
+conv-rnnt:
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result_ConvRNNT-c2i-lsvsc.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/word/result-convrnnt-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/phoneme/reevaluated_result-conv-rnnt.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/conv-rnnt"
+  log_path : "/home/anhkhoa/PhonoASR/logs/conv-rnnt"
+  save: False
+
+
+conformer:
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result_conformer_lsvsc_char.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/word/result-convrnnt-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result_new/result-conformer.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/conv-rnnt"
+  log_path : "/home/anhkhoa/PhonoASR/logs/conv-rnnt"
+  save: False
+
+zipformer:
+  test_word_path : "/home/anhkhoa/dataset/LSVSC_test_word.json"
+  result_test_word_path : "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  vocab_word_path : "/home/anhkhoa/dataset/word_vocab_lsvsc.json"
+  result_c2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result-zipformer.json"
+  result_w2i_path : "/home/anhkhoa/PhonoASR/result/LSVSC/word/result-convrnnt-w2i-lsvsc.json"
+  result_p2i_path : "/home/anhkhoa/PhonoASR/result_new/result-conformer.json" 
+  save_path : "/home/anhkhoa/PhonoASR/saves/conv-rnnt"
+  log_path : "/home/anhkhoa/PhonoASR/logs/conv-rnnt"
   save: False

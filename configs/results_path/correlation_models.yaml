@@ -1,8 +1,62 @@
 TASA:
-  result_word : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-w2i-lsvsc.json"
-  result_phoneme : "/home/anhkhoa/anhkhoa/PhonoASR/result/result-tasa-p2i_lsvsc.json"
-  result_char: "/home/anhkhoa/anhkhoa/PhonoASR/result/reevaluated-result-tasa-c2i-lsvsc.json"
-  train_word : "/home/anhkhoa/anhkhoa/dataset/LSVSC_train_word.json"
-  train_phoneme : "/home/anhkhoa/anhkhoa/dataset/LSVSC_train_phoneme.json"
-  train_char: "/home/anhkhoa/anhkhoa/dataset/LSVSC_train_char.json"
-  log_file : "/home/anhkhoa/anhkhoa/PhonoASR/logs/correlation_tasa.log"
+  result_word : "/home/anhkhoa/PhonoASR/result_new/result-tasa-w2i-lsvsc.json"
+  result_phoneme : "/home/anhkhoa/PhonoASR/result_new/result-tasa-p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/reevaluated-result-tasa-c2i-lsvsc.json"
+  train_word : "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme : "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file : "/home/anhkhoa/PhonoASR/logs/correlation_tasa.log"
+
+VGGTrans:
+  result_word: "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-vgg-transformer_p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/result-vgg-transformer-char.json"
+  train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
+
+SpeechTrans:
+  result_word: "/home/anhkhoa/PhonoASR/result_new/result-vggTransformer-w2i-lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
+
+Conformer:
+  result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/result_conformer_w2i_lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
+
+Zipformer:
+  result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/reeavaluated_result-zipformer-w2i-lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
+
+multi-convformer:
+  result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/reevaluarted_result_convconformer-w2i-lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
+
+viSpeech:
+  result_word: "/home/anhkhoa/PhonoASR/result/vits_result_word_lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  result_char: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
+  train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
+  train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
+  train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
+  log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vispeech.log"

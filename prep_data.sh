@@ -144,7 +144,7 @@ if [[ "$1" == "phoneme" ]]; then
         --input "${test_path%.json}_phoneme.json" \
 
     if [[ -n "$valid_path" ]]; then
-        python check_empty.py \
+        python ./PhonoASR/dataset/check_empty.py \
             --input "${valid_path%.json}_phoneme.json"
     fi
 
