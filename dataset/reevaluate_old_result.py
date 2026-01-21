@@ -39,7 +39,6 @@ def reevaluate_old_result(old_result_path, new_result_path, skip_indexs):
     for item in old_res[:-1]:
         pred = item['gold']
         target = item['predicted']
-
         all_gold_text.append(target)
         all_predicted_text.append(pred)
     
@@ -50,8 +49,8 @@ def reevaluate_old_result(old_result_path, new_result_path, skip_indexs):
         "Re-evaluated WER": wer,
         "Re-evaluated CER": cer
     }
-    # old_res.append({"Re-evaluated Result": result})
-    # save_data(old_res, new_result_path)
+    old_res.append({"Re-evaluated Result": result})
+    save_data(old_res, new_result_path)
 
     # rows = [x for x in old_res if isinstance(x, dict) and "WER" in x and "CER" in x]
 
@@ -61,8 +60,8 @@ def reevaluate_old_result(old_result_path, new_result_path, skip_indexs):
     # print("macro WER%", wer_macro * 100)
     # print("macro CER%", cer_macro * 100)
 
-old_result_path = './result/result-tasa-c2i-lsvsc.json'
-new_result_path = './result/reevaluated-result-tasa-c2i-lsvsc.json'
-skip_indexs = load_json("../dataset/LSVSC_test_unprocessed.json")['skip_indexes']
+old_result_path = '/home/anhkhoa/PhonoASR/result/LSVSC/character/result-zipformer.json'
+new_result_path = '/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result-zipformer.json'
+skip_indexs = load_json("/home/anhkhoa/dataset/LSVSC_test_unprocessed.json")['skip_indexes']
 
 reevaluate_old_result(old_result_path, new_result_path, skip_indexs)

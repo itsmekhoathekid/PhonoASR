@@ -68,6 +68,7 @@ class oov_accuracy:
                     if token == "<unk>":
                         num_unk += 1
                         idx_list_data.append((idx, idx_word))
+                        # print(transcription)
             except: 
                 continue
         
@@ -88,23 +89,23 @@ class oov_accuracy:
             if idx_word < len(test_result_type[idx]["predicted"].split(' ')) and idx_word < len(test_result_type[idx]["gold"].split(' ')):
                 gold = test_result_type[idx]["gold"].split(' ')[idx_word]
                 pred = test_result_type[idx]["predicted"].split(' ')[idx_word]
-                # print(f"Gold: {gold}, Pred: {pred}")
+                
                 if gold == pred:
-                    
+                     
                     correct_filled.append(gold)
                     num_correct_fill += 1
                     if test_result_type[idx]['gold'] == test_result_type[idx]["predicted"]:
-                        print(f"Gold {type_fill}: {test_result_type[idx]['gold']} | pred {type_fill}: {test_result_type[idx]["predicted"]}")
+                        print(f'Gold {type_fill}: {test_result_type[idx]["gold"]} | pred {type_fill}: {test_result_type[idx]["predicted"]}')
 
                         sample_correct.append([
                             test_data[idx]['gold'],
-                            test_origin[idx]['text']
-                            
+                            test_origin[idx]['text'],
+                            test_result_type[idx]["predicted"]
                         ])
                 else:
                     cannot_be_filled.append(gold)
                     tried_to_filled_but_wrong.append(pred)
-                total_num += 1
+            total_num += 1
         oov_word, unique_token_test = self.get_number_of_oov()
         logging.info("OOV Filled Accuracy Results:")
         logging.info(f"Number of OOV words: {len(oov_word)}, Percentage: {len(oov_word)/len(unique_token_test)*100:.2f}%")
@@ -116,10 +117,10 @@ class oov_accuracy:
         logging.info(f"Tried to fill but wrong predictions: {set(tried_to_filled_but_wrong)}")
 
         duplicate_check = set()
-        for gold, text in sample_correct:
-            if (gold, text) not in duplicate_check:
-                logging.info(f"Gold unknown word: {gold} \nPredicted {type_fill} Converted: {text} \n{'-'*20}")
-                duplicate_check.add((gold, text))
+        for gold, text, predicted in sample_correct:
+            if (gold, text, predicted) not in duplicate_check:
+                logging.info(f"Gold unknown word: {gold} \nPredicted {type_fill} Converted: {text} \n{'-'*20}, Prediction: {predicted}\n{'='*50}")
+                duplicate_check.add((gold, text, predicted))
         
         if self.config['save']:
             self.save_json("./result/correctly_filled_words.json", list(set(correct_filled)))
