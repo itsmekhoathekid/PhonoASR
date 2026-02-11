@@ -1,59 +1,127 @@
-# 📖 Configuration Documentation
 
-This section describes the key configuration parameters used for training, inference, and model setup. We use YAML file to control config of models.
+# ViSpeechFormer — Official Implementation
 
-## Training Settings
+Official implementation of **ViSpeechFormer: A Phonemic Approach for Vietnamese Automatic Speech Recognition**.
 
-### **Epoch Control**
-- `epoch`: Determines how training is terminated:
-  - `epoch = 0`: Training continues until **early stopping** is triggered.
-  - `epoch > 0`: Training will run for the specified number of epochs, if early stopping is triggered, it'll stop.
-- `patience`: Param controls early stopping (If not specified, the default value is applied).
-- `patience_objective` : setting patience based on **WER** or **CER** 
-- `log_val_loss` : log val loss or not / Boolen (True/False)
+Paper: https://arxiv.org/pdf/2602.10003  
+Architecture diagram: 
+![Full workflow](./configs/results_path/architecture.png)
+---
 
-### **Training Objective**
-- `type_training`: Specifies the loss function. Supported values:
-  - `ce`: Cross-Entropy Loss  
-  - `ctc-kldiv`: Combined CTC Loss + KL-Divergence  
-  - `transducer`: Transducer Loss, use this to train transducer base models (eg: RNNT, Conv-RNNT, Conformer, ...). When using this, you have to change `type` in `dec` to transducer. 
-- If `type_training = ctc-kldiv`, you must include:
-  - `ctc-weight`: weighting factor for the CTC component.
+# 1. Overview
 
-### **Training Level**
-- `type`: Defines the linguistic unit used by the model:
-  - `word`: Word-level training, It's also applied to our method in phoneme-level cause we use a stack of 3 phonemes units to illustrating a word   
-  - `character`: Character-level training  
-  - `phoneme`: Phoneme-level training, this phoneme is kinda like character, we break down the word into phoneme unit and separate each word with \<space> token
+ViSpeechFormer is a phoneme-based Vietnamese ASR framework that explicitly models Vietnamese syllable structure using a **three-head phonemic decoder**:
 
-### **Reload Level**
-- `reload`: Boolean values (True/False)
-- `reload_mode`: You can reload and continue training with `latest`/`best`. If `latest`, you loaded model from the latest epoch. If `best`, you loaded model from your best epoch.
+- Initial
+- Rhyme
+- Tone
 
-### **Save**
+The model improves OOV generalization by decomposing words into phonological components instead of predicting characters or subwords directly.
 
-- `daily_save` : Boolen values (True/False), normally set to True
+Supported datasets:
+- LSVSC
+- VIVOS
 
-## Inference Settings
+---
 
-### **Inference Flow**
-- `infer`: Specifies the inference mechanism:
-  - `normal`: Standard greedy inference  
-  - `mtp_stack`: Multi token prediction inference, this can only be used when traning by our method  
+# 2. Repository Structure
 
-## Model Settings
+```
+.
+├── README.md
+├── requirements.txt
+├── prep_data.sh
+├── train.py
+├── eval.py
+├── configs/
+│   ├── baseline/
+│   ├── phoneme-dec/
+│   ├── lsvsc-configuration/
+│   └── results_path/
+│       └── architecture.png
+├── core/
+│   ├── engine.py
+│   ├── inference.py
+│   ├── model.py
+│   ├── encoders/
+│   ├── decoder/
+│   └── modules/
+└── dataset/
+    ├── LSVSC/
+    ├── VIVOS/
+    ├── dataset.py
+    ├── construct.py
+    ├── phoneme_construct.py
+    └── Vietnamese_utils.py
+```
 
-### **Model Name**
-- `model_name`: Defines the name displayed when saving checkpoints.
+---
 
-### **Encoder Configuration**
-- Under `enc`:
-  - `type`: Specifies the encoder architecture to use.
+# 3. Installation
 
-### **Decoder Configuration**
-- Under `dec`:
-  - `type`: Specifies the decoder architecture to use. Currently, we have: `base`, `saa_dec`, `vgg_dec`, `transducer`
-  - `k`: This param is exclusively used for our method, default is 1, for truly mean phoneme-level as our theory, set it to 3 
+## 3.1 Create environment
 
-### **Note**
-When changing the model architecture, make sure to check the configuration template for that architecture. Each architecture has its own specific config requirements, and you must follow them.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+```
+
+## 3.2 Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+If using GPU, ensure your PyTorch version matches your CUDA runtime.
+
+---
+
+# 4. Data Preparation
+
+Run : 
+
+```bash
+bash prep_data.sh --word (or char, phoneme) --lsvsc (or vivos)
+```
+
+---
+
+# 5. Training
+
+## 5.1 Phoneme Decoder
+
+```bash
+python train.py --config configs/phoneme-dec/conformer-config.yaml
+```
+
+## 5.2 Baseline (Character/Subword)
+
+```bash
+python train.py --config configs/baseline/conformer-transducer-config.yaml
+```
+
+---
+
+# 6. Evaluation
+
+```bash
+python eval.py --config configs/phoneme-dec/conformer-config.yaml --ckpt /path/to/checkpoint.pt
+```
+
+Metrics typically include CER, WER, and phoneme component errors.
+
+---
+
+# 8. Citation
+
+```bibtex
+@article{nguyen2026vispeechformer,
+  title   = {ViSpeechFormer: A Phonemic Approach for Vietnamese Automatic Speech Recognition},
+  author  = {Nguyen, Khoa Anh and Hoang, Long Minh and Nguyen, Nghia Hieu and Nguyen, Luan Thanh and Nguyen, Ngan Luu-Thuy},
+  journal = {arXiv preprint arXiv:2602.10003},
+  year    = {2026}
+}
+```
+
+
