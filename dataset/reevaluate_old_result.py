@@ -60,8 +60,8 @@ def reevaluate_old_result(old_result_path, new_result_path, skip_indexs):
     # print("macro WER%", wer_macro * 100)
     # print("macro CER%", cer_macro * 100)
 
-old_result_path = '/home/anhkhoa/PhonoASR/result/LSVSC/character/result-zipformer.json'
-new_result_path = '/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result-zipformer.json'
+old_result_path = '/home/anhkhoa/PhonoASR/result/LSVSC/word/result_conformer_w2i_lsvsc.json'
+new_result_path = '/home/anhkhoa/PhonoASR/result/LSVSC/word/reevaluated_result_conformer_w2i_lsvsc.json'
 skip_indexs = load_json("/home/anhkhoa/dataset/LSVSC_test_unprocessed.json")['skip_indexes']
 
 reevaluate_old_result(old_result_path, new_result_path, skip_indexs)

@@ -26,9 +26,9 @@ SpeechTrans:
   log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
 
 Conformer:
-  result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/result_conformer_w2i_lsvsc.json"
-  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
-  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/reevaluated_result_conformer_w2i_lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result/LSVSC/phoneme/reevaluated_result-conformer.json"
+  result_char: "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result_conformer_lsvsc_char.json"
   train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
   train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
   train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
@@ -36,8 +36,8 @@ Conformer:
 
 Zipformer:
   result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/reeavaluated_result-zipformer-w2i-lsvsc.json"
-  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
-  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result/LSVSC/phoneme/reevaluated_result-zipformer.json"
+  result_char: "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result-zipformer.json"
   train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
   train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
   train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
@@ -45,15 +45,15 @@ Zipformer:
 
 multi-convformer:
   result_word: "/home/anhkhoa/PhonoASR/result/LSVSC/word/reevaluarted_result_convconformer-w2i-lsvsc.json"
-  result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
-  result_char: "/home/anhkhoa/PhonoASR/result_new/result-speech-transformer-c2i-lsvsc.json"
+  result_phoneme: "/home/anhkhoa/PhonoASR/result/LSVSC/phoneme/reevaluated_result-conv-conformer.json"
+  result_char: "/home/anhkhoa/PhonoASR/result/LSVSC/character/reevaluated_result_Conv-Conformer-c2i-lsvsc.json"
   train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
   train_phoneme: "/home/anhkhoa/dataset/LSVSC_train_phoneme.json"
   train_char: "/home/anhkhoa/dataset/LSVSC_train_char.json"
   log_file: "/home/anhkhoa/PhonoASR/logs/correlation_vggtrans.log"
 
 viSpeech:
-  result_word: "/home/anhkhoa/PhonoASR/result/vits_result_word_lsvsc.json"
+  result_word: "/home/anhkhoa/PhonoASR/result_new/result-speechtrans-w2i-lsvsc.json"
   result_phoneme: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
   result_char: "/home/anhkhoa/PhonoASR/result_new/result-Speechtransformer_p2i-lsvsc.json"
   train_word: "/home/anhkhoa/dataset/LSVSC_train_word.json"
